@@ -1,9 +1,10 @@
 import Image from "next/image";
+import {Header} from "@/components/ui/header";
 
 export default function Home() {
   return (
     <>
-    <h1 className="text-center">Hello</h1>
+    <Header />
     </>
   );
 }

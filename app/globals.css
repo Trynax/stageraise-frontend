@@ -1,3 +1,33 @@
 @import "tailwindcss";
 
 
+:root {
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+
+    --color-deepGreen: #3C6B5B;
+    --color-dark: #030319;
+}
+
+.nav-link {
+    position: relative;
+    display: inline-block;
+}
+
+
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    transform: translateY(4px);
+    height: 4px;
+    background-color: var(--color-deepGreen);
+    transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
