@@ -12,13 +12,13 @@ export function VoteSection(){
     const filteredVotes = mockVotes.filter(vote => vote.status === activeTab);
 
     return (
-        <section className="py-20 px-8">
+        <section className="py-10 px-8">
             <h1 className="text-5xl font-bold text-center">Live Voting Rounds <span className="text-secondary" style={{ 
                             WebkitTextStroke: '2px black',
                             paintOrder: 'stroke fill'
             }}>Powered by the Community</span></h1>
 
-            <div className="border border-dark flex rounded-lg w-92 mx-auto mt-12"> 
+            {/* <div className="border border-dark flex rounded-lg w-92 mx-auto mt-12"> 
                <button
                 onClick={() => setActiveTab('ongoing')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
@@ -39,7 +39,7 @@ export function VoteSection(){
             >
                 Ended
              </button>
-            </div>
+            </div> */}
 
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
                 {filteredVotes.map((vote) => (

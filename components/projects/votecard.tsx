@@ -45,18 +45,18 @@ export default function VoteCard({ vote }: VoteCardProps) {
   return (
     <div className="p-1">
       <div className="w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-dark p-4 relative hover:scale-102 transition-transform duration-300 flex flex-col">
-        {/* Header with image and title */}
+   
         <div className="flex items-center gap-3 mb-4">
           <img 
             src={vote.image} 
             alt={vote.title} 
             className="w-16 h-16 object-cover rounded-xl border-2 border-dark"
           />
-          <h2 className="text-xl font-bold line-clamp-1 flex-1">{vote.title}</h2>
+          <h2 className="text-2xl font-bold line-clamp-1 flex-1">{vote.title}</h2>
         </div>
 
-        {/* Description */}
-        <p className="text-gray-700 mb-4 leading-relaxed line-clamp-2 text-sm">
+ 
+        <p className="text-gray-700 mb-4 leading-relaxed line-clamp-2 text-lg font-semibold ">
           {vote.description}
         </p>
 

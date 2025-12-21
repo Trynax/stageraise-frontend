@@ -3,6 +3,7 @@ import {Header} from "@/components/ui/header";
 import { HeroSection } from "@/components/sections/herosection";
 import { ProjectSection } from "@/components/sections/projectsection";
 import {VoteSection} from "@/components/sections/votesection";
+import { AboutSection } from "@/components/sections/aboutsection";  
 export default function Home() {
   return (
     <div className="relative">
@@ -17,6 +18,10 @@ export default function Home() {
     
     <div className="">
       <VoteSection/>
+    </div>
+
+    <div className="">
+      <AboutSection />
     </div>
    
 
