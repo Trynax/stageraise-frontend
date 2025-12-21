@@ -12,7 +12,7 @@ export function VoteSection(){
     const filteredVotes = mockVotes.filter(vote => vote.status === activeTab);
 
     return (
-        <section className="py-10 px-8">
+        <section className="py-10 px-8 bg-primary">
             <h1 className="text-5xl font-bold text-center">Live Voting Rounds <span className="text-secondary" style={{ 
                             WebkitTextStroke: '2px black',
                             paintOrder: 'stroke fill'

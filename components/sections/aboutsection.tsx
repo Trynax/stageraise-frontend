@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function AboutSection() {
   return (
-    <section className="px-8 py-10">
+    <section className=" bg-primary px-8 py-10">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-dark">
