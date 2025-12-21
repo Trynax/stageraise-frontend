@@ -2,6 +2,7 @@ import Image from "next/image";
 import {Header} from "@/components/ui/header";
 import { HeroSection } from "@/components/sections/herosection";
 import { ProjectSection } from "@/components/sections/projectsection";
+import {VoteSection} from "@/components/sections/votesection";
 export default function Home() {
   return (
     <div className="relative">
@@ -10,10 +11,13 @@ export default function Home() {
        <HeroSection />
     </div>
 
-    <div className="py-20">
+    <div className="">
       <ProjectSection/>
     </div>
     
+    <div className="">
+      <VoteSection/>
+    </div>
    
 
     
