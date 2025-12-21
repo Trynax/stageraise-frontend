@@ -4,9 +4,19 @@
 :root {
     --font-sans: 'Inter', sans-serif;
     --font-mono: 'Fira Code', monospace;
-
     --color-deepGreen: #3C6B5B;
     --color-dark: #030319;
+    --color-primary: #FAFAFA;
+}
+
+@theme {
+   --font-sans: 'Inter', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+    --color-deepGreen: #3C6B5B;
+    --color-dark: #030319;
+    --color-primary: #FAFAFA;
+    --color-secondary: #A6EC90;
+    --color-light-orange:#F6EFE6;
 }
 
 .nav-link {

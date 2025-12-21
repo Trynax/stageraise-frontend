@@ -4,7 +4,7 @@ export function Header() {
 
 
     return (
-        <header className="flex items-center gap-5 px-16 py-4 bg-white w-full border-2 border-dark">
+        <header className="flex fixed top-0 left-0 right-0 z-50 items-center gap-5 px-16 py-4 bg-primary w-full border-b-3 border-dark">
             <div className="font-bold text-xl flex-none">
                 LOGO
             </div>
