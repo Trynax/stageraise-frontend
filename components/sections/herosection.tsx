@@ -56,9 +56,13 @@ export function HeroSection() {
                         Fund project
                     </button>
                 </div>
+
+                <div className="relative h-[400px] overflow-hidden -mb-2">
+                    <Image className="absolute -bottom-62  left-1/2 -translate-x-1/2" src="/images/heroimage.svg" alt="Hero Image" width={800} height={400} />
+                </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 bg-light-orange">
+            <div className="absolute bottom-0 left-0 right-0 bg-light-orange z-10 ">
                 <div className="flex justify-between items-center px-8 py-6">
                     <div className="flex items-center gap-3">
                         <Image src="/icons/shield.svg" alt="Verification Icon" width={22} height={22} />
