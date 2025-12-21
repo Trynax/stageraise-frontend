@@ -166,10 +166,10 @@ export function AboutSection() {
         <h1 className=" text-5xl text-center font-semibold leading-15">The Future of Crowdfunding is <br /> Community-Governed.</h1>
 
          <div className="flex justify-center gap-6 mb-20">
-                    <button className="px-8 py-3 bg-deepGreen text-white rounded-xl font-semibold text-lg hover:scale-105 transition-colors shadow-lg ">
+                    <button className="px-8 py-3 bg-deepGreen text-white rounded-xl font-semibold text-lg hover:scale-105  transition-transform duration-300 shadow-lg ">
                         Create Project
                     </button>
-                    <button className="px-8 py-3 bg-white text-gray-900 rounded-xl font-semibold text-lg border-2 border-gray-900 hover:scale-105 transition-colors shadow-lg">
+                    <button className="px-8 py-3 bg-white text-gray-900 rounded-xl font-semibold text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg">
                         Fund project
                     </button>
           </div>
