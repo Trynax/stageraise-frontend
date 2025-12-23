@@ -29,8 +29,8 @@ export function ProjectList() {
     }, [searchQuery, sortOrder]);
 
     return (
-        <section className="max-w-7xl mx-auto py-10 bg-primary min-h-screen">
-            <div className="flex items-center gap-4 mb-8">
+        <section className=" mx-auto py-10 bg-primary min-h-screen">
+            <div className="flex items-center gap-4 mb-8 max-w-7xl mx-auto">
                
                 <button className="flex items-center gap-2 px-6 py-3 bg-primary border-2 border-gray-800 rounded-xl">
                 <Image src="/icons/filter.svg" alt="Filter Icon" width={20} height={20} />

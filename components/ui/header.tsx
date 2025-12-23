@@ -12,7 +12,7 @@ export function Header() {
 
         <div className="flex-1 flex justify-center gap-8">
             <Link href="/projects" className="nav-link">Explore Projects</Link>
-            <Link href="/voting" className="nav-link">Explore Voting</Link>
+            <Link href="/votes" className="nav-link">Explore Voting</Link>
             <Link href="/how-it-works" className="nav-link">How it works</Link>
             <Link href="/about" className="nav-link">About</Link>
         </div>
