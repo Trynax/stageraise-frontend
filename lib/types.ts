@@ -10,6 +10,7 @@ export interface Project {
   funders: number;
   communityVote: boolean;
   refundable: boolean;
+  startDate: string;
   endDate: string;
   status: 'ongoing' | 'ended';
 }
@@ -27,6 +28,7 @@ export interface Vote {
   funders: number;
   communityVote: boolean;
   refundable: boolean;
+  startDate: string;
   endDate: string;
   status: 'ongoing' | 'ended';
 }

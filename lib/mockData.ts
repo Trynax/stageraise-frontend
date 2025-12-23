@@ -13,6 +13,7 @@ export const mockProjects: Project[] = [
     funders: 150,
     communityVote: true,
     refundable: true,
+    startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // Started 15 days ago
     endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000).toISOString(), // 3 days 24 hours from now
     status: 'ongoing',
   },
@@ -28,6 +29,7 @@ export const mockProjects: Project[] = [
     funders: 320,
     communityVote: true,
     refundable: true,
+    startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // Started 10 days ago
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
     status: 'ongoing',
   },
@@ -43,6 +45,7 @@ export const mockProjects: Project[] = [
     funders: 890,
     communityVote: true,
     refundable: false,
+    startDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), // Started 25 days ago
     endDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days from now
     status: 'ongoing',
   },
@@ -58,6 +61,7 @@ export const mockProjects: Project[] = [
     funders: 245,
     communityVote: true,
     refundable: true,
+    startDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // Started 8 days ago
     endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
     status: 'ongoing',
   },
@@ -73,6 +77,7 @@ export const mockProjects: Project[] = [
     funders: 567,
     communityVote: true,
     refundable: true,
+    startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Started 5 days ago
     endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days from now
     status: 'ongoing',
   },
@@ -88,6 +93,7 @@ export const mockProjects: Project[] = [
     funders: 412,
     communityVote: true,
     refundable: true,
+    startDate: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(), // Started 18 days ago
     endDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days from now
     status: 'ongoing',
   },
@@ -103,6 +109,7 @@ export const mockProjects: Project[] = [
     funders: 1250,
     communityVote: true,
     refundable: false,
+    startDate: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000).toISOString(), // Started 32 days ago
     endDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Ended 2 days ago
     status: 'ended',
   },
@@ -118,6 +125,7 @@ export const mockProjects: Project[] = [
     funders: 1890,
     communityVote: true,
     refundable: true,
+    startDate: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(), // Started 35 days ago
     endDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Ended 5 days ago
     status: 'ended',
   },
@@ -133,6 +141,7 @@ export const mockProjects: Project[] = [
     funders: 678,
     communityVote: true,
     refundable: false,
+    startDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(), // Started 40 days ago
     endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // Ended 10 days ago
     status: 'ended',
   },

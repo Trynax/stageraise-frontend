@@ -3,8 +3,8 @@ import Image from "next/image";
 export function HeroSection() {
     return (
         <section className="relative min-h-[80vh] bg-primary px-16 overflow-hidden">
-              <div className="absolute top-0 bottom-0 left-16 w-[3px] bg-dark"></div>
-              <div className="absolute top-0 bottom-0 right-16 w-[3px] bg-dark"></div>
+              <div className="absolute top-0 bottom-0 left-32 w-[3px] bg-dark"></div>
+              <div className="absolute top-0 bottom-0 right-32 w-[3px] bg-dark"></div>
             <div 
                 className="absolute inset-0 opacity-30"
                 style={{
@@ -57,7 +57,7 @@ export function HeroSection() {
                     </button>
                 </div>
 
-                <div className="relative h-[400px] overflow-hidden -mb-2">
+                <div className="relative h-[400px] overflow-hidden -mb-3">
                     <Image className="absolute -bottom-62  left-1/2 -translate-x-1/2" src="/images/heroimage.svg" alt="Hero Image" width={800} height={400} />
                 </div>
             </div>
