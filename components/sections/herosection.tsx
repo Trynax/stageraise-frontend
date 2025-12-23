@@ -57,50 +57,50 @@ export function HeroSection() {
                     </button>
                 </div>
 
-                <div className="relative h-100 overflow-visible -mb-40 md:mb-0">
+                <div className="relative h-100 overflow-visible -mb-50 md:mb-0">
                     <Image className="absolute -bottom- md:-bottom-64 left-1/2 -translate-x-1/2" src="/images/heroimage.svg" alt="Hero Image" width={800} height={400} />
                 </div>
             </div>
     <div className="absolute bottom-0 left-0 right-0 bg-light-orange z-10 overflow-hidden">
     <div className="flex animate-scroll gap-8 py-4 sm:py-6">
-        {/* First set of items */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+   
+        <div className="flex items-center gap-3 shrink-0">
             <Image src="/icons/shield.svg" alt="Verification Icon" width={22} height={22} />
             <span className="font-semibold text-gray-900 whitespace-nowrap">On-Chain Verification</span>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
             <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} />
             <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
             <Image src="/icons/squares.svg" alt="Squares Icon" width={22} height={22} />
             <span className="font-semibold text-gray-900 whitespace-nowrap">Milestone-Based Funding</span>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
             <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} /> 
             <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
         </div>
 
-        {/* Duplicate set for seamless loop */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+       
+        <div className="flex items-center gap-3 shrink-0">
             <Image src="/icons/shield.svg" alt="Verification Icon" width={22} height={22} />
             <span className="font-semibold text-gray-900 whitespace-nowrap">On-Chain Verification</span>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
             <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} />
             <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
             <Image src="/icons/squares.svg" alt="Squares Icon" width={22} height={22} />
             <span className="font-semibold text-gray-900 whitespace-nowrap">Milestone-Based Funding</span>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
             <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} /> 
             <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
         </div>
