@@ -2,30 +2,30 @@
 
 import { useState, useMemo } from 'react';
 import Image from "next/image";
-import ProjectCard from '../projects/projectcard';
-import { mockProjects } from '@/lib/mockData';
+import VoteCard from "@/components/projects/votecard";
+import { mockVotes } from '@/lib/mockVoteData';
 
-export function ProjectList() {
+export function VotesList() {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortOrder, setSortOrder] = useState('new');
 
-    const filteredProjects = useMemo(() => {
-        let projects = [...mockProjects];
+    const filteredVotes = useMemo(() => {
+        let votes = [...mockVotes];
 
         if (searchQuery) {
-            projects = projects.filter(project =>
-                project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                project.description.toLowerCase().includes(searchQuery.toLowerCase())
+            votes = votes.filter(vote =>
+                vote.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                vote.description.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
-        projects.sort((a, b) => {
+        votes.sort((a, b) => {
             const dateA = new Date(a.startDate).getTime();
             const dateB = new Date(b.startDate).getTime();
             return sortOrder === 'new' ? dateB - dateA : dateA - dateB;
         });
 
-        return projects;
+        return votes;
     }, [searchQuery, sortOrder]);
 
     return (
@@ -69,9 +69,9 @@ export function ProjectList() {
 
             
              <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-                {filteredProjects.length > 0 ? (
-                    filteredProjects.map((project) => (
-                        <ProjectCard key={project.id} project={project} />
+                {filteredVotes.length > 0 ? (
+                    filteredVotes.map((vote) => (
+                        <VoteCard key={vote.id} vote={vote} />
                     ))
                 ) : (
                     <div className="col-span-full text-center py-12">
