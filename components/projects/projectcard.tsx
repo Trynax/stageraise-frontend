@@ -101,7 +101,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           {/* Badges */}
           <div className="flex gap-2 mb-4">
             {project.communityVote && (
-              <button className="flex-1 flex items-center justify-center gap-1 py-1.5 px-3 border-2 border-gray-800 rounded-full hover:bg-gray-50 transition-colors text-xs">
+              <button className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 border-2 border-gray-800 rounded-full hover:bg-gray-50 transition-colors text-xs">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
                 </svg>

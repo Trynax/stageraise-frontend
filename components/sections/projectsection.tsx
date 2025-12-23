@@ -19,7 +19,7 @@ export function ProjectSection () {
                         }}>Built to Deliver</span></h1>
 
 
-            <div className="border border-dark flex rounded-lg w-92 mx-auto mt-12"> 
+            <div className="border border-dark flex rounded-lg md:w-92 mx-auto mt-12"> 
                <button
                 onClick={() => setActiveTab('ongoing')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${

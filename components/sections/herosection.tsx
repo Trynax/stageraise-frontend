@@ -49,10 +49,10 @@ export function HeroSection() {
 
 
                 <div className="flex justify-center gap-3 md:gap-6 mb-20">
-                    <button className="px-8 py-3 bg-deepGreen text-white rounded-xl font-semibold text-sm  md:text-lg hover:scale-105 transition-transform duration-300 shadow-lg ">
+                    <button className="px-4 py-3 bg-deepGreen text-white rounded-xl font-semibold text-sm  md:text-lg hover:scale-105 transition-transform duration-300 shadow-lg ">
                         Create Project
                     </button>
-                    <button className="px-8 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg">
+                    <button className="px-4 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg">
                         Fund project
                     </button>
                 </div>
@@ -61,30 +61,51 @@ export function HeroSection() {
                     <Image className="absolute -bottom- md:-bottom-64 left-1/2 -translate-x-1/2" src="/images/heroimage.svg" alt="Hero Image" width={800} height={400} />
                 </div>
             </div>
+    <div className="absolute bottom-0 left-0 right-0 bg-light-orange z-10 overflow-hidden">
+    <div className="flex animate-scroll gap-8 py-4 sm:py-6">
+        {/* First set of items */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Image src="/icons/shield.svg" alt="Verification Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">On-Chain Verification</span>
+        </div>
 
-            <div className="absolute bottom-0 left-0 right-0 bg-light-orange z-10 ">
-                <div className="flex justify-between items-center px-8 py-6">
-                    <div className="flex items-center gap-3">
-                        <Image src="/icons/shield.svg" alt="Verification Icon" width={22} height={22} />
-                        <span className="font-semibold text-gray-900">On-Chain Verification</span>
-                    </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
+        </div>
 
-                    <div className="flex items-center gap-3">
-                            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} />
-                            <span className="font-semibold text-gray-900">Automatic Refunds</span>
-                    </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Image src="/icons/squares.svg" alt="Squares Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Milestone-Based Funding</span>
+        </div>
 
-                    <div className="flex items-center gap-3">
-                          <Image src="/icons/squares.svg" alt="Refresh Icon" width={22} height={22} />
-                          <span className="font-semibold text-gray-900">Milestone-Based Funding</span>
-                    </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} /> 
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
+        </div>
 
-                    <div className="flex items-center gap-3">
-                            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} /> 
-                            <span className="font-semibold text-gray-900">Automatic Refunds</span>
-                    </div>
-                </div>
-            </div>
+        {/* Duplicate set for seamless loop */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Image src="/icons/shield.svg" alt="Verification Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">On-Chain Verification</span>
+        </div>
+
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
+        </div>
+
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Image src="/icons/squares.svg" alt="Squares Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Milestone-Based Funding</span>
+        </div>
+
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} /> 
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
+        </div>
+    </div>
+    </div>
         </section>
     );
 }
