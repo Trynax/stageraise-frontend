@@ -13,7 +13,7 @@ export function VoteSection(){
 
     return (
         <section className="py-10 px-8 bg-primary">
-            <h1 className="text-5xl font-bold text-center">Live Voting Rounds <span className="text-secondary" style={{ 
+            <h1 className="text-4xl md:text-5xl font-bold text-center">Live Voting Rounds <span className="text-secondary" style={{ 
                             WebkitTextStroke: '2px black',
                             paintOrder: 'stroke fill'
             }}>Powered by the Community</span></h1>
