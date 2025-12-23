@@ -29,10 +29,10 @@ export function ProjectList() {
     }, [searchQuery, sortOrder]);
 
     return (
-        <section className=" mx-auto py-10 bg-primary min-h-screen">
+        <section className=" mx-auto py-10 px-4 bg-primary min-h-screen">
             <div className="flex items-center gap-4 mb-8 max-w-7xl mx-auto">
                
-                <button className="flex items-center gap-2 px-6 py-3 bg-primary border-2 border-gray-800 rounded-xl">
+                <button className="flex items-center gap-2 px-3 md:px-6 py-3 bg-primary border-2 border-gray-800 rounded-xl">
                 <Image src="/icons/filter.svg" alt="Filter Icon" width={20} height={20} />
                     <span className="font-semibold">Filter</span>
                 </button>
@@ -56,10 +56,10 @@ export function ProjectList() {
        
                 <div className="relative">
                     <button 
-                        className="flex items-center gap-3 px-6 py-3 bg-white border-2 border-gray-800 rounded-xl hover:bg-gray-50 transition-colors min-w-[180px] justify-between"
+                        className="flex items-center gap-3 px-3 md:px-6 py-3 bg-white border-2 border-gray-800 rounded-xl hover:bg-gray-50 transition-colors md:min-w-[180px] justify-between"
                         onClick={() => setSortOrder(sortOrder === 'new' ? 'old' : 'new')}
                     >
-                        <span className="font-semibold">
+                        <span className="font-semibold hidden md:block">
                             {sortOrder === 'new' ? 'New to Old' : 'Old to New'}
                         </span>
                         <Image src="/icons/sort.svg" alt="Sort Icon" width={20} height={20} />

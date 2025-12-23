@@ -57,7 +57,7 @@ export function HeroSection() {
                     </button>
                 </div>
 
-                <div className="relative h-100 overflow-visible -mb-40">
+                <div className="relative h-100 overflow-visible -mb-40 md:mb-0">
                     <Image className="absolute -bottom- md:-bottom-64 left-1/2 -translate-x-1/2" src="/images/heroimage.svg" alt="Hero Image" width={800} height={400} />
                 </div>
             </div>
