@@ -34,7 +34,7 @@ export function ProjectList() {
                
                 <button className="flex items-center gap-2 px-3 md:px-6 py-3 bg-primary border-2 border-gray-800 rounded-xl">
                 <Image src="/icons/filter.svg" alt="Filter Icon" width={20} height={20} />
-                    <span className="font-semibold">Filter</span>
+                    <span className="font-semibold hidden md:block">Filter</span>
                 </button>
 
 

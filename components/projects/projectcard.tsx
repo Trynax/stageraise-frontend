@@ -51,7 +51,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             className="w-full h-48 object-cover rounded-2xl"
           />
           {project.type === 'Milestone Based' && (
-            <div className="absolute top-18 left-0 bg-linear-to-br from-deepGreen to-deepGreen text-secondary px-20 py-1 transform -rotate-35 origin-top-left -translate-x-10 translate-y-10 shadow-lg">
+            <div className="absolute top-18 left-0 bg-linear-to-br from-deepGreen to-deepGreen text-secondary px-18 py-1 transform -rotate-35 origin-top-left -translate-x-10 translate-y-10 shadow-lg">
               <span className="text-sm font-semibold">{project.type}</span>
             </div>
           )}
