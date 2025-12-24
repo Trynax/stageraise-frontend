@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export function HeroSection() {
     return (
@@ -49,12 +50,18 @@ export function HeroSection() {
 
 
                 <div className="flex justify-center gap-3 md:gap-6 mb-20">
-                    <button className="px-4 py-3 bg-deepGreen text-white rounded-xl font-semibold text-sm  md:text-lg hover:scale-105 transition-transform duration-300 shadow-lg ">
+                    <Link 
+                        href="/create"
+                        className="px-4 py-3 bg-deepGreen text-white rounded-xl font-semibold text-sm md:text-lg hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
+                    >
                         Create Project
-                    </button>
-                    <button className="px-4 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg">
+                    </Link>
+                    <Link 
+                        href="/create"
+                        className="px-4 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
+                    >
                         Fund project
-                    </button>
+                    </Link>
                 </div>
 
                 <div className="relative h-100 overflow-visible -mb-50 md:mb-0">
