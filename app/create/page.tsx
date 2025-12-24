@@ -12,7 +12,7 @@ import ReviewStep from "@/components/create/ReviewStep"
 import SuccessStep from "@/components/create/SuccessStep"
 
 export default function CreateProjectPage() {
-    const [currentStep, setCurrentStep] = useState(5)
+    const [currentStep, setCurrentStep] = useState(1)
     const [formData, setFormData] = useState({
         projectType: '',
         projectName: '',
