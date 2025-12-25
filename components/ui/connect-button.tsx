@@ -2,8 +2,12 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 
-export function ButtonConnect() {
+interface ButtonConnectProps {
+    accountStatus?: "full" | "avatar" | "address"
+}
+
+export function ButtonConnect({ accountStatus = "full" }: ButtonConnectProps) {
     return (
-        <ConnectButton showBalance={false} chainStatus="icon" />
+        <ConnectButton showBalance={false} chainStatus="icon" accountStatus={accountStatus} />
     )
 }
