@@ -4,10 +4,13 @@ import { useState, useMemo } from 'react';
 import Image from "next/image";
 import VoteCard from "@/components/projects/votecard";
 import { mockVotes } from '@/lib/mockVoteData';
+import VotesFilter, { VotesFilterState } from '../filters/VotesFilter';
 
 export function VotesList() {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortOrder, setSortOrder] = useState('new');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [activeFilters, setActiveFilters] = useState<VotesFilterState | null>(null);
 
     const filteredVotes = useMemo(() => {
         let votes = [...mockVotes];
@@ -28,11 +31,18 @@ export function VotesList() {
         return votes;
     }, [searchQuery, sortOrder]);
 
+    const handleApplyFilters = (filters: VotesFilterState) => {
+        setActiveFilters(filters);
+    };
+
     return (
-        <section className=" mx-auto px-4 md:px-32 py-10 bg-primary min-h-screen">
-            <div className="flex items-center gap-4 mb-8  mx-auto">
+        <section className="mx-auto px-4 md:px-32 py-10 bg-primary min-h-screen">
+            <div className="flex items-center gap-4 mb-8 mx-auto">
                
-                <button className="flex items-center gap-2 px-3 md:px-6 py-3 bg-primary border-2 border-gray-800 rounded-xl">
+                <button 
+                    onClick={() => setIsFilterOpen(true)}
+                    className="flex items-center gap-2 px-3 md:px-6 py-3 bg-primary border-2 border-gray-800 rounded-xl hover:bg-gray-100 transition-colors"
+                >
                 <Image src="/icons/filter.svg" alt="Filter Icon" width={20} height={20} />
                     <span className="font-semibold hidden md:block">Filter</span>
                 </button>
@@ -67,29 +77,47 @@ export function VotesList() {
                 </div>
             </div>
 
+            {searchQuery && (
+                <div className="">
+                    <p className="text-dark text-lg">
+                        {filteredVotes.length} Result{filteredVotes.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
+                    </p>
+                </div>
+            )}
+
             
-             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6  mx-auto">
                 {filteredVotes.length > 0 ? (
                     filteredVotes.map((vote) => (
                         <VoteCard key={vote.id} vote={vote} />
                     ))
                 ) : (
-                    <div className="col-span-full text-center py-12">
-                        <p className="text-gray-500 text-lg">No projects found matching your search.</p>
+                    <div className="col-span-full flex flex-col items-center justify-center py-20">
+                        <Image src="/images/notfound.svg" alt="No results found" width={200} height={200} className="mb-6 opacity-60" />
+                        <h3 className="text-2xl font-semibold mb-2">No Result Found</h3>
+
                     </div>
                 )}
              </div>
 
 
-           <div className="text-center mt-12">
-                <button className="inline-flex items-center justify-center gap-2 text-lg font-semibold group">
-                    Load More
-                    <svg className="w-5 h-5 translate-y-1 transition-transform group-hover:translate-y-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 2l-7 7-7-7" />
-                    </svg>
-                </button>
-            </div>
+           {filteredVotes.length > 0 && (
+               <div className="text-center mt-12">
+                    <button className="inline-flex items-center justify-center gap-2 text-lg font-semibold group">
+                        Load More
+                        <svg className="w-5 h-5 translate-y-1 transition-transform group-hover:translate-y-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 2l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+           )}
+
+           <VotesFilter 
+                isOpen={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                onApplyFilters={handleApplyFilters}
+           />
         </section>
     );
 }
