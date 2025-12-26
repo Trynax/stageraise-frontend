@@ -57,7 +57,7 @@ export function HeroSection() {
                         Create Project
                     </Link>
                     <Link 
-                        href="/create"
+                        href="/projects"
                         className="px-4 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
                     >
                         Fund project

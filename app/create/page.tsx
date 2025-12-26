@@ -10,9 +10,10 @@ import ProjectDetailsStep from "@/components/create/ProjectDetailsStep"
 import MediaStep from "@/components/create/MediaStep"
 import ReviewStep from "@/components/create/ReviewStep"
 import SuccessStep from "@/components/create/SuccessStep"
+import MilestoneStep from "@/components/create/milestoneStep"
 
 export default function CreateProjectPage() {
-    const [currentStep, setCurrentStep] = useState(1)
+    const [currentStep, setCurrentStep] = useState(3)
     const [formData, setFormData] = useState({
         projectType: '',
         projectName: '',
@@ -37,7 +38,7 @@ export default function CreateProjectPage() {
         setFormData(prev => ({ ...prev, ...data }))
     }
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 5))
+    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 6))
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1))
 
     return (
@@ -62,7 +63,7 @@ export default function CreateProjectPage() {
                     />
                 )}
                 {currentStep === 3 && (
-                    <MediaStep 
+                    <MilestoneStep 
                         formData={formData} 
                         updateFormData={updateFormData} 
                         nextStep={nextStep}
@@ -71,6 +72,15 @@ export default function CreateProjectPage() {
                     />
                 )}
                 {currentStep === 4 && (
+                    <MediaStep 
+                        formData={formData} 
+                        updateFormData={updateFormData} 
+                        nextStep={nextStep}
+                        prevStep={prevStep}
+                        currentStep={currentStep}
+                    />
+                )}
+                {currentStep === 5 && (
                     <ReviewStep 
                         formData={formData} 
                         nextStep={nextStep}
@@ -78,7 +88,7 @@ export default function CreateProjectPage() {
                         currentStep={currentStep}
                     />
                 )}
-                {currentStep === 5 && <SuccessStep />}
+                {currentStep === 6 && <SuccessStep />}
             </div>
             <Footer />
         </>
