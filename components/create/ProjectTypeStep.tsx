@@ -35,7 +35,7 @@ export default function ProjectTypeStep({ formData, updateFormData, nextStep, cu
                         <p className="text-gray-600">Select the type of project you want to create</p>
                     </div>
                     <div className="flex flex-col items-center gap-2">
-                        <span className="text-lg font-semibold self-end">{currentStep}/4</span>
+                        <span className="text-lg font-semibold self-end">{currentStep}/5</span>
                         <button
                             onClick={handleContinue}
                             disabled={!selectedType}

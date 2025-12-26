@@ -30,7 +30,7 @@ export default function ProjectDetailsStep({ formData, updateFormData, nextStep,
                             <p className="text-gray-600">Explain what you're building, how much you need, and how you'll deliver.</p>
                         </div>
                         <div className="flex flex-col items-center gap-2">
-                            <span className="text-lg font-semibold self-end">{currentStep}/4</span>
+                            <span className="text-lg font-semibold self-end">{currentStep}/5</span>
                             <div className="flex gap-2">
                                 <button
                                     type="button"

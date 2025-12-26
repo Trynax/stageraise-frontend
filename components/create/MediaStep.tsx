@@ -47,7 +47,7 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
                             <p className="text-gray-600">Using a bright and clear photo helps people connect to your fundraiser right away.</p>
                         </div>
                         <div className="flex flex-col items-center gap-2">
-                            <span className="text-lg font-semibold self-end">{currentStep}/4</span>
+                            <span className="text-lg font-semibold self-end">{currentStep}/5</span>
                             <div className="flex gap-2">
                                 <button
                                     type="button"
