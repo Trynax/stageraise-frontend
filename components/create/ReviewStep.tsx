@@ -338,7 +338,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
             {editModal.isOpen && (
                 <>
                     <div className="fixed inset-0 bg-dark/50 z-40" onClick={closeEditModal} />
-                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-full max-w-md z-50 max-h-[90vh] overflow-y-auto">
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-[calc(100%-2rem)] max-w-md z-50 max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">
                                 {editModal.field === 'projectName' && 'Edit title'}
