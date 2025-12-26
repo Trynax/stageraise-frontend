@@ -124,32 +124,35 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
 
             <div className="px-4 md:px-32 py-12">
                 <div>
-                    <div className="hidden md:flex justify-between items-start mb-20">
-                        <div>
-                            <h2 className="text-3xl font-bold mb-2">Milestone Details</h2>
-                            <p className="text-gray-600">Explain what you're building, how much you need, and how you'll deliver.</p>
-                        </div>
-                        <div className="flex flex-col items-center gap-2">
-                            <span className="text-lg font-semibold self-end">{currentStep}/5</span>
-                            <div className="flex gap-2">
-                                <button
-                                    type="button"
-                                    onClick={prevStep}
-                                    className="px-6 py-2 border-2 border-dark rounded-xl font-semibold hover:bg-gray-100 transition-colors"
-                                >
-                                    <Image src="/icons/back.svg" alt="Back" width={24} height={24} />
-                                </button>
-                                <button
-                                    onClick={nextStep}
-                                    className="px-6 py-2 rounded-xl font-semibold transition-all bg-deepGreen text-secondary hover:bg-deepGreen/80"
-                                >
-                                    Continue
-                                </button>
+                    <div className="hidden md:block sticky top-16 z-30 bg-primary -mx-4 md:-mx-32 px-4 md:px-32 mb-20">
+                        <div className="flex justify-between items-start py-6">
+                            <div>
+                                <h2 className="text-3xl font-bold mb-2">Milestone Details</h2>
+                                <p className="text-gray-600">Explain what you're building, how much you need, and how you'll deliver.</p>
+                            </div>
+                            <div className="flex flex-col items-center gap-2">
+                                <span className="text-lg font-semibold self-end">{currentStep}/5</span>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={prevStep}
+                                        className="px-6 py-2 border-2 border-dark rounded-xl font-semibold hover:bg-gray-100 transition-colors"
+                                    >
+                                        <Image src="/icons/back.svg" alt="Back" width={24} height={24} />
+                                    </button>
+                                    <button
+                                        onClick={nextStep}
+                                        className="px-6 py-2 rounded-xl font-semibold transition-all bg-deepGreen text-secondary hover:bg-deepGreen/80"
+                                    >
+                                        Continue
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <div className="border-t-2 border-dark -mx-4 md:-mx-32"></div>
+                </div>
 
-                    <div className="flex flex-col md:hidden justify-between items-start gap-4 mb-10">
+                    <div className="flex flex-col md:hidden sticky top-16 z-30 bg-primary py-4 -mx-4 px-4 justify-between items-start gap-4 mb-10">
                         <div className="flex justify-between items-center w-full">
                             <h2 className="text-3xl font-bold">Milestone Details</h2>
                             <span className="text-lg">{currentStep}/5</span>
@@ -171,10 +174,7 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
                             >
                                 Continue
                             </button>
-                        </div>
-                    </div>
-
-                    <div className="absolute hidden top-74 lg:block right-0 left-0 h-0.5 bg-dark"></div>
+                        </div>                        <div className="border-t-2 border-dark -mx-4"></div>                    </div>
 
                     <div className="space-y-6">
                         {milestones.map((milestone, index) => (
