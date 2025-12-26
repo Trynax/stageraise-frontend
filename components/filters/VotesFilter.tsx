@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 
 interface VotesFilterProps {
@@ -19,6 +19,17 @@ export interface VotesFilterState {
 }
 
 export default function VotesFilter({ isOpen, onClose, onApplyFilters }: VotesFilterProps) {
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     const formatValue = (value: number): string => {
         if (value >= 1_000_000_000_000) {
             return `$${(value / 1_000_000_000_000).toFixed(1)}t`;

@@ -53,7 +53,7 @@ export default function ProjectDetailsStep({ formData, updateFormData, nextStep,
                     <div className="flex flex-col md:hidden justify-between items-start gap-4 mb-10">
                         <div className="flex justify-between items-center w-full">
                             <h2 className="text-3xl font-bold">Project Details</h2>
-                            <span className="text-lg">{currentStep}/4</span>
+                            <span className="text-lg">{currentStep}/5</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                             <p className="text-gray-600">Explain what you're building, how much you need, and how you'll deliver.</p>    

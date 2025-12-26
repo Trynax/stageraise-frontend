@@ -3,7 +3,7 @@
 import { ButtonConnect} from "./connect-button"
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAccount, useDisconnect } from "wagmi"
 
 export function Header() {
@@ -14,6 +14,17 @@ export function Header() {
     const formatAddress = (addr: string) => {
         return `${addr.slice(0, 6)}......${addr.slice(-4)}`;
     };
+
+    useEffect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [mobileMenuOpen]);
 
     return (
         <>

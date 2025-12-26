@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 interface ProjectFilterProps {
@@ -20,6 +20,17 @@ export interface FilterState {
 }
 
 export default function ProjectFilter({ isOpen, onClose, onApplyFilters }: ProjectFilterProps) {
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     // Helper function to format large numbers with k, m, b, t suffixes
     const formatValue = (value: number): string => {
         if (value >= 1_000_000_000_000) {

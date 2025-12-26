@@ -69,7 +69,7 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
                     <div className="flex flex-col md:hidden justify-between items-start gap-4 mb-10">
                         <div className="flex justify-between items-center w-full">
                             <h2 className="text-3xl font-bold">Media</h2>
-                            <span className="text-lg">{currentStep}/4</span>
+                            <span className="text-lg">{currentStep}/5</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                             <p className="text-gray-600">Using a bright and clear photo helps people connect to your fundraiser right away.</p>    
