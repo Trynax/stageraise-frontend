@@ -13,7 +13,7 @@ import SuccessStep from "@/components/create/SuccessStep"
 import MilestoneStep from "@/components/create/milestoneStep"
 
 export default function CreateProjectPage() {
-    const [currentStep, setCurrentStep] = useState(1)
+    const [currentStep, setCurrentStep] = useState(5)
     const [formData, setFormData] = useState({
         projectType: '',
         projectName: '',
@@ -82,7 +82,8 @@ export default function CreateProjectPage() {
                 )}
                 {currentStep === 5 && (
                     <ReviewStep 
-                        formData={formData} 
+                        formData={formData}
+                        updateFormData={updateFormData}
                         nextStep={nextStep}
                         prevStep={prevStep}
                         currentStep={currentStep}
