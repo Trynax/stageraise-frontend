@@ -1,0 +1,169 @@
+// Prisma Schema for StageRaise
+// Backend database for off-chain metadata
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Main project metadata
+model Project {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // On-chain linkage
+  projectId       Int    @unique  // Contract project ID
+  contractAddress String
+  chainId         Int
+  ownerAddress    String
+
+  // OFF-CHAIN METADATA ONLY (not on contract)
+  tagline     String
+  category    String[]  // ["DeFi", "NFT", "Gaming"]
+  detailedDescription String  @db.Text
+  
+  // Media (IPFS references)
+  coverImageCID String?
+  coverImageUrl String?
+  logoUrl       String?
+  additionalImages Json?  // Array of {cid, url}
+  
+  // Social links
+  website  String?
+  twitter  String?
+  discord  String?
+  telegram String?
+  
+  // OPTIONAL: Cached blockchain data for performance (NOT source of truth)
+  // Always verify critical data from contract
+  cachedRaisedAmount      String? // Cache only for listing performance
+  cachedTotalContributors Int?    // Cache only for listing performance
+  cachedIsActive          Boolean? @default(true)
+  
+  // Sync tracking
+  lastSyncedBlock BigInt?
+  lastActivityAt  DateTime @default(now())
+  
+  // Relations
+  milestones   Milestone[]
+  contributions Contribution[]
+  votes        Vote[]
+  updates      ProjectUpdate[]
+
+  @@index([chainId, projectId])
+  @@index([ownerAddress])
+}
+
+// Milestone details (supplement on-chain voting data)
+model Milestone {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  stage Int  // 1, 2, 3...
+  
+  // OFF-CHAIN METADATA (not on contract)
+  title         String
+  description   String  @db.Text
+  deliverables  Json    // Array of deliverable items
+  
+  // Proof of work (IPFS documents)
+  proofDocuments Json?  // [{cid, url, filename, uploadedAt}]
+  
+  @@unique([projectId, stage])
+  @@index([projectId])
+}
+
+// Event log cache (for activity feeds, NOT source of truth)
+// Always verify amounts from contract for critical operations
+model Contribution {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  contributor String  // Wallet address
+  
+  // Blockchain reference (for activity history only)
+  transactionHash String @unique
+  blockNumber     BigInt
+  chainId         Int
+  timestamp       DateTime @default(now())
+  
+  @@index([projectId])
+  @@index([contributor])
+  @@index([blockNumber])
+}
+
+// Event log cache (for activity feeds, NOT source of truth)
+// Always verify voting results from contract
+model Vote {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  voter         String   // Wallet address
+  milestoneStage Int
+  voteYes       Boolean
+  
+  // Blockchain reference
+  transactionHash String @unique
+  blockNumber     BigInt
+  timestamp       DateTime @default(now())
+  
+  @@unique([projectId, milestoneStage, voter])
+  @@index([projectId])
+  @@index([voter])
+}
+
+// Project updates/announcements by owner
+model ProjectUpdate {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  title   String
+  content String @db.Text
+  author  String  // Owner address
+  
+  // Optional media
+  images Json?
+  
+  @@index([projectId])
+}
+
+// User profiles (optional, for enhanced features)
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  address   String @unique  // Wallet address
+  
+  // Profile data
+  displayName String?
+  bio         String?
+  avatar      String?  // IPFS URL
+  email       String?  // For notifications
+  
+  // Social
+  twitter  String?
+  discord  String?
+  website  String?
+  
+  // Verification
+  isVerified Boolean @default(false)
+  
+  @@index([address])
+}
