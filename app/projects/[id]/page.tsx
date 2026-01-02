@@ -127,49 +127,49 @@ export default function ProjectDetailPage() {
                             </>
                         )}
                     </div>
-                    <div className="border-3 border-dark px-3 py-2 rounded-xl mt-6 flex gap-8">
-                        <div className="flex gap-2 flex-col flex-[40%]">
-                            <div className="flex gap-2 items-center ">
-                                <div className="flex items-center gap-4">
-                                    <Image src={project.logoUrl || "#"} alt={project.tagline || "Project Logo"} width={40} height={40} className="rounded-full" />
-                                     <h1 className="text-2xl font-bold">{project.tagline}</h1>
+                    <div className="border-3 border-dark px-6 py-4 rounded-xl mt-6 flex gap-8">
+                        <div className="flex gap-3 flex-col flex-[40%]">
+                            <div className="flex gap-3 items-center justify-between w-full">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <Image src={project.logoUrl || "#"} alt={project.tagline || "Project Logo"} width={50} height={50} className="rounded-full flex-shrink-0" />
+                                     <h1 className="text-xl font-bold truncate">{project.tagline}</h1>
                                 </div>
                                
-                                <div className="flex gap-4 border-l pl-4 ">
-                                    <Link href={project.discordUrl || "#"}>
-                                    <Image src="/icons/discord-black.svg" alt="Discord" width={24} height={24} />
+                                <div className="flex gap-3 border-l border-gray-300 pl-3 flex-shrink-0">
+                                    <Link href={project.discordUrl || "#"} className="hover:opacity-70 transition-opacity">
+                                    <Image src="/icons/discord-black.svg" alt="Discord" width={20} height={20} />
                                     </Link>
-                                    <Link href={project.discordUrl || "#"}>
-                                    <Image src="/icons/X-black.svg" alt="Discord" width={24} height={24} />
+                                    <Link href={project.twitterUrl || "#"} className="hover:opacity-70 transition-opacity">
+                                    <Image src="/icons/X-black.svg" alt="Twitter" width={20} height={20} />
                                     </Link>
-                                    <Link href={project.discordUrl || "#"}>
-                                    <Image src="/icons/website-black.svg" alt="Discord" width={24} height={24} />
+                                    <Link href={project.websiteUrl || "#"} className="hover:opacity-70 transition-opacity">
+                                    <Image src="/icons/website-black.svg" alt="Website" width={20} height={20} />
                                     </Link>
-                                    <Link href={project.discordUrl || "#"}>
-                                    <Image src="/icons/share-black.svg" alt="Discord" width={24} height={24} />
+                                    <Link href={project.websiteUrl || "#"} className="hover:opacity-70 transition-opacity">
+                                    <Image src="/icons/share-black.svg" alt="Share" width={20} height={20} />
                                     </Link>
 
                                 </div>
                                 
                             </div>
 
-                            <div className ="flex items-center gap-2">
-                                <div className="flex items-center bg-secondary p-0.5 border border-dark rounded-full">
-                                    <Image src={"/icons/squares.svg"} alt="milestones" width={12} height={12}></Image>
+                            <div className ="flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center bg-secondary px-2 py-1 border border-dark rounded-full">
+                                    <Image src={"/icons/squares.svg"} alt="milestones" width={14} height={14}></Image>
                                     {
                                         project.currentMilestone > 0 ? (
-                                            <span className="ml-2 text-xs font-semibold">{project.currentMilestone}/{project.milestones.length} Milestones</span>
+                                            <span className="ml-2 text-xs font-semibold whitespace-nowrap">{project.currentMilestone}/{project.milestones.length} Milestones</span>
                                         ) : (
-                                            <span className="ml-2 text-xs font-semibold">{project.milestones.length} Milestones</span>
+                                            <span className="ml-2 text-xs font-semibold whitespace-nowrap">{project.milestones.length} Milestones</span>
                                         )
                                     }
                                 </div>
-                                <div className="flex items-center  bg-secondary p-0.5 border border-dark rounded-full">
-                                     <Image src={"/icons/clock.svg"} alt="milestones" width={12} height={12}></Image>
-                                     <span className="ml-2 text-xs font-semibold">Voting Perioid ({project.votingPeriodDays}D)</span>
+                                <div className="flex items-center bg-secondary px-2 py-1 border border-dark rounded-full">
+                                     <Image src={"/icons/clock.svg"} alt="milestones" width={14} height={14}></Image>
+                                     <span className="ml-2 text-xs font-semibold whitespace-nowrap">Voting Period ({project.votingPeriodDays}D)</span>
 
                                 </div>
-                                    <span className="bg-secondary p-0.5 border border-dark rounded-full text-xs font-semibold">Created On {new Date(project.createdAt).toLocaleDateString()}</span>
+                                    <span className="bg-secondary px-2 py-1 border border-dark rounded-full text-xs font-semibold whitespace-nowrap">Created On {new Date(project.createdAt).toLocaleDateString()}</span>
 
                             </div>
 
