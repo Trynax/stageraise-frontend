@@ -6,13 +6,16 @@ import Image from "next/image"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
 import { getTokenByAddress } from "@/lib/constants/tokens"
+import { FundingCard } from "@/components/project/FundingCard"
+import { FundersList } from "@/components/project/FundersList"
+import { MilestoneTab } from "@/components/project/MilestoneTab"
+import { VotingTab } from "@/components/project/VotingTab"
 import Link from "next/link"
 
 export default function ProjectDetailPage() {
     const params = useParams()
     const projectId = params.id
     const [activeTab, setActiveTab] = useState<'about' | 'milestone' | 'voting'>('about')
-    const [fundAmount, setFundAmount] = useState('')
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [project, setProject] = useState<any>(null)
     const [loading, setLoading] = useState(true)
@@ -127,9 +130,9 @@ export default function ProjectDetailPage() {
                             </>
                         )}
                     </div>
-                    <div className="border-3 border-dark px-6 py-4 rounded-xl mt-6 flex gap-8">
+                    <div className="border-2 border-dark px-4 py-2 rounded-xl mt-6 flex gap-8">
                         <div className="flex gap-3 flex-col flex-[40%]">
-                            <div className="flex gap-3 items-center justify-between w-full">
+                            <div className="flex gap-16 items-center w-full">
                                 <div className="flex items-center gap-3 min-w-0">
                                     <Image src={project.logoUrl || "#"} alt={project.tagline || "Project Logo"} width={50} height={50} className="rounded-full flex-shrink-0" />
                                      <h1 className="text-xl font-bold truncate">{project.tagline}</h1>
@@ -200,7 +203,6 @@ export default function ProjectDetailPage() {
 
                     </div>
 
-                    {/* Main Content */}
                     <div className="grid lg:grid-cols-3 gap-6 mt-8">
                       
                         <div className="lg:col-span-2">
@@ -244,7 +246,7 @@ export default function ProjectDetailPage() {
                                 </button>
                             </div>
 
-                            {/* Tab Content */}
+                      
                             {activeTab === 'about' && (
                                 <div className="">
                                     <h2 className="text-sm font-semibold mb-3">Tag line</h2>
@@ -263,174 +265,34 @@ export default function ProjectDetailPage() {
                             )}
 
                             {activeTab === 'milestone' && (
-                                <div className="space-y-4">
-                                    {project.milestones && project.milestones.length > 0 ? (
-                                        project.milestones.map((milestone: any) => (
-                                            <div key={milestone.id} className="bg-white border-2 border-dark rounded-2xl p-6">
-                                                <div className="flex items-start justify-between mb-4">
-                                                    <div>
-                                                        <h3 className="text-xl font-bold mb-2">{milestone.title}</h3>
-                                                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                                                            Stage {milestone.stage}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <p className="text-gray-700 mb-4">
-                                                    {milestone.description}
-                                                </p>
-                                                {milestone.deliverables && (
-                                                    <div className="mb-4">
-                                                        <h4 className="font-semibold mb-2">Deliverables:</h4>
-                                                        <p className="text-gray-700">{milestone.deliverables}</p>
-                                                    </div>
-                                                )}
-                                                {milestone.proofDocuments && milestone.proofDocuments.length > 0 && (
-                                                    <div className="flex gap-2 mb-4">
-                                                        {milestone.proofDocuments.slice(0, 3).map((doc: string, idx: number) => (
-                                                            <div key={idx} className="w-20 h-20 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600" />
-                                                        ))}
-                                                        {milestone.proofDocuments.length > 3 && (
-                                                            <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 font-semibold">
-                                                                +{milestone.proofDocuments.length - 3}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="bg-white border-2 border-dark rounded-2xl p-12 text-center">
-                                            <p className="text-xl font-semibold text-gray-600">No milestones defined</p>
-                                        </div>
-                                    )}
-                                </div>
+                                <MilestoneTab 
+                                    milestones={project.milestones || []} 
+                                    currentMilestone={project.currentMilestone || 0}
+                                    projectTitle={project.tagline}
+                                />
                             )}
 
                             {activeTab === 'voting' && (
-                                <div className="bg-white border-2 border-dark rounded-2xl p-12 text-center">
-                                    <div className="flex justify-center mb-6">
-                                        <div className="text-6xl">📊</div>
-                                    </div>
-                                    <p className="text-xl font-semibold text-gray-600">No voting yet</p>
-                                </div>
+                                <VotingTab />
                             )}
                         </div>
 
                   
                         <div className="space-y-6">
                            
-                            <div className="bg-white border-2 border-dark rounded-2xl p-6">
-                                <h3 className="text-xl font-bold mb-4">Enter Fund amount</h3>
-                                <div className="relative mb-4">
-                                   <Image src={`/icons/${project.symbol}.svg`} alt={project.symbol} width={24} height={24} />
-                                    <input
-                                        type="number"
-                                        value={fundAmount}
-                                        onChange={(e) => setFundAmount(e.target.value)}
-                                        placeholder="Min 5"
-                                        className="w-full pl-14 pr-4 py-4 border-2 border-gray-300 rounded-xl focus:border-secondary focus:outline-none text-lg"
-                                    />
-                                </div>
+                            <FundingCard 
+                                token={token}
+                                fundingTarget={project.fundingTarget}
+                                cachedRaisedAmount={project.cachedRaisedAmount}
+                                amountRaisedPercent={amountRaisedPercent}
+                                minContribution={project.minContribution}
+                                maxContribution={project.maxContribution}
+                            />
 
-                                <div className="grid grid-cols-4 gap-2 mb-4">
-                                    <button 
-                                        onClick={() => setFundAmount('10')}
-                                        className="px-3 py-2 bg-secondary rounded-xl font-semibold whitespace-nowrap hover:bg-secondary/80 transition-all text-sm"
-                                    >
-                                        10{token?.symbol || 'BUSD'}
-                                    </button>
-                                    <button 
-                                        onClick={() => setFundAmount('50')}
-                                        className="px-3 py-2 bg-white border-2 border-dark rounded-xl font-semibold whitespace-nowrap hover:bg-gray-50 transition-all text-sm"
-                                    >
-                                        50 {token?.symbol || 'BUSD'}
-                                    </button>
-                                    <button 
-                                        onClick={() => setFundAmount('100')}
-                                        className="px-3 py-2 bg-white border-2 border-dark rounded-xl font-semibold whitespace-nowrap hover:bg-gray-50 transition-all text-sm"
-                                    >
-                                        100 {token?.symbol || 'BUSD'}
-                                    </button>
-                                    <button 
-                                        onClick={() => setFundAmount('1000')}
-                                        className="px-3 py-2 bg-white border-2 border-dark rounded-xl font-semibold whitespace-nowrap hover:bg-gray-50 transition-all text-sm"
-                                    >
-                                        1000 {token?.symbol || 'BUSD'}
-                                    </button>
-                                </div>
-
-                                <div className="flex gap-2 mb-6">
-                                    <button className="flex-1 py-3 border-2 border-dark rounded-xl font-semibold hover:bg-gray-50 transition-all">
-                                        Share
-                                    </button>
-                                    <button className="flex-[2] py-3 bg-deepGreen text-white rounded-xl font-semibold hover:bg-deepGreen/80 transition-all">
-                                        Fund projector
-                                    </button>
-                                </div>
-
-                                <div className="mb-2">
-                                    <div className="flex justify-between text-sm font-semibold mb-2">
-                                        <span>${project.cachedRaisedAmount?.toLocaleString() || 0} raised</span>
-                                        <span>${project.fundingTarget?.toLocaleString() || 0}</span>
-                                    </div>
-                                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-gradient-to-r from-green-400 to-secondary transition-all"
-                                            style={{ width: `${amountRaisedPercent}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Funders List */}
-                            <div className="bg-white border-2 border-dark rounded-2xl p-6">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg font-bold">Funders ({project.recentContributions?.length || 0})</h3>
-                                    <button className="px-3 py-1 border-2 border-dark rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all flex items-center gap-1">
-                                        New to Old
-                                        <span className="text-xs">▼</span>
-                                    </button>
-                                </div>
-
-                                <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                                    {project.recentContributions && project.recentContributions.length > 0 ? (
-                                        project.recentContributions.map((contribution: any, index: number) => {
-                                            const timeAgo = Math.floor((Date.now() - new Date(contribution.timestamp).getTime()) / (1000 * 60))
-                                            return (
-                                                <div key={index} className="flex items-start justify-between py-3 border-b border-gray-100 last:border-0">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center flex-shrink-0">
-                                                            <span className="text-lg">💰</span>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm text-gray-500 mb-1">Amount</p>
-                                                            <p className="font-bold text-base">50 {token?.symbol || 'BUSD'}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="text-sm text-gray-500 mb-1">{timeAgo} min ago</p>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-sm text-gray-700 font-medium">
-                                                                {contribution.contributor.slice(0, 4)}....{contribution.contributor.slice(-4)}
-                                                            </span>
-                                                            <a 
-                                                                href={`https://testnet.bscscan.com/tx/${contribution.transactionHash}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-all"
-                                                            >
-                                                                <span className="text-xs">👁</span>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )
-                                        })
-                                    ) : (
-                                        <p className="text-center text-gray-500 py-8">No contributions yet</p>
-                                    )}
-                                </div>
-                            </div>
+                            <FundersList 
+                                recentContributions={project.recentContributions || []}
+                                token={token}
+                            />
                         </div>
                     </div>
                 </div>

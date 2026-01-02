@@ -13,21 +13,21 @@ export const SUPPORTED_TOKENS: Token[] = [
     name: 'Binance USD',
     address: '0xaB1a4d4f1D656d2450692D237fdD6C7f9146e814', // BSC Testnet BUSD
     decimals: 18,
-    icon: '/icons/busd.svg'
+    icon: '/icons/BUSD.svg'
   },
   {
     symbol: 'USDT',
     name: 'Tether USD',
     address: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd', // BSC Testnet USDT
     decimals: 18,
-    icon: '/icons/usdt.svg'
+    icon: '/icons/USDT.svg'
   },
   {
     symbol: 'USDC',
     name: 'USD Coin',
     address: '0x64544969ed7EBf5f083679233325356EbE738930', // BSC Testnet USDC
     decimals: 18,
-    icon: '/icons/usdc.svg'
+    icon: '/icons/USDC.svg'
   }
 ]
 

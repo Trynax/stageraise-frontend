@@ -44,62 +44,119 @@ The goal of this phase is to deliver a secure, user-friendly platform connected 
     milestones: [
       {
         id: 1,
-        stage: 0,
-        title: "Land Acquisition & Legal Setup",
-        description: "Secure land rights, complete legal documentation, and establish the project entity. This includes surveying, environmental assessments, and zoning approvals.",
-        deliverables: "Land deed, environmental clearance certificate, zoning approval documents, project registration certificate",
-        proofDocuments: []
+        stage: 1,
+        title: "Apilax - monatic",
+        description: "StageRaise is a decentralized crowdfunding platform that enables creators to raise funds transparently through milestone-based releases and community voting.\n\nThis project focuses on building the first production-ready web application that allows creators to launch projects, funders to vote on milestones, and funds to be released or refunded based on on-chain governance.",
+        deliverables: ["Smart contract deployment", "Web application", "Documentation"],
+        proofDocuments: [
+          { cid: "QmTest1", url: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&q=80", filename: "preview1.jpg" },
+          { cid: "QmTest2", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80", filename: "preview2.jpg" },
+          { cid: "QmTest3", url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&q=80", filename: "preview3.jpg" },
+          { cid: "QmTest4", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80", filename: "preview4.jpg" },
+          { cid: "QmTest5", url: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=400&q=80", filename: "preview5.jpg" },
+          { cid: "QmTest6", url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&q=80", filename: "preview6.jpg" }
+        ]
       },
       {
         id: 2,
-        stage: 1,
-        title: "Infrastructure Development",
-        description: "Build core infrastructure including roads, utilities (water, electricity, sewage), and site preparation for construction.",
-        deliverables: "Completed road network, utility connections, grading and leveling, construction site access",
-        proofDocuments: []
+        stage: 2,
+        title: "Apilax - monatic",
+        description: "StageRaise is a decentralized crowdfunding platform that enables creators to raise funds transparently through milestone-based releases and community voting.\n\nThis project focuses on building the first production-ready web application that allows creators to launch projects, funders to vote on milestones, and funds to be released or refunded based on on-chain governance.",
+        deliverables: ["Backend API", "Database setup", "User authentication"],
+        proofDocuments: [
+          { cid: "QmTest7", url: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&q=80", filename: "preview1.jpg" },
+          { cid: "QmTest8", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80", filename: "preview2.jpg" },
+          { cid: "QmTest9", url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&q=80", filename: "preview3.jpg" },
+          { cid: "QmTest10", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80", filename: "preview4.jpg" }
+        ]
       },
       {
         id: 3,
-        stage: 2,
-        title: "Building Construction Phase 1",
-        description: "Construct the first set of residential units (Foundation to Roof). Includes structural work, electrical, and plumbing installations.",
-        deliverables: "10 completed housing units, structural inspection reports, utility installation certificates",
-        proofDocuments: []
+        stage: 3,
+        title: "Apilax - monatic",
+        description: "StageRaise is a decentralized crowdfunding platform that enables creators to raise funds transparently through milestone-based releases and community voting.\n\nThis project focuses on building the first production-ready web application that allows creators to launch projects, funders to vote on milestones, and funds to be released or refunded based on on-chain governance.",
+        deliverables: ["Testing and QA", "Security audit", "Performance optimization"],
+        proofDocuments: [
+          { cid: "QmTest11", url: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&q=80", filename: "preview1.jpg" },
+          { cid: "QmTest12", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80", filename: "preview2.jpg" },
+          { cid: "QmTest13", url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&q=80", filename: "preview3.jpg" }
+        ]
       },
       {
         id: 4,
-        stage: 3,
-        title: "Finishing & Handover",
-        description: "Complete interior finishing, landscaping, and final inspections. Prepare units for occupancy and handover to buyers.",
-        deliverables: "Fully finished units, occupancy certificates, landscaping completion, buyer handover documentation",
-        proofDocuments: []
+        stage: 4,
+        title: "Apilax - monatic",
+        description: "StageRaise is a decentralized crowdfunding platform that enables creators to raise funds transparently through milestone-based releases and community voting.\n\nThis project focuses on building the first production-ready web application that allows creators to launch projects, funders to vote on milestones, and funds to be released or refunded based on on-chain governance.",
+        deliverables: ["Production deployment", "User onboarding", "Marketing launch"],
+        proofDocuments: [
+          { cid: "QmTest14", url: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&q=80", filename: "preview1.jpg" },
+          { cid: "QmTest15", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80", filename: "preview2.jpg" },
+          { cid: "QmTest16", url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&q=80", filename: "preview3.jpg" },
+          { cid: "QmTest17", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80", filename: "preview4.jpg" },
+          { cid: "QmTest18", url: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=400&q=80", filename: "preview5.jpg" }
+        ]
       }
     ],
     recentContributions: [
       {
         contributor: "0x9876543210987654321098765432109876543210",
-        transactionHash: "0xabc123def456...",
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
+        amount: 500,
+        transactionHash: "0xabc123def456789abc123def456789abc123def456789abc123def456789abc12",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
       },
       {
         contributor: "0x1111222233334444555566667777888899990000",
-        transactionHash: "0x123abc456def...",
-        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() // 5 hours ago
+        amount: 50,
+        transactionHash: "0x123abc456def789123abc456def789123abc456def789123abc456def789123a",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
       },
       {
         contributor: "0xaaabbbcccdddeeefffaaabbbcccdddeeefffaa",
-        transactionHash: "0xdef789ghi012...",
-        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString() // 8 hours ago
+        amount: 150,
+        transactionHash: "0xdef789ghi012345def789ghi012345def789ghi012345def789ghi012345def7",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
       },
       {
         contributor: "0x5555666677778888999900001111222233334444",
-        transactionHash: "0x456def789abc...",
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString() // 12 hours ago
+        amount: 75,
+        transactionHash: "0x456def789abc123456def789abc123456def789abc123456def789abc123456d",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
       },
       {
         contributor: "0xffffeeeeddddccccbbbbaaaa9999888877776666",
-        transactionHash: "0x789abc123def...",
-        timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString() // 18 hours ago
+        amount: 200,
+        transactionHash: "0x789abc123def456789abc123def456789abc123def456789abc123def456789a",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
+      },
+      {
+        contributor: "0x2222333344445555666677778888999900001111",
+        amount: 100,
+        transactionHash: "0x321fed654cba987321fed654cba987321fed654cba987321fed654cba9873",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
+      },
+      {
+        contributor: "0xbbbcccdddeeefff000111222333444555666777",
+        amount: 250,
+        transactionHash: "0xaaa111bbb222ccc333ddd444eee555fff666aaa111bbb222ccc333ddd444ee",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
+      },
+      {
+        contributor: "0x7777888899990000111122223333444455556666",
+        amount: 300,
+        transactionHash: "0x999888777666555444333222111000999888777666555444333222111000999",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
+      },
+      {
+        contributor: "0x3333444455556666777788889999000011112222",
+        amount: 125,
+        transactionHash: "0x111222333444555666777888999000111222333444555666777888999000111",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
+      },
+      {
+        contributor: "0x8888999900001111222233334444555566667777",
+        amount: 450,
+        transactionHash: "0x555666777888999000111222333444555666777888999000111222333444555",
+        timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString() // 50 min ago
       }
     ]
   },
@@ -145,7 +202,7 @@ All milestones will be voted on by our community of contributors. Development is
     milestones: [
       {
         id: 5,
-        stage: 0,
+        stage: 1,
         title: "Smart Contract Development",
         description: "Develop and audit core lending protocol smart contracts with multiple security audits.",
         deliverables: "Audited smart contracts, security reports, testnet deployment",
@@ -153,7 +210,7 @@ All milestones will be voted on by our community of contributors. Development is
       },
       {
         id: 6,
-        stage: 1,
+        stage: 2,
         title: "Frontend & Backend Integration",
         description: "Build user interface and backend infrastructure for seamless user experience.",
         deliverables: "Web application, mobile app, API documentation",
@@ -161,7 +218,7 @@ All milestones will be voted on by our community of contributors. Development is
       },
       {
         id: 7,
-        stage: 2,
+        stage: 3,
         title: "Mainnet Launch & Marketing",
         description: "Deploy to mainnet and execute marketing campaign to onboard users.",
         deliverables: "Mainnet deployment, marketing materials, user onboarding",
@@ -221,7 +278,7 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
     milestones: [
       {
         id: 8,
-        stage: 0,
+        stage: 1,
         title: "Smart Contract Development",
         description: "Core marketplace contracts with gas optimization and security audits.",
         deliverables: "Audited contracts, gas optimization reports, testnet deployment",
@@ -229,7 +286,7 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
       },
       {
         id: 9,
-        stage: 1,
+        stage: 2,
         title: "Beta Platform Launch",
         description: "Launch beta version with limited features for community testing.",
         deliverables: "Beta platform, user testing reports, bug fixes",
@@ -237,7 +294,7 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
       },
       {
         id: 10,
-        stage: 2,
+        stage: 3,
         title: "Cross-Chain Integration",
         description: "Enable cross-chain NFT transfers and trading across multiple networks.",
         deliverables: "Cross-chain bridge, multi-network support, integration tests",
@@ -245,7 +302,7 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
       },
       {
         id: 11,
-        stage: 3,
+        stage: 4,
         title: "Full Launch & Marketing",
         description: "Official mainnet launch with comprehensive marketing campaign.",
         deliverables: "Mainnet deployment, marketing campaign, partnership announcements",
@@ -255,7 +312,7 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
     recentContributions: [],
     votingHistory: [
       {
-        stage: 0,
+        stage: 1,
         result: "passed",
         yesVotes: 850,
         noVotes: 40,
@@ -263,7 +320,7 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
         votingEnded: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
-        stage: 1,
+        stage: 2,
         result: "passed",
         yesVotes: 783,
         noVotes: 107,
@@ -327,7 +384,7 @@ We appreciate all contributors who supported this project. Thank you for your pa
     milestones: [
       {
         id: 12,
-        stage: 0,
+        stage: 1,
         title: "Platform Architecture",
         description: "Design and implement core metaverse architecture and infrastructure.",
         deliverables: "Architecture documentation, core infrastructure, scalability tests",
@@ -335,7 +392,7 @@ We appreciate all contributors who supported this project. Thank you for your pa
       },
       {
         id: 13,
-        stage: 1,
+        stage: 2,
         title: "Game Engine Integration",
         description: "Integrate leading game engine and create development tools.",
         deliverables: "Game engine integration, developer SDK, sample games",
@@ -343,7 +400,7 @@ We appreciate all contributors who supported this project. Thank you for your pa
       },
       {
         id: 14,
-        stage: 2,
+        stage: 3,
         title: "Beta Testing",
         description: "Launch beta version for community testing and feedback.",
         deliverables: "Beta platform, testing results, performance metrics",
@@ -353,7 +410,7 @@ We appreciate all contributors who supported this project. Thank you for your pa
     recentContributions: [],
     votingHistory: [
       {
-        stage: 0,
+        stage: 1,
         result: "failed",
         yesVotes: 438,
         noVotes: 812,
@@ -361,7 +418,7 @@ We appreciate all contributors who supported this project. Thank you for your pa
         votingEnded: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
-        stage: 1,
+        stage: 2,
         result: "failed",
         yesVotes: 350,
         noVotes: 900,
@@ -369,7 +426,7 @@ We appreciate all contributors who supported this project. Thank you for your pa
         votingEnded: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
-        stage: 2,
+        stage: 3,
         result: "failed",
         yesVotes: 275,
         noVotes: 975,
