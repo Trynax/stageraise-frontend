@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import { getTokenByAddress, SUPPORTED_TOKENS } from "@/lib/constants/tokens"
 
 interface ReviewStepProps {
     formData: any
@@ -201,6 +202,20 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
 
                 <div className="border-t pt-4">
                     <div className="flex justify-between items-center mb-2">
+                        <p className="font-semibold">Payment Token</p>
+                        <button 
+                            onClick={() => openEditModal('paymentToken', formData.paymentToken)}
+                            className="text-sm border border-dark px-3 py-1 rounded-lg hover:bg-gray-100 flex gap-1 items-center"
+                        >
+                            <span>Edit</span>
+                            <Image src={"/icons/edit.svg"} alt="Edit" width={24} height={24} />
+                        </button>
+                    </div>
+                    <p className="text-sm">{getTokenByAddress(formData.paymentToken)?.symbol || 'Not selected'}</p>
+                </div>
+
+                <div className="border-t pt-4">
+                    <div className="flex justify-between items-center mb-2">
                         <p className="font-semibold">Minimum Contribution per Person</p>
                         <button 
                             onClick={() => openEditModal('minContribution', formData.minContribution)}
@@ -346,6 +361,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                                 {editModal.field === 'tagline' && 'Edit tags'}
                                 {editModal.field === 'description' && 'Edit project description'}
                                 {editModal.field === 'fundraisingTarget' && 'Edit Fundraising Target'}
+                                {editModal.field === 'paymentToken' && 'Select Token Type'}
                                 {editModal.field === 'minContribution' && 'Minimum contribution'}
                                 {editModal.field === 'maxContribution' && 'Maximum contribution'}
                                 {editModal.field === 'numberOfMilestones' && 'Edit Number of Milestones'}
@@ -366,7 +382,25 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                         </div>
 
                         <div className="space-y-4">
-                            {editModal.field === 'coverImage' ? (
+                            {editModal.field === 'paymentToken' ? (
+                                <div className="flex gap-2">
+                                    {SUPPORTED_TOKENS.map((token) => (
+                                        <button
+                                            key={token.symbol}
+                                            type="button"
+                                            onClick={() => setEditModal({ ...editModal, value: token.address })}
+                                            className={`flex-1 px-4 py-3 border-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                                                editModal.value === token.address
+                                                    ? 'border-secondary bg-secondary text-dark'
+                                                    : 'border-gray-300 hover:border-gray-400'
+                                            }`}
+                                        >
+                                            <Image src={`/icons/${token.symbol}.svg`} alt={token.symbol} width={24} height={24} />
+                                            {token.symbol}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : editModal.field === 'coverImage' ? (
                                 <div>
                                     {formData.coverImage && (
                                         <div className="relative mb-4">

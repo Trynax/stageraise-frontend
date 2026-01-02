@@ -13,7 +13,7 @@ import SuccessStep from "@/components/create/SuccessStep"
 import MilestoneStep from "@/components/create/milestoneStep"
 
 export default function CreateProjectPage() {
-    const [currentStep, setCurrentStep] = useState(1)
+    const [currentStep, setCurrentStep] = useState<number>(1)
     const [formData, setFormData] = useState({
         projectType: '',
         projectName: '',
@@ -25,6 +25,7 @@ export default function CreateProjectPage() {
         maxContribution: '',
         numberOfMilestones: '',
         votingPeriod: '',
+        paymentToken: '0xaB1a4d4f1D656d2450692D237fdD6C7f9146e814', // BUSD default
         walletAddress: '',
         website: '',
         twitter: '',

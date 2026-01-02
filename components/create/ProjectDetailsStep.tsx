@@ -1,5 +1,7 @@
 "use client"
 import Image from "next/image"
+import { SUPPORTED_TOKENS } from "@/lib/constants/tokens"
+
 interface ProjectDetailsStepProps {
     formData: any
     updateFormData: (data: any) => void
@@ -11,6 +13,13 @@ interface ProjectDetailsStepProps {
 export default function ProjectDetailsStep({ formData, updateFormData, nextStep, prevStep, currentStep }: ProjectDetailsStepProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        
+        // Validate payment token is selected
+        if (!formData.paymentToken) {
+            alert('Please select a payment token')
+            return
+        }
+        
         nextStep()
     }
 
@@ -191,8 +200,29 @@ export default function ProjectDetailsStep({ formData, updateFormData, nextStep,
                     </div>
                 </div>
 
-                <div>
-                    <label className="block font-semibold mb-2">Project Wallet Address (Optional)</label>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                        <label className="block font-semibold mb-2">Select Token Type</label>
+                        <div className="flex gap-2">
+                            {SUPPORTED_TOKENS.map((token) => (
+                                <button
+                                    key={token.symbol}
+                                    type="button"
+                                    onClick={() => updateFormData({ paymentToken: token.address })}
+                                    className={`flex-1 px-4 py-3 border-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                                        formData.paymentToken === token.address
+                                            ? 'border-secondary bg-secondary text-dark'
+                                            : 'border-gray-300 hover:border-gray-400'
+                                    }`}
+                                >
+                                   <Image src={`/icons/${token.symbol}.svg`} alt={token.symbol} width={24} height={24} />
+                                    {token.symbol}
+                                </button>
+                            ))}
+                    </div>
+                   </div>
+                   <div>
+                     <label className="block font-semibold mb-2">Project Wallet Address (Optional)</label>
                     <input
                         type="text"
                         value={formData.walletAddress}
@@ -200,6 +230,7 @@ export default function ProjectDetailsStep({ formData, updateFormData, nextStep,
                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-secondary focus:outline-none"
                         placeholder="0x0e..."
                     />
+                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
