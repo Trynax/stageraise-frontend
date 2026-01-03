@@ -53,7 +53,7 @@ export function ContributionDetailsCard({
           />
         </svg>
 
-        <div className="absolute top-1/2 gitleft-1/2 -translate-x-1/2 -translate-y-1/2 mt-4 bg-[#3A9E1B] text-white px-4 py-2 rounded-xl border border-dark font-bold text-xl">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-4 bg-[#3A9E1B] text-white px-4 py-2 rounded-xl border border-dark font-bold text-xl">
           {contributionPercentage}%
         </div>
       </div>
