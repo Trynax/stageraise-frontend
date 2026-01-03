@@ -12,6 +12,7 @@ import { MilestoneTab } from "@/components/project/MilestoneTab"
 import { VotingTab } from "@/components/project/VotingTab"
 import { ContributionDetailsCard } from "@/components/project/ContributionDetailsCard"
 import { LiveVotingCard } from "@/components/project/LiveVotingCard"
+import { RefundCard } from "@/components/project/RefundCard"
 import Link from "next/link"
 
 export default function ProjectDetailPage() {
@@ -283,7 +284,7 @@ export default function ProjectDetailPage() {
                         <div className="space-y-6">
                            
                             {/* Show FundingCard if funding is ongoing (currentMilestone === 0) */}
-                            {project.currentMilestone === 0 && (
+                            {project.currentMilestone === 0 && !project.status && (
                                 <FundingCard 
                                     token={token}
                                     fundingTarget={project.fundingTarget}
@@ -294,8 +295,17 @@ export default function ProjectDetailPage() {
                                 />
                             )}
 
-                            {/* Show LiveVotingCard if there's an active voting */}
-                            {project.activeVoting && (
+
+                            {project.status === 'refundable' && (
+                                <RefundCard
+                                    failedAtMilestone={project.currentMilestone}
+                                    refundableAmount={project.userContribution || 0}
+                                    token={token}
+                                />
+                            )}
+
+
+                            {project.activeVoting && !project.status && (
                                 <LiveVotingCard
                                     milestoneStage={project.activeVoting.stage}
                                     milestoneTitle={project.activeVoting.title}
@@ -307,8 +317,7 @@ export default function ProjectDetailPage() {
                                 />
                             )}
 
-                            {/* Show ContributionDetailsCard if funding is completed and no active voting */}
-                            {project.currentMilestone > 0 && !project.activeVoting && (
+                            {project.currentMilestone > 0 && !project.activeVoting && !project.status && (
                                 <ContributionDetailsCard
                                     token={token}
                                     userContribution={project.userContribution || 100}
