@@ -49,9 +49,12 @@ export function FundingCard({
       <h3 className="text-xl font-bold mb-4">Enter Fund amount</h3>
       <div className="relative mb-4">
         {token?.icon && (
-          <span className="absolute left-4 top-1/2 -translate-y-1/2">
-            <Image src={token.icon} alt={token.symbol} width={24} height={24} />
-          </span>
+          <>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2">
+              <Image src={token.icon} alt={token.symbol} width={24} height={24} />
+            </span>
+            <div className="absolute left-[52px] top-1/2 -translate-y-1/2 h-15 w-[1px] bg-dark"></div>
+          </>
         )}
         <input
           type="number"

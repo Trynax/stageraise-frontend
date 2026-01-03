@@ -167,7 +167,10 @@ The goal of this phase is to deliver a secure, user-friendly platform connected 
     projectId: 2,
     tagline: "DeFi Lending Protocol v2.0",
     logoUrl: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=200&h=200&fit=crop&q=80",
-    currentMilestone: 1,    tags: ["DeFi", "Lending", "Finance", "Protocol"],    description: `A next-generation decentralized lending platform that revolutionizes how users borrow and lend crypto assets.
+    currentMilestone: 1,
+    userContribution: 30000,
+    userContributionPercent: 10,
+    tags: ["DeFi", "Lending", "Finance", "Protocol"],    description: `A next-generation decentralized lending platform that revolutionizes how users borrow and lend crypto assets.
 
 Successfully funded with 100% community support! We've reached our funding goal and are now in the development phase.
 
@@ -225,7 +228,38 @@ All milestones will be voted on by our community of contributors. Development is
         proofDocuments: []
       }
     ],
-    recentContributions: []
+    recentContributions: [
+      {
+        contributor: "0x1234567890123456789012345678901234567890",
+        amount: 1000,
+        transactionHash: "0xabc123def456789abc123def456789abc123def456789abc123def456789abc12",
+        timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x2345678901234567890123456789012345678901",
+        amount: 500,
+        transactionHash: "0x123abc456def789123abc456def789123abc456def789123abc456def789123a",
+        timestamp: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x3456789012345678901234567890123456789012",
+        amount: 2000,
+        transactionHash: "0xdef789ghi012345def789ghi012345def789ghi012345def789ghi012345def7",
+        timestamp: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x4567890123456789012345678901234567890123",
+        amount: 750,
+        transactionHash: "0x456def789abc123456def789abc123456def789abc123456def789abc123456d",
+        timestamp: new Date(Date.now() - 27 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x5678901234567890123456789012345678901234",
+        amount: 1500,
+        transactionHash: "0x789abc123def456789abc123def456789abc123def456789abc123def456789a",
+        timestamp: new Date(Date.now() - 26 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ]
   },
 
   // Project 3: Has Past Voting History
@@ -235,6 +269,16 @@ All milestones will be voted on by our community of contributors. Development is
     tagline: "NFT Marketplace - Zero Gas Fees",
     logoUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&h=200&fit=crop&q=80",
     currentMilestone: 2,
+    userContribution: 48000,
+    userContributionPercent: 8,
+    activeVoting: {
+      stage: 3,
+      title: "Cross-Chain Integration",
+      yesVotes: 450,
+      noVotes: 120,
+      votingEndTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000 + 30 * 60 * 1000 + 23 * 1000).toISOString(), // 3d 24h 30m 23s from now
+      userVote: null
+    },
     tags: ["NFT", "Marketplace", "Web3", "Digital Art"],
     description: `The next-generation NFT marketplace with zero gas fees and cross-chain compatibility.
 
@@ -309,7 +353,56 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
         proofDocuments: []
       }
     ],
-    recentContributions: [],
+    recentContributions: [
+      {
+        contributor: "0x9876543210987654321098765432109876543210",
+        amount: 5000,
+        transactionHash: "0xabc123def456789abc123def456789abc123def456789abc123def456789abc12",
+        timestamp: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x8765432109876543210987654321098765432109",
+        amount: 2500,
+        transactionHash: "0x123abc456def789123abc456def789123abc456def789123abc456def789123a",
+        timestamp: new Date(Date.now() - 54 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x7654321098765432109876543210987654321098",
+        amount: 10000,
+        transactionHash: "0xdef789ghi012345def789ghi012345def789ghi012345def789ghi012345def7",
+        timestamp: new Date(Date.now() - 53 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x6543210987654321098765432109876543210987",
+        amount: 1000,
+        transactionHash: "0x456def789abc123456def789abc123456def789abc123456def789abc123456d",
+        timestamp: new Date(Date.now() - 52 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x5432109876543210987654321098765432109876",
+        amount: 7500,
+        transactionHash: "0x789abc123def456789abc123def456789abc123def456789abc123def456789a",
+        timestamp: new Date(Date.now() - 51 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x4321098765432109876543210987654321098765",
+        amount: 3000,
+        transactionHash: "0x321fed654cba987321fed654cba987321fed654cba987321fed654cba9873",
+        timestamp: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x3210987654321098765432109876543210987654",
+        amount: 15000,
+        transactionHash: "0xaaa111bbb222ccc333ddd444eee555fff666aaa111bbb222ccc333ddd444ee",
+        timestamp: new Date(Date.now() - 49 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0x2109876543210987654321098765432109876543",
+        amount: 8000,
+        transactionHash: "0x999888777666555444333222111000999888777666555444333222111000999",
+        timestamp: new Date(Date.now() - 48 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ],
     votingHistory: [
       {
         stage: 1,
@@ -337,6 +430,8 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
     tagline: "Metaverse Gaming Platform",
     logoUrl: "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=200&h=200&fit=crop&q=80",
     currentMilestone: 2,
+    userContribution: 24000,
+    userContributionPercent: 3,
     tags: ["Gaming", "Metaverse", "VR", "Blockchain"],
     description: `An ambitious metaverse gaming platform that was unable to meet community expectations.
 
@@ -407,7 +502,44 @@ We appreciate all contributors who supported this project. Thank you for your pa
         proofDocuments: []
       }
     ],
-    recentContributions: [],
+    recentContributions: [
+      {
+        contributor: "0xaabbccddeeaabbccddeeaabbccddeeaabbccddee",
+        amount: 2500,
+        transactionHash: "0xabc123def456789abc123def456789abc123def456789abc123def456789abc12",
+        timestamp: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0xbbccddeeaabbccddeeaabbccddeeaabbccddeeaa",
+        amount: 5000,
+        transactionHash: "0x123abc456def789123abc456def789123abc456def789123abc456def789123a",
+        timestamp: new Date(Date.now() - 99 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0xccddeeaabbccddeeaabbccddeeaabbccddeeaabb",
+        amount: 10000,
+        transactionHash: "0xdef789ghi012345def789ghi012345def789ghi012345def789ghi012345def7",
+        timestamp: new Date(Date.now() - 98 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0xddeeaabbccddeeaabbccddeeaabbccddeeaabbcc",
+        amount: 1500,
+        transactionHash: "0x456def789abc123456def789abc123456def789abc123456def789abc123456d",
+        timestamp: new Date(Date.now() - 97 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0xeeaabbccddeeaabbccddeeaabbccddeeaabbccdd",
+        amount: 7500,
+        transactionHash: "0x789abc123def456789abc123def456789abc123def456789abc123def456789a",
+        timestamp: new Date(Date.now() - 96 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        contributor: "0xaabbccddeeffaabbccddeeffaabbccddeeffaabb",
+        amount: 3000,
+        transactionHash: "0x321fed654cba987321fed654cba987321fed654cba987321fed654cba9873",
+        timestamp: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ],
     votingHistory: [
       {
         stage: 1,

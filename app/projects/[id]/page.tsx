@@ -10,6 +10,8 @@ import { FundingCard } from "@/components/project/FundingCard"
 import { FundersList } from "@/components/project/FundersList"
 import { MilestoneTab } from "@/components/project/MilestoneTab"
 import { VotingTab } from "@/components/project/VotingTab"
+import { ContributionDetailsCard } from "@/components/project/ContributionDetailsCard"
+import { LiveVotingCard } from "@/components/project/LiveVotingCard"
 import Link from "next/link"
 
 export default function ProjectDetailPage() {
@@ -280,17 +282,47 @@ export default function ProjectDetailPage() {
                   
                         <div className="space-y-6">
                            
-                            <FundingCard 
-                                token={token}
-                                fundingTarget={project.fundingTarget}
-                                cachedRaisedAmount={project.cachedRaisedAmount}
-                                amountRaisedPercent={amountRaisedPercent}
-                                minContribution={project.minContribution}
-                                maxContribution={project.maxContribution}
-                            />
+                            {/* Show FundingCard if funding is ongoing (currentMilestone === 0) */}
+                            {project.currentMilestone === 0 && (
+                                <FundingCard 
+                                    token={token}
+                                    fundingTarget={project.fundingTarget}
+                                    cachedRaisedAmount={project.cachedRaisedAmount}
+                                    amountRaisedPercent={amountRaisedPercent}
+                                    minContribution={project.minContribution}
+                                    maxContribution={project.maxContribution}
+                                />
+                            )}
+
+                            {/* Show LiveVotingCard if there's an active voting */}
+                            {project.activeVoting && (
+                                <LiveVotingCard
+                                    milestoneStage={project.activeVoting.stage}
+                                    milestoneTitle={project.activeVoting.title}
+                                    yesVotes={project.activeVoting.yesVotes || 0}
+                                    noVotes={project.activeVoting.noVotes || 0}
+                                    totalVotes={(project.activeVoting.yesVotes || 0) + (project.activeVoting.noVotes || 0)}
+                                    votingEndTime={new Date(project.activeVoting.votingEndTime)}
+                                    userVote={project.activeVoting.userVote}
+                                />
+                            )}
+
+                            {/* Show ContributionDetailsCard if funding is completed and no active voting */}
+                            {project.currentMilestone > 0 && !project.activeVoting && (
+                                <ContributionDetailsCard
+                                    token={token}
+                                    userContribution={project.userContribution || 100}
+                                    contributionPercentage={project.userContributionPercent || 10}
+                                    currentMilestone={project.currentMilestone}
+                                    totalMilestones={project.milestones?.length || 0}
+                                    cachedRaisedAmount={project.cachedRaisedAmount}
+                                    fundingTarget={project.fundingTarget}
+                                    amountRaisedPercent={amountRaisedPercent}
+                                />
+                            )}
 
                             <FundersList 
-                                recentContributions={project.recentContributions || []}
+                                contributions={project.recentContributions || []}
                                 token={token}
                             />
                         </div>
