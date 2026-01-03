@@ -21,9 +21,10 @@ interface MilestoneTabProps {
   milestones: Milestone[]
   currentMilestone: number
   projectTitle?: string
+  failedVotingCount?: number
 }
 
-export function MilestoneTab({ milestones, currentMilestone, projectTitle }: MilestoneTabProps) {
+export function MilestoneTab({ milestones, currentMilestone, projectTitle, failedVotingCount = 0 }: MilestoneTabProps) {
   if (!milestones || milestones.length === 0) {
     return (
       <div className="bg-white border-2 border-dark rounded-2xl p-12 text-center">
@@ -38,6 +39,10 @@ export function MilestoneTab({ milestones, currentMilestone, projectTitle }: Mil
       return { text: "", color: "bg-[#EAECF0] text-dark border border-dark" }
     }
     
+
+    if (failedVotingCount >= 3 && stage === currentMilestone) {
+      return { text: "Failed", color: "bg-red-100 text-red-700 border border-red-500" }
+    }
 
     if (stage < currentMilestone) {
       return { text: "Completed", color: "bg-[#3A9E1B]/10 text-[#3A9E1B] border border-[#3A9E1B]" }

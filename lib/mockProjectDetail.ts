@@ -429,30 +429,28 @@ Join our growing community of 890 supporters as we build the future of NFT tradi
     projectId: 4,
     tagline: "Metaverse Gaming Platform",
     logoUrl: "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=200&h=200&fit=crop&q=80",
-    currentMilestone: 2,
+    currentMilestone: 4,
     userContribution: 24000,
     userContributionPercent: 3,
     tags: ["Gaming", "Metaverse", "VR", "Blockchain"],
-    description: `An ambitious metaverse gaming platform that was unable to meet community expectations.
+    description: `Building the next generation metaverse gaming platform powered by blockchain technology.
 
-⚠️ REFUNDS NOW AVAILABLE ⚠️
+🎮 Project Overview:
+We're creating an immersive metaverse gaming ecosystem where players can truly own their in-game assets, create custom experiences, and participate in a player-driven economy. Our platform combines cutting-edge VR technology with blockchain infrastructure to deliver unprecedented gaming experiences.
 
-After three consecutive milestone voting failures, this project has been automatically flagged for refunds according to our smart contract governance rules.
+🎯 Key Features:
+• Fully immersive VR environments with realistic physics
+• True digital asset ownership via NFTs
+• Cross-platform compatibility (VR, Desktop, Mobile)
+• Player-created content marketplace
+• Decentralized governance for platform decisions
+• Play-to-earn mechanics with sustainable tokenomics
 
-Voting History:
-✗ Milestone 1: Platform Architecture - Failed (35% YES, 65% NO)
-✗ Milestone 2: Game Engine Integration - Failed (28% YES, 72% NO)
-✗ Milestone 3: Beta Testing - Failed (22% YES, 78% NO)
+💡 What Makes Us Different:
+Unlike traditional gaming platforms, we're building a truly decentralized ecosystem where players have real ownership and control. Our advanced game engine supports unlimited scalability, and our economic model ensures long-term sustainability for creators and players alike.
 
-The community has determined that the project did not meet the expected deliverables. All contributors can now claim their full refund directly from the smart contract.
-
-To claim your refund:
-1. Connect your wallet
-2. Click "Claim Refund" button
-3. Confirm the transaction
-4. Funds will be returned to your wallet
-
-We appreciate all contributors who supported this project. Thank you for your participation in our decentralized governance process.`,
+👥 Team:
+Our team consists of veteran game developers from AAA studios, blockchain engineers, and VR specialists with decades of combined experience in gaming and emerging technologies.`,
     category: "Gaming",
     contractAddress: "0xe416F78434D3B068E18bEd48D4a61EeA3526AF68",
     chainId: 97,
@@ -500,6 +498,22 @@ We appreciate all contributors who supported this project. Thank you for your pa
         description: "Launch beta version for community testing and feedback.",
         deliverables: "Beta platform, testing results, performance metrics",
         proofDocuments: []
+      },
+      {
+        id: 15,
+        stage: 4,
+        title: "Marketplace Launch",
+        description: "Launch the NFT marketplace and player trading system.",
+        deliverables: "Live marketplace, trading interface, smart contracts",
+        proofDocuments: []
+      },
+      {
+        id: 16,
+        stage: 5,
+        title: "Full Platform Release",
+        description: "Complete platform launch with all features and marketing push.",
+        deliverables: "Production platform, marketing campaign, community events",
+        proofDocuments: []
       }
     ],
     recentContributions: [
@@ -543,27 +557,35 @@ We appreciate all contributors who supported this project. Thank you for your pa
     votingHistory: [
       {
         stage: 1,
-        result: "failed",
-        yesVotes: 438,
-        noVotes: 812,
+        result: "passed",
+        yesVotes: 892,
+        noVotes: 358,
         totalVoters: 1250,
-        votingEnded: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString()
+        votingEnded: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         stage: 2,
         result: "failed",
-        yesVotes: 350,
-        noVotes: 900,
+        yesVotes: 438,
+        noVotes: 812,
         totalVoters: 1250,
-        votingEnded: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString()
+        votingEnded: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         stage: 3,
         result: "failed",
+        yesVotes: 350,
+        noVotes: 900,
+        totalVoters: 1250,
+        votingEnded: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        stage: 4,
+        result: "failed",
         yesVotes: 275,
         noVotes: 975,
         totalVoters: 1250,
-        votingEnded: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString()
+        votingEnded: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
       }
     ]
   }

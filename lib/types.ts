@@ -28,6 +28,7 @@ export interface Vote {
   funders: number;
   communityVote: boolean;
   refundable: boolean;
+  result?: 'passed' | 'failed' | 'ongoing';
   startDate: string;
   endDate: string;
   status: 'ongoing' | 'ended';

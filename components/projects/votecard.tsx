@@ -63,8 +63,13 @@ export default function VoteCard({ vote }: VoteCardProps) {
         {/* Milestone and Status */}
         <div className="flex justify-between items-center mb-3">
           <span className="font-bold text-base">Milestone {vote.milestone} Vote</span>
-          <span className="text-[#F97316] font-semibold text-sm">
-            {vote.status === 'ongoing' ? 'Ongoing' : 'Ended'}
+          <span className={`font-semibold text-sm ${
+            vote.result === 'ongoing' ? 'text-[#F97316]' :
+            vote.result === 'passed' ? 'text-green-600' :
+            vote.result === 'failed' ? 'text-red-600' :
+            vote.status === 'ongoing' ? 'text-[#F97316]' : 'text-gray-600'
+          }`}>
+            {vote.result === 'ongoing' || vote.status === 'ongoing' ? 'Ongoing' : 'Ended'}
           </span>
         </div>
 
@@ -148,18 +153,46 @@ export default function VoteCard({ vote }: VoteCardProps) {
           )}
         </div>
 
-        {/* Countdown */}
-        <div className="text-center mb-4 mt-auto">
-          <p className="text-gray-600 text-xs mb-1">Vote Ends In</p>
-          <p className="text-base font-semibold">
-            {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
-          </p>
-        </div>
+        {/* Status Messages */}
+        {vote.result === 'passed' && vote.status === 'ended' && (
+          <div className="bg-white border-2 border-dark rounded-xl p-3 mb-4">
+            <p className="text-sm font-semibold mb-1">Vote Ended</p>
+            <p className="text-xs text-gray-700">
+              This milestone met the required approval threshold. Funds have been released and project progression continues.
+            </p>
+          </div>
+        )}
 
-        {/* Vote Button */}
-        <button className="w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102">
-          Vote now
-        </button>
+        {vote.result === 'failed' && vote.status === 'ended' && (
+          <div className="bg-white border-2 border-dark rounded-xl p-3 mb-4">
+            <p className="text-sm font-semibold mb-1">Vote Ended</p>
+            <p className="text-xs text-gray-700">
+              {vote.refundable 
+                ? "After three consecutive failed attempts, the project has been marked as failed. Funders can now manually claim their proportional refunds."
+                : "This milestone did not meet the required approval threshold. The creator may resubmit for another vote."
+              }
+            </p>
+          </div>
+        )}
+
+        {/* Countdown or Vote Button */}
+        {vote.result === 'ongoing' || vote.status === 'ongoing' ? (
+          <>
+            <div className="text-center mb-4 mt-auto">
+              <p className="text-gray-600 text-xs mb-1">Vote Ends In</p>
+              <p className="text-base font-semibold">
+                {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
+              </p>
+            </div>
+            <button className="w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102">
+              Vote now
+            </button>
+          </>
+        ) : (
+          <button className="w-full bg-white font-semibold text-dark text-base py-3 rounded-2xl transition-all border-2 border-dark hover:bg-gray-50 mt-auto">
+            View details
+          </button>
+        )}
       </div>
     </div>
   );

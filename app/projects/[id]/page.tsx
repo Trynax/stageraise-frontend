@@ -272,11 +272,21 @@ export default function ProjectDetailPage() {
                                     milestones={project.milestones || []} 
                                     currentMilestone={project.currentMilestone || 0}
                                     projectTitle={project.tagline}
+                                    failedVotingCount={project.failedVotingCount || 0}
                                 />
                             )}
 
                             {activeTab === 'voting' && (
-                                <VotingTab />
+                                <VotingTab 
+                                    votingHistory={project.votingHistory || []}
+                                    projectTitle={project.tagline}
+                                    projectImage={project.logoUrl}
+                                    projectDescription={project.description}
+                                    totalMilestones={project.milestones?.length || 0}
+                                    totalFunders={project.cachedTotalContributors || 0}
+                                    failedVotingCount={project.failedVotingCount || 0}
+                                    status={project.status}
+                                />
                             )}
                         </div>
 
