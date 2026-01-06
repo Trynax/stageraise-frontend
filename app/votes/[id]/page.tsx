@@ -149,7 +149,7 @@ export default function VoteDetailPage() {
     : 0
 
   const handleVote = (vote: 'yes' | 'no') => {
-    // TODO: Integrate with smart contract
+  
     setUserVote(vote)
   }
 
@@ -184,7 +184,11 @@ export default function VoteDetailPage() {
                 <div className="px-3 py-4">
                   <div className="flex items-start gap-3">
                   <h3 className="text-xl font-bold mb-2">{voteData.projectTitle}</h3>
-                  <span className="px-2 py-1 bg-[#EAECF0] text-dark border border-dark rounded-full text-sm font-medium whitespace-nowrap">
+                  <span className={`px-2 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
+                    voteData.result === 'passed' ? 'bg-[#3A9E1B]/10 text-[#3A9E1B] border border-[#3A9E1B]' :
+                    voteData.result === 'failed' ? 'bg-red-100 text-red-700 border border-red-500' :
+                    'bg-[#DC6803]/10 text-[#DC6803] border border-[#DC6803]'
+                  }`}>
                     {voteData.milestone.stage}/{voteData.totalMilestones} Milestone {
                       voteData.result === 'passed' ? 'Completed' :
                       voteData.result === 'failed' ? 'Failed' :

@@ -47,7 +47,7 @@ export function MilestoneTab({ milestones, currentMilestone, projectTitle, faile
     if (stage < currentMilestone) {
       return { text: "Completed", color: "bg-[#3A9E1B]/10 text-[#3A9E1B] border border-[#3A9E1B]" }
     } else if (stage === currentMilestone) {
-      return { text: "InProgress", color: "bg-[#DC6803]/10 text-[#DC6803] border border-[#DC6803]" }
+      return { text: "In Progress", color: "bg-[#DC6803]/10 text-[#DC6803] border border-[#DC6803]" }
     }
     return { text: "", color: "bg-[#EAECF0] text-dark border border-dark" }
   }
