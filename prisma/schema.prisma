@@ -23,39 +23,52 @@ model Project {
 
   // OFF-CHAIN METADATA ONLY (not on contract)
   tagline     String
-  category    String[]  // ["DeFi", "NFT", "Gaming"]
-  detailedDescription String  @db.Text
+  category    String  // Single category string
+  tags        String[]  // Array of tags ["DeFi", "NFT", "Gaming"]
+  description String  @db.Text
   
   // Media (IPFS references)
-  coverImageCID String?
   coverImageUrl String?
   logoUrl       String?
-  additionalImages Json?  // Array of {cid, url}
+  galleryImageUrls String[]  // Array of image URLs
   
   // Social links
-  website  String?
-  twitter  String?
-  discord  String?
-  telegram String?
+  websiteUrl  String?
+  twitterUrl  String?
+  discordUrl  String?
+  telegramUrl String?
+  
+  // Project state tracking
+  currentMilestone   Int @default(0)  // 0 = funding phase, 1+ = milestone number
+  failedVotingCount  Int @default(0)  // Track consecutive failures for refund logic
+  status             String? // "active", "refundable", "completed", null for normal
+  
+  // Funding parameters (cached from contract)
+  fundingTarget      Float
+  fundingDeadline    DateTime
+  minContribution    Float
+  maxContribution    Float
+  votingPeriodDays   Int
+  paymentToken       String  // Token address
   
   // OPTIONAL: Cached blockchain data for performance (NOT source of truth)
-  // Always verify critical data from contract
-  cachedRaisedAmount      String? // Cache only for listing performance
+  cachedRaisedAmount      Float? // Cache only for listing performance
   cachedTotalContributors Int?    // Cache only for listing performance
-  cachedIsActive          Boolean? @default(true)
   
   // Sync tracking
   lastSyncedBlock BigInt?
   lastActivityAt  DateTime @default(now())
   
   // Relations
-  milestones   Milestone[]
-  contributions Contribution[]
-  votes        Vote[]
-  updates      ProjectUpdate[]
+  milestones     Milestone[]
+  contributions  Contribution[]
+  votes          Vote[]
+  votingRounds   VotingRound[]  // NEW: Track each voting attempt
+  updates        ProjectUpdate[]
 
   @@index([chainId, projectId])
   @@index([ownerAddress])
+  @@index([status])
 }
 
 // Milestone details (supplement on-chain voting data)
@@ -69,12 +82,13 @@ model Milestone {
   stage Int  // 1, 2, 3...
   
   // OFF-CHAIN METADATA (not on contract)
+  // These are the OBJECTIVES defined at project creation
   title         String
   description   String  @db.Text
-  deliverables  Json    // Array of deliverable items
+  deliverables  Json    // Array of expected deliverable items
   
-  // Proof of work (IPFS documents)
-  proofDocuments Json?  // [{cid, url, filename, uploadedAt}]
+  // NOTE: Proof documents are NOT stored here!
+  // They are uploaded per voting round attempt (see VotingRound.proofDocuments)
   
   @@unique([projectId, stage])
   @@index([projectId])
@@ -90,6 +104,7 @@ model Contribution {
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
   contributor String  // Wallet address
+  amount      Float   // Contribution amount (cached)
   
   // Blockchain reference (for activity history only)
   transactionHash String @unique
@@ -102,6 +117,42 @@ model Contribution {
   @@index([blockNumber])
 }
 
+// NEW: Track each voting round attempt on a milestone
+// Critical for showing voting history and 3-failure refund logic
+model VotingRound {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  milestoneStage Int     // Which milestone is being voted on
+  
+  // Proof of work submitted for THIS voting attempt
+  // Each resubmission can have different/updated proof
+  proofDocuments Json?  // [{cid, url, filename, uploadedAt}]
+  
+  // Voting results
+  result       String   // "passed", "failed", "ongoing"
+  yesVotes     Int      @default(0)
+  noVotes      Int      @default(0)
+  totalVoters  Int      @default(0)
+  
+  // Voting period
+  votingStarted DateTime @default(now())
+  votingEnded   DateTime?  // Null if still ongoing
+  
+  // Track if this is an active vote
+  isActive      Boolean  @default(true)
+  
+  // Relations
+  votes         Vote[]   // Individual votes in this round
+  
+  @@unique([projectId, milestoneStage, votingStarted])  // Allow multiple rounds per milestone
+  @@index([projectId])
+  @@index([isActive])
+}
+
 // Event log cache (for activity feeds, NOT source of truth)
 // Always verify voting results from contract
 model Vote {
@@ -111,18 +162,22 @@ model Vote {
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
-  voter         String   // Wallet address
+  votingRoundId String?
+  votingRound   VotingRound? @relation(fields: [votingRoundId], references: [id], onDelete: Cascade)
+  
+  voter          String   // Wallet address
   milestoneStage Int
-  voteYes       Boolean
+  voteYes        Boolean
   
   // Blockchain reference
   transactionHash String @unique
   blockNumber     BigInt
   timestamp       DateTime @default(now())
   
-  @@unique([projectId, milestoneStage, voter])
+  @@unique([projectId, milestoneStage, voter, votingRoundId])
   @@index([projectId])
   @@index([voter])
+  @@index([votingRoundId])
 }
 
 // Project updates/announcements by owner
