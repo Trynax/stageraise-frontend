@@ -286,6 +286,7 @@ export default function ProjectDetailPage() {
                                     totalFunders={project.cachedTotalContributors || 0}
                                     failedVotingCount={project.failedVotingCount || 0}
                                     status={project.status}
+                                    projectId={project.id}
                                 />
                             )}
                         </div>

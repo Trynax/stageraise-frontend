@@ -21,6 +21,7 @@ interface VotingTabProps {
   totalFunders?: number
   failedVotingCount?: number
   status?: string
+  projectId?: number
 }
 
 export function VotingTab({ 
@@ -31,7 +32,8 @@ export function VotingTab({
   totalMilestones = 4,
   totalFunders = 0,
   failedVotingCount = 0,
-  status
+  status,
+  projectId
 }: VotingTabProps) {
   if (!votingHistory || votingHistory.length === 0) {
     return (
@@ -46,6 +48,7 @@ export function VotingTab({
 
   const votes = [...votingHistory].reverse().map((vote, index) => ({
     id: vote.stage.toString(),
+    projectId,
     title: projectTitle,
     description: projectDescription,
     image: projectImage || 'https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=800&q=80',
@@ -66,7 +69,7 @@ export function VotingTab({
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {votes.map((vote) => (
-        <VoteCard key={vote.id} vote={vote} />
+        <VoteCard key={vote.id} vote={vote} fromPage="project" />
       ))}
     </div>
   )

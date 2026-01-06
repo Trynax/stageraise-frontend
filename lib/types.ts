@@ -17,6 +17,7 @@ export interface Project {
 
 export interface Vote {
   id: string;
+  projectId?: number;
   title: string;
   description: string;
   image: string;

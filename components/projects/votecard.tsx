@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import type { Vote } from '@/lib/types';
 
 interface VoteCardProps {
   vote: Vote;
+  fromPage?: 'project' | 'explore';
 }
 
-export default function VoteCard({ vote }: VoteCardProps) {
+export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -184,14 +186,20 @@ export default function VoteCard({ vote }: VoteCardProps) {
                 {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
               </p>
             </div>
-            <button className="w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102">
+            <Link 
+              href={`/votes/${vote.projectId || 3}-${vote.milestone}?from=${fromPage}`}
+              className="block w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102 text-center"
+            >
               Vote now
-            </button>
+            </Link>
           </>
         ) : (
-          <button className="w-full bg-white font-semibold text-dark text-base py-3 rounded-2xl transition-all border-2 border-dark hover:bg-gray-50 mt-auto">
+          <Link 
+            href={`/votes/${vote.projectId || 3}-${vote.milestone}?from=${fromPage}`}
+            className="block w-full bg-white font-semibold text-dark text-base py-3 rounded-2xl transition-all border-2 border-dark hover:bg-gray-50 mt-auto text-center"
+          >
             View details
-          </button>
+          </Link>
         )}
       </div>
     </div>
