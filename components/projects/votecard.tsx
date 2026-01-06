@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { Vote } from '@/lib/types';
 
 interface VoteCardProps {
-  vote: Vote;
+  vote: Vote | any; // Allow both mock and API formats
   fromPage?: 'project' | 'explore';
 }
 
@@ -17,9 +17,40 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
     seconds: 0
   });
 
+  // Handle both mock data format and API format
+  const projectId = vote.projectId;
+  const milestoneStage = vote.milestone || vote.milestoneStage || vote.stage;
+  const title = vote.title || vote.projectName || 'Untitled Project';
+  const description = vote.description || vote.milestoneTitle || '';
+  const image = vote.image || vote.coverImageUrl || '/placeholder.jpg';
+  const endDate = vote.endDate || vote.votingEndTime;
+  const status = vote.status || (vote.result === 'ongoing' ? 'ongoing' : 'ended');
+  const result = vote.result;
+  
+  // Handle vote counts
+  const yesVotes = vote.yesVotes || 0;
+  const noVotes = vote.noVotes || 0;
+  const totalVotes = vote.totalVotes || (yesVotes + noVotes) || 0;
+  const yesPercentage = vote.yesPercent !== undefined ? vote.yesPercent : (totalVotes > 0 ? Math.round((yesVotes / totalVotes) * 100) : 0);
+  const noPercentage = vote.noPercent !== undefined ? vote.noPercent : (totalVotes > 0 ? Math.round((noVotes / totalVotes) * 100) : 0);
+
+  const milestones = vote.milestones || 0;
+  const funders = vote.funders || 0;
+
   useEffect(() => {
+    // If API provides pre-calculated timeRemaining, use that
+    if (vote.timeRemaining) {
+      setTimeLeft({
+        days: vote.timeRemaining.days,
+        hours: vote.timeRemaining.hours,
+        minutes: vote.timeRemaining.minutes,
+        seconds: 0
+      });
+      return; // Don't start timer if we have static data
+    }
+
     const calculateTimeLeft = () => {
-      const difference = +new Date(vote.endDate) - +new Date();
+      const difference = +new Date(endDate) - +new Date();
       
       if (difference > 0) {
         return {
@@ -39,10 +70,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [vote.endDate]);
-
-  const yesPercentage = vote.totalVotes > 0 ? Math.round((vote.yesVotes / vote.totalVotes) * 100) : 0;
-  const noPercentage = vote.totalVotes > 0 ? Math.round((vote.noVotes / vote.totalVotes) * 100) : 0;
+  }, [endDate, vote.timeRemaining]);
 
   return (
     <div className="p-1">
@@ -50,28 +78,27 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
    
         <div className="flex items-center gap-3 mb-4">
           <img 
-            src={vote.image} 
-            alt={vote.title} 
+            src={image} 
+            alt={title} 
             className="w-16 h-16 object-cover rounded-xl border-2 border-dark"
           />
-          <h2 className="text-2xl font-bold line-clamp-1 flex-1">{vote.title}</h2>
+          <h2 className="text-2xl font-bold line-clamp-1 flex-1">{title}</h2>
         </div>
 
  
         <p className="text-gray-700 mb-4 leading-relaxed line-clamp-2 text-lg font-semibold ">
-          {vote.description}
+          {description}
         </p>
 
         {/* Milestone and Status */}
         <div className="flex justify-between items-center mb-3">
-          <span className="font-bold text-base">Milestone {vote.milestone} Vote</span>
+          <span className="font-bold text-base">Milestone {milestoneStage} Vote</span>
           <span className={`font-semibold text-sm ${
-            vote.result === 'ongoing' ? 'text-[#F97316]' :
-            vote.result === 'passed' ? 'text-green-600' :
-            vote.result === 'failed' ? 'text-red-600' :
-            vote.status === 'ongoing' ? 'text-[#F97316]' : 'text-gray-600'
+            result === 'ongoing' || status === 'ongoing' ? 'text-[#F97316]' :
+            result === 'passed' ? 'text-green-600' :
+            result === 'failed' ? 'text-red-600' : 'text-gray-600'
           }`}>
-            {vote.result === 'ongoing' || vote.status === 'ongoing' ? 'Ongoing' : 'Ended'}
+            {result === 'ongoing' || status === 'ongoing' ? 'Ongoing' : 'Ended'}
           </span>
         </div>
 
@@ -102,15 +129,15 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
         <div className="space-y-1 mb-4 text-sm">
           <div className="flex justify-between">
             <span className="text-green-600 font-semibold">YES Vote</span>
-            <span className="font-bold">{vote.yesVotes}</span>
+            <span className="font-bold">{yesVotes}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-red-600 font-semibold">NO Vote</span>
-            <span className="font-bold">{vote.noVotes}</span>
+            <span className="font-bold">{noVotes}</span>
           </div>
           <div className="flex justify-between border-t pt-1">
             <span className="font-semibold">Total Vote</span>
-            <span className="font-bold">{vote.totalVotes}</span>
+            <span className="font-bold">{totalVotes}</span>
           </div>
         </div>
 
@@ -123,7 +150,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
                 <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
               </svg>
             </div>
-            <span className="font-semibold">{vote.milestone}/{vote.milestones} Step Milestone</span>
+            <span className="font-semibold">{milestoneStage}/{milestones || '?'} Step Milestone</span>
           </div>
           <div className="flex items-center gap-2 text-gray-700">
             <div className="w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center">
@@ -131,7 +158,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
               </svg>
             </div>
-            <span className="font-semibold">{vote.funders} funders</span>
+            <span className="font-semibold">{funders} funders</span>
           </div>
         </div>
 
@@ -156,7 +183,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
         </div>
 
         {/* Status Messages */}
-        {vote.result === 'passed' && vote.status === 'ended' && (
+        {result === 'passed' && status === 'ended' && (
           <div className="bg-white border-2 border-dark rounded-xl p-3 mb-4">
             <p className="text-sm font-semibold mb-1">Vote Ended</p>
             <p className="text-xs text-gray-700">
@@ -165,7 +192,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
           </div>
         )}
 
-        {vote.result === 'failed' && vote.status === 'ended' && (
+        {result === 'failed' && status === 'ended' && (
           <div className="bg-white border-2 border-dark rounded-xl p-3 mb-4">
             <p className="text-sm font-semibold mb-1">Vote Ended</p>
             <p className="text-xs text-gray-700">
@@ -178,7 +205,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
         )}
 
         {/* Countdown or Vote Button */}
-        {vote.result === 'ongoing' || vote.status === 'ongoing' ? (
+        {result === 'ongoing' || status === 'ongoing' ? (
           <>
             <div className="text-center mb-4 mt-auto">
               <p className="text-gray-600 text-xs mb-1">Vote Ends In</p>
@@ -187,7 +214,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
               </p>
             </div>
             <Link 
-              href={`/votes/${vote.projectId || 3}-${vote.milestone}?from=${fromPage}`}
+              href={`/votes/${projectId}-${milestoneStage}?from=${fromPage}`}
               className="block w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102 text-center"
             >
               Vote now
@@ -195,7 +222,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
           </>
         ) : (
           <Link 
-            href={`/votes/${vote.projectId || 3}-${vote.milestone}?from=${fromPage}`}
+            href={`/votes/${projectId}-${milestoneStage}?from=${fromPage}`}
             className="block w-full bg-white font-semibold text-dark text-base py-3 rounded-2xl transition-all border-2 border-dark hover:bg-gray-50 mt-auto text-center"
           >
             View details

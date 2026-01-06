@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import type { Project } from '@/lib/types';
 
 interface ProjectCardProps {
-  project: Project;
+  project: Project | any; // Allow both mock and real project types
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
@@ -15,9 +16,22 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     seconds: 0
   });
 
+  // Handle both mock data format and database format
+  const projectId = project.id || project.projectId;
+  const title = project.title || project.name || 'Untitled Project';
+  const description = project.description || project.detailedDescription || '';
+  const image = project.image || project.coverImageUrl || project.logoUrl || '/placeholder.jpg';
+  const raised = project.raised || parseFloat(project.cachedRaisedAmount || '0');
+  const goal = project.goal || parseFloat(project.targetAmount || '0');
+  const funders = project.funders || project.cachedTotalContributors || 0;
+  const endDate = project.endDate || project.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const status = project.status || (project.cachedIsActive ? 'ongoing' : 'ended');
+  const milestoneCount = project.milestones?.length || project.milestones || 0;
+  const type = project.type || (milestoneCount > 0 ? 'Milestone Based' : 'Regular');
+
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = +new Date(project.endDate) - +new Date();
+      const difference = +new Date(endDate) - +new Date();
       
       if (difference > 0) {
         return {
@@ -37,31 +51,31 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [project.endDate]);
+  }, [endDate]);
 
-  const percentage = (project.raised / project.goal) * 100;
+  const percentage = goal > 0 ? (raised / goal) * 100 : 0;
 
   return (
-    <div className="p-1">
+    <Link href={`/projects/${projectId}`} className="p-1 block">
       <div className="w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-dark p-2 relative hover:scale-102 transition-transform duration-300 flex flex-col">
         <div className="relative">
           <img 
-            src={project.image} 
-            alt={project.title} 
+            src={image} 
+            alt={title} 
             className="w-full h-48 object-cover rounded-2xl"
           />
-          {project.type === 'Milestone Based' && (
+          {type === 'Milestone Based' && (
             <div className="absolute top-18 left-0 bg-linear-to-br from-deepGreen to-deepGreen text-secondary px-18 py-1 transform -rotate-35 origin-top-left -translate-x-10 translate-y-10 shadow-lg">
-              <span className="text-sm font-semibold">{project.type}</span>
+              <span className="text-sm font-semibold">{type}</span>
             </div>
           )}
         </div>
 
         <div className="p-2 flex flex-col flex-grow">
    
-          <h2 className="text-2xl font-bold mb-2 line-clamp-1">{project.title}</h2>
+          <h2 className="text-2xl font-bold mb-2 line-clamp-1">{title}</h2>
           <p className="text-gray-700 mb-4 leading-relaxed line-clamp-2 text-sm">
-            {project.description}
+            {description}
           </p>
 
           <div className="mb-4">
@@ -74,8 +88,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </div>
 
           <div className="flex justify-between items-center mb-4">
-            <span className="text-base font-bold">${project.raised.toLocaleString()} raised</span>
-            <span className="text-base font-semibold text-gray-600">${project.goal.toLocaleString()}</span>
+            <span className="text-base font-bold">${raised.toLocaleString()} raised</span>
+            <span className="text-base font-semibold text-gray-600">${goal.toLocaleString()}</span>
           </div>
 
           <div className="flex justify-between mb-4 text-sm">
@@ -86,7 +100,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                   <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
                 </svg>
               </div>
-              <span className="font-semibold">{project.milestones} Step Milestone</span>
+              <span className="font-semibold">{milestoneCount} Step Milestone</span>
             </div>
             <div className="flex items-center gap-2 text-gray-700">
               <div className="w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center">
@@ -94,7 +108,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                 </svg>
               </div>
-              <span className="font-semibold">{project.funders} funders</span>
+              <span className="font-semibold">{funders} funders</span>
             </div>
           </div>
 
@@ -131,6 +145,6 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

@@ -97,15 +97,16 @@ export async function PATCH(
     const project = await prisma.project.update({
       where: { projectId },
       data: {
-        ...(body.tagline && { tagline: body.tagline }),
+        ...(body.name && { name: body.name }),
         ...(body.category && { category: body.category }),
-        ...(body.detailedDescription && { detailedDescription: body.detailedDescription }),
+        ...(body.tags && { tags: body.tags }),
+        ...(body.description && { description: body.description }),
         ...(body.logoUrl && { logoUrl: body.logoUrl }),
-        ...(body.additionalImages && { additionalImages: body.additionalImages }),
-        ...(body.website && { website: body.website }),
-        ...(body.twitter && { twitter: body.twitter }),
-        ...(body.discord && { discord: body.discord }),
-        ...(body.telegram && { telegram: body.telegram }),
+        ...(body.galleryImageUrls && { galleryImageUrls: body.galleryImageUrls }),
+        ...(body.websiteUrl && { websiteUrl: body.websiteUrl }),
+        ...(body.twitterUrl && { twitterUrl: body.twitterUrl }),
+        ...(body.discordUrl && { discordUrl: body.discordUrl }),
+        ...(body.telegramUrl && { telegramUrl: body.telegramUrl }),
         updatedAt: new Date()
       },
       include: {

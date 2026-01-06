@@ -51,7 +51,7 @@ export default function VoteDetailPage() {
             setVoteData({
               ...vote,
               milestone,
-              projectTitle: project.tagline,
+              projectTitle: project.name,
               projectImage: project.logoUrl,
               projectId: project.id,
               totalMilestones: project.milestones?.length || 0,

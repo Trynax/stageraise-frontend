@@ -1,35 +1,55 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from "next/image";
 import VoteCard from "@/components/projects/votecard";
-import { mockVotes } from '@/lib/mockVoteData';
 import VotesFilter, { VotesFilterState } from '../filters/VotesFilter';
 
 export function VotesList() {
+    const [votes, setVotes] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortOrder, setSortOrder] = useState('new');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [activeFilters, setActiveFilters] = useState<VotesFilterState | null>(null);
 
+    // Fetch active votes from API
+    useEffect(() => {
+        const fetchVotes = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/votes/active');
+                const data = await response.json();
+                if (data.success) {
+                    setVotes(data.activeVotes || []);
+                }
+            } catch (error) {
+                console.error('Error fetching votes:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchVotes();
+    }, []);
+
     const filteredVotes = useMemo(() => {
-        let votes = [...mockVotes];
+        let filtered = [...votes];
 
         if (searchQuery) {
-            votes = votes.filter(vote =>
-                vote.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                vote.description.toLowerCase().includes(searchQuery.toLowerCase())
+            filtered = filtered.filter(vote =>
+                vote.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                vote.description?.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
-        votes.sort((a, b) => {
-            const dateA = new Date(a.startDate).getTime();
-            const dateB = new Date(b.startDate).getTime();
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.votingEndTime || 0).getTime();
+            const dateB = new Date(b.votingEndTime || 0).getTime();
             return sortOrder === 'new' ? dateB - dateA : dateA - dateB;
         });
 
-        return votes;
-    }, [searchQuery, sortOrder]);
+        return filtered;
+    }, [votes, searchQuery, sortOrder]);
 
     const handleApplyFilters = (filters: VotesFilterState) => {
         setActiveFilters(filters);
@@ -85,33 +105,39 @@ export function VotesList() {
                 </div>
             )}
 
-            
-             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6  mx-auto">
-                {filteredVotes.length > 0 ? (
-                    filteredVotes.map((vote) => (
-                        <VoteCard key={vote.id} vote={vote} />
-                    ))
-                ) : (
-                    <div className="col-span-full flex flex-col items-center justify-center py-20">
-                        <Image src="/images/notfound.svg" alt="No results found" width={200} height={200} className="mb-6 opacity-60" />
-                        <h3 className="text-2xl font-semibold mb-2">No Result Found</h3>
-
-                    </div>
-                )}
-             </div>
-
-
-           {filteredVotes.length > 0 && (
-               <div className="text-center mt-12">
-                    <button className="inline-flex items-center justify-center gap-2 text-lg font-semibold group">
-                        Load More
-                        <svg className="w-5 h-5 translate-y-1 transition-transform group-hover:translate-y-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 2l-7 7-7-7" />
-                        </svg>
-                    </button>
+            {loading ? (
+                <div className="mt-12 flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary"></div>
                 </div>
-           )}
+            ) : (
+                <>
+                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6  mx-auto">
+                        {filteredVotes.length > 0 ? (
+                            filteredVotes.map((vote) => (
+                                <VoteCard key={`${vote.projectId}-${vote.milestoneStage}`} vote={vote} fromPage="explore" />
+                            ))
+                        ) : (
+                            <div className="col-span-full flex flex-col items-center justify-center py-20">
+                                <Image src="/images/notfound.svg" alt="No results found" width={200} height={200} className="mb-6 opacity-60" />
+                                <h3 className="text-2xl font-semibold mb-2">No Active Votes</h3>
+                                <p className="text-gray-600">Check back later for new voting sessions</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {filteredVotes.length > 0 && (
+                        <div className="text-center mt-12">
+                            <button className="inline-flex items-center justify-center gap-2 text-lg font-semibold group">
+                                Load More
+                                <svg className="w-5 h-5 translate-y-1 transition-transform group-hover:translate-y-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 2l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
 
            <VotesFilter 
                 isOpen={isFilterOpen}

@@ -17,16 +17,16 @@ export async function GET(request: NextRequest) {
 
     const projects = await prisma.project.findMany({
       where: {
-        ...(category && { category: { has: category } }),
-        ...(status && { cachedIsActive: status === 'active' }),
+        ...(category && { category: category }),
+        ...(status && { status: status }),
         ...(milestoneBased && { 
           milestones: { some: {} } 
         }),
         ...(chainId && { chainId: parseInt(chainId) }),
         ...(search && {
           OR: [
-            { tagline: { contains: search, mode: 'insensitive' } },
-            { detailedDescription: { contains: search, mode: 'insensitive' } }
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } }
           ]
         })
       },
@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.project.count({
       where: {
-        ...(category && { category: { has: category } }),
-        ...(status && { cachedIsActive: status === 'active' }),
+        ...(category && { category: category }),
+        ...(status && { status: status }),
         ...(chainId && { chainId: parseInt(chainId) })
       }
     })
@@ -106,25 +106,30 @@ export async function POST(request: NextRequest) {
         chainId: body.chainId,
         ownerAddress: body.ownerAddress,
 
-        tagline: body.tagline || '',
-        category: body.category || [],
-        detailedDescription: body.detailedDescription || '',
+        name: body.name || '',
+        category: body.category || '',
+        tags: body.tags || [],
+        description: body.description || '',
 
-        coverImageCID: body.coverImageCID,
         coverImageUrl: body.coverImageUrl,
         logoUrl: body.logoUrl,
-        additionalImages: body.additionalImages || [],
+        galleryImageUrls: body.galleryImageUrls || [],
         
-
-        website: body.website,
-        twitter: body.twitter,
-        discord: body.discord,
-        telegram: body.telegram,
+        websiteUrl: body.websiteUrl,
+        twitterUrl: body.twitterUrl,
+        discordUrl: body.discordUrl,
+        telegramUrl: body.telegramUrl,
         
+        fundingTarget: body.fundingTarget || 0,
+        fundingDeadline: body.fundingDeadline ? new Date(body.fundingDeadline) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        minContribution: body.minContribution || 0,
+        maxContribution: body.maxContribution || 0,
+        votingPeriodDays: body.votingPeriodDays || 7,
+        paymentToken: body.paymentToken || '0x0000000000000000000000000000000000000000',
   
-        cachedRaisedAmount: '0',
+        cachedRaisedAmount: 0,
         cachedTotalContributors: 0,
-        cachedIsActive: true,
+        status: 'active',
 
         ...(body.milestones && body.milestones.length > 0 && {
           milestones: {

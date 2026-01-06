@@ -1,24 +1,44 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from "next/image";
 import ProjectCard from '../projects/projectcard';
-import { mockProjects } from '@/lib/mockData';
 import ProjectFilter, { FilterState } from '../filters/ProjectFilter';
 
 export function ProjectList() {
+    const [projects, setProjects] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortOrder, setSortOrder] = useState('new');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
 
+    // Fetch projects from API
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                if (data.success) {
+                    setProjects(data.projects);
+                }
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProjects();
+    }, []);
+
     const filteredProjects = useMemo(() => {
-        let projects = [...mockProjects];
+        let filtered = [...projects];
 
         if (searchQuery) {
-            projects = projects.filter(project =>
-                project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                project.description.toLowerCase().includes(searchQuery.toLowerCase())
+            filtered = filtered.filter(project =>
+                project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                project.description?.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
@@ -26,27 +46,20 @@ export function ProjectList() {
         if (activeFilters) {
             // Project Status filter
             if (activeFilters.projectStatus.length > 0) {
-                projects = projects.filter(project => 
-                    activeFilters.projectStatus.includes(project.status.toLowerCase())
+                filtered = filtered.filter(project => 
+                    activeFilters.projectStatus.includes(project.status?.toLowerCase())
                 );
             }
-
-            // Funding Model filter (you'll need to add this to your Project type)
-            // if (activeFilters.fundingModel.length > 0) {
-            //     projects = projects.filter(project => 
-            //         activeFilters.fundingModel.includes(project.fundingModel)
-            //     );
-            // }
         }
 
-        projects.sort((a, b) => {
-            const dateA = new Date(a.startDate).getTime();
-            const dateB = new Date(b.startDate).getTime();
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
             return sortOrder === 'new' ? dateB - dateA : dateA - dateB;
         });
 
-        return projects;
-    }, [searchQuery, sortOrder, activeFilters]);
+        return filtered;
+    }, [projects, searchQuery, sortOrder, activeFilters]);
 
     const handleApplyFilters = (filters: FilterState) => {
         setActiveFilters(filters);
@@ -103,32 +116,39 @@ export function ProjectList() {
                 </div>
             )}
 
-            
-             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6  mx-auto">
-                {filteredProjects.length > 0 ? (
-                    filteredProjects.map((project) => (
-                        <ProjectCard key={project.id} project={project} />
-                    ))
-                ) : (
-                    <div className="col-span-full flex flex-col items-center justify-center py-20">
-                        <Image src="/images/notfound.svg" alt="No results found" width={200} height={200} className="mb-6 opacity-60" />
-                        <h3 className="text-2xl font-semibold mb-2">No Result Found</h3>
-                    </div>
-                )}
-             </div>
-
-
-           {filteredProjects.length > 0 && (
-               <div className="text-center mt-12">
-                    <button className="inline-flex items-center justify-center gap-2 text-lg font-semibold group">
-                        Load More
-                        <svg className="w-5 h-5 translate-y-1 transition-transform group-hover:translate-y-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 2l-7 7-7-7" />
-                        </svg>
-                    </button>
+            {loading ? (
+                <div className="mt-12 flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary"></div>
                 </div>
-           )}
+            ) : (
+                <>
+                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6  mx-auto">
+                        {filteredProjects.length > 0 ? (
+                            filteredProjects.map((project) => (
+                                <ProjectCard key={project.projectId} project={project} />
+                            ))
+                        ) : (
+                            <div className="col-span-full flex flex-col items-center justify-center py-20">
+                                <Image src="/images/notfound.svg" alt="No results found" width={200} height={200} className="mb-6 opacity-60" />
+                                <h3 className="text-2xl font-semibold mb-2">No Result Found</h3>
+                                <p className="text-gray-600">Try adjusting your search or filters</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {filteredProjects.length > 0 && (
+                        <div className="text-center mt-12">
+                            <button className="inline-flex items-center justify-center gap-2 text-lg font-semibold group">
+                                Load More
+                                <svg className="w-5 h-5 translate-y-1 transition-transform group-hover:translate-y-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 2l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
 
             <ProjectFilter 
                 isOpen={isFilterOpen}

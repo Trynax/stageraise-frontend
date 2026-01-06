@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
           return {
             projectId: project.projectId,
-            projectName: project.tagline,
+            projectName: project.name,
             coverImageUrl: project.coverImageUrl,
             ownerAddress: project.ownerAddress,
             milestoneStage: currentStage,

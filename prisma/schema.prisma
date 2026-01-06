@@ -22,7 +22,7 @@ model Project {
   ownerAddress    String
 
   // OFF-CHAIN METADATA ONLY (not on contract)
-  tagline     String
+  name        String  // Project name (matches contract field)
   category    String  // Single category string
   tags        String[]  // Array of tags ["DeFi", "NFT", "Gaming"]
   description String  @db.Text

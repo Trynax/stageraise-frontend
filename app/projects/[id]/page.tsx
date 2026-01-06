@@ -110,7 +110,7 @@ export default function ProjectDetailPage() {
                         {images.length > 0 && (
                             <Image
                                 src={images[currentImageIndex]}
-                                alt={project.tagline}
+                                alt={project.name}
                                 fill
                                 quality={95}
                                 className="object-fit object-center "
@@ -137,8 +137,8 @@ export default function ProjectDetailPage() {
                         <div className="flex gap-3 flex-col flex-[40%]">
                             <div className="flex gap-16 items-center w-full">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <Image src={project.logoUrl || "#"} alt={project.tagline || "Project Logo"} width={50} height={50} className="rounded-full flex-shrink-0" />
-                                     <h1 className="text-xl font-bold truncate">{project.tagline}</h1>
+                                    <Image src={project.logoUrl || "#"} alt={project.name || "Project Logo"} width={50} height={50} className="rounded-full flex-shrink-0" />
+                                     <h1 className="text-xl font-bold truncate">{project.name}</h1>
                                 </div>
                                
                                 <div className="flex gap-3 border-l border-gray-300 pl-3 flex-shrink-0">
@@ -271,7 +271,7 @@ export default function ProjectDetailPage() {
                                 <MilestoneTab 
                                     milestones={project.milestones || []} 
                                     currentMilestone={project.currentMilestone || 0}
-                                    projectTitle={project.tagline}
+                                    projectTitle={project.name}
                                     failedVotingCount={project.failedVotingCount || 0}
                                 />
                             )}

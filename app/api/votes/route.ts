@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         project: {
           select: {
             projectId: true,
-            tagline: true,
+            name: true,
             coverImageUrl: true,
             ownerAddress: true
           }
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       if (!acc[key]) {
         acc[key] = {
           projectId: vote.project.projectId,
-          projectName: vote.project.tagline,
+          projectName: vote.project.name,
           coverImageUrl: vote.project.coverImageUrl,
           ownerAddress: vote.project.ownerAddress,
           milestoneStage: vote.milestoneStage,
