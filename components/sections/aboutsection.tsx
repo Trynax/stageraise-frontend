@@ -3,8 +3,8 @@ import Link from "next/link";
 
 export function AboutSection() {
   return (
-    <section className=" bg-primary px-8 py-10">
-      <div className="max-w-7xl mx-auto">
+    <section className=" bg-primary py-10">
+      <div className="px-4 sm:px-8 lg:px-32">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-dark">
             Stage Raise is for <span className="text-secondary" style={{ 

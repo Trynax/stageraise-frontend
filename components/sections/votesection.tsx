@@ -31,7 +31,7 @@ export function VoteSection(){
     const filteredVotes = votes;
 
     return (
-        <section className="py-10 px-8 bg-primary">
+        <section className="py-10 bg-primary">
             <h1 className="text-4xl md:text-5xl font-bold text-center">Live Voting Rounds <span className="text-secondary" style={{ 
                             WebkitTextStroke: '2px black',
                             paintOrder: 'stroke fill'
@@ -43,7 +43,7 @@ export function VoteSection(){
                 </div>
             ) : filteredVotes.length > 0 ? (
                 <>
-                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-8 lg:px-32">
                         {filteredVotes.slice(0, 6).map((vote) => (
                             <VoteCard key={`${vote.projectId}-${vote.milestoneStage}`} vote={vote} fromPage="explore" />
                         ))}

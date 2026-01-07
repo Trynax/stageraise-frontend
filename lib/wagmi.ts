@@ -1,7 +1,7 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { http } from 'wagmi';
 import {
   mainnet,
-
   sepolia,
   bsc,
   bscTestnet,
@@ -9,12 +9,14 @@ import {
 
 export const config = getDefaultConfig({
   appName: 'StageRaise',
-  projectId:`${process.env.REOWN_PROJECTID}`,
+  projectId:`${process.env.NEXT_PUBLIC_REOWN_PROJECTID}`,
   chains: [
-    mainnet,
     bsc,
     bscTestnet,
-    sepolia,
   ],
+  transports: {
+    [bscTestnet.id]: http(process.env.NEXT_PUBLIC_BSC_TESTNET_RPC || 'https://bsc-testnet.publicnode.com'),
+    [bsc.id]: http('https://bsc-dataseed.binance.org'),
+  },
   ssr: true, 
 });
