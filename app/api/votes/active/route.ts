@@ -34,25 +34,48 @@ export async function GET(request: NextRequest) {
       },
       take: limit
     })
-
-    // Check voting status for each project
     const activeVotes = await Promise.all(
       projects.map(async (project) => {
         try {
-          const votingStatus: any = await client.readContract({
-            address: CONTRACT_ADDRESS,
-            abi: stageRaiseABI,
-            functionName: 'getVotingStatus',
-            args: [BigInt(project.projectId)]
-          })
+          const projectId = project.projectId
 
-          if (!votingStatus.isVotingOpen) return null
+          // Call individual getter functions from the contract
+          const [isVotingOpen, votingEndTime, yesVotes, noVotes, currentStage] = await Promise.all([
+            client.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: stageRaiseABI,
+              functionName: 'getProjectMileStoneVotingStatus',
+              args: [projectId]
+            }) as Promise<boolean>,
+            client.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: stageRaiseABI,
+              functionName: 'getProjectVotingEndTime',
+              args: [projectId]
+            }) as Promise<bigint>,
+            client.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: stageRaiseABI,
+              functionName: 'getProjectYesVotes',
+              args: [projectId]
+            }) as Promise<bigint>,
+            client.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: stageRaiseABI,
+              functionName: 'getProjectNoVotes',
+              args: [projectId]
+            }) as Promise<bigint>,
+            client.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: stageRaiseABI,
+              functionName: 'getProjectMilestoneStage',
+              args: [projectId]
+            }) as Promise<number>
+          ])
 
-          const currentStage = Number(votingStatus.milestoneStage)
-          const endTime = Number(votingStatus.timeForTheVotingProcessToElapsed)
-          const yesVotes = votingStatus.votesForYes
-          const noVotes = votingStatus.votesForNo
+          if (!isVotingOpen) return null
 
+          const endTime = Number(votingEndTime)
           const total = yesVotes + noVotes
           const yesPercent = total > BigInt(0) ? Number((yesVotes * BigInt(100)) / total) : 0
           const noPercent = total > BigInt(0) ? Number((noVotes * BigInt(100)) / total) : 0

@@ -36,6 +36,39 @@ export function useOpenVoting() {
   }
 }
 
+// With auto-sync
+export function useOpenVotingWithSync() {
+  const openVotingHook = useOpenVoting()
+  
+  const syncVotingOpen = async (projectId: number, chainId: number) => {
+    try {
+      const response = await fetch('/api/sync/voting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          chainId,
+          action: 'open'
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to sync voting open')
+      }
+      
+      return await response.json()
+    } catch (error) {
+      console.error('Error syncing voting:', error)
+      throw error
+    }
+  }
+
+  return {
+    ...openVotingHook,
+    syncVotingOpen
+  }
+}
+
 
 export function useVote() {
   const {
@@ -69,6 +102,38 @@ export function useVote() {
   }
 }
 
+// With auto-sync
+export function useVoteWithSync() {
+  const voteHook = useVote()
+  
+  const syncVote = async (txHash: string, chainId: number) => {
+    try {
+      const response = await fetch('/api/sync/votes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionHash: txHash,
+          chainId
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to sync vote')
+      }
+      
+      return await response.json()
+    } catch (error) {
+      console.error('Error syncing vote:', error)
+      throw error
+    }
+  }
+
+  return {
+    ...voteHook,
+    syncVote
+  }
+}
+
 
 export function useFinalizeVoting() {
   const {
@@ -99,6 +164,39 @@ export function useFinalizeVoting() {
     isConfirming,
     isSuccess,
     error,
+  }
+}
+
+// With auto-sync
+export function useFinalizeVotingWithSync() {
+  const finalizeHook = useFinalizeVoting()
+  
+  const syncFinalize = async (projectId: number, chainId: number) => {
+    try {
+      const response = await fetch('/api/sync/voting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          chainId,
+          action: 'finalize'
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to sync finalize')
+      }
+      
+      return await response.json()
+    } catch (error) {
+      console.error('Error syncing finalize:', error)
+      throw error
+    }
+  }
+
+  return {
+    ...finalizeHook,
+    syncFinalize
   }
 }
 

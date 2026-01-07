@@ -12,7 +12,7 @@ export {
 } from './useProjectData'
 
 // Funding
-export { useFundProject } from './useFundProject'
+export { useFundProject, useFundProjectWithSync } from './useFundProject'
 
 // Token Operations
 export {
@@ -25,8 +25,11 @@ export {
 // Voting
 export {
   useOpenVoting,
+  useOpenVotingWithSync,
   useVote,
+  useVoteWithSync,
   useFinalizeVoting,
+  useFinalizeVotingWithSync,
   useVotingStatus,
   useHasVoted,
   useVotingPower,

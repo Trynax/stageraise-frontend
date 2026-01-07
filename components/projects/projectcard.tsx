@@ -17,7 +17,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   });
 
   // Handle both mock data format and database format
-  const projectId = project.id || project.projectId;
+  // Use projectId (numeric, for contract) for URL routing, not database UUID
+  const projectId = project.projectId || project.id;
   const title = project.title || project.name || 'Untitled Project';
   const description = project.description || project.detailedDescription || '';
   const image = project.image || project.coverImageUrl || project.logoUrl || '/placeholder.jpg';

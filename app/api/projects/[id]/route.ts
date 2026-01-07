@@ -4,44 +4,72 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const projectId = parseInt(params.id)
+    const { id } = await params
     
-    if (isNaN(projectId)) {
-      return NextResponse.json(
-        { error: 'Invalid project ID' },
-        { status: 400 }
-      )
-    }
-
-    const project = await prisma.project.findUnique({
-      where: { projectId },
-      include: {
-        milestones: {
-          orderBy: { stage: 'asc' }
-        },
-        contributions: {
-          orderBy: { createdAt: 'desc' },
-          take: 10 
-        },
-        votes: {
-          orderBy: { createdAt: 'desc' },
-          take: 10 
-        },
-        updates: {
-          orderBy: { createdAt: 'desc' }
-        },
-        _count: {
-          select: {
-            contributions: true,
-            votes: true,
-            updates: true
+    // Try to find by database UUID first, then by numeric projectId
+    let project
+    const numericId = parseInt(id)
+    
+    if (isNaN(numericId)) {
+      // It's a UUID, query by database id
+      project = await prisma.project.findUnique({
+        where: { id },
+        include: {
+          milestones: {
+            orderBy: { stage: 'asc' }
+          },
+          contributions: {
+            orderBy: { createdAt: 'desc' },
+            take: 10 
+          },
+          votes: {
+            orderBy: { createdAt: 'desc' },
+            take: 10 
+          },
+          updates: {
+            orderBy: { createdAt: 'desc' }
+          },
+          _count: {
+            select: {
+              contributions: true,
+              votes: true,
+              updates: true
+            }
           }
         }
-      }
-    })
+      })
+    } else {
+      // It's numeric, query by projectId
+      project = await prisma.project.findUnique({
+        where: { projectId: numericId },
+        include: {
+          milestones: {
+            orderBy: { stage: 'asc' }
+          },
+          contributions: {
+            orderBy: { createdAt: 'desc' },
+            take: 10 
+          },
+          votes: {
+            orderBy: { createdAt: 'desc' },
+            take: 10 
+          },
+          updates: {
+            orderBy: { createdAt: 'desc' }
+          },
+          _count: {
+            select: {
+              contributions: true,
+              votes: true,
+              updates: true
+            }
+          }
+        }
+      })
+    }
 
     if (!project) {
       return NextResponse.json(
@@ -66,22 +94,25 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const projectId = parseInt(params.id)
+    const { id } = await params
     const body = await request.json()
     
-    if (isNaN(projectId)) {
-      return NextResponse.json(
-        { error: 'Invalid project ID' },
-        { status: 400 }
-      )
+    // Check if existing project exists (by UUID or numeric ID)
+    let existing
+    const numericId = parseInt(id)
+    
+    if (isNaN(numericId)) {
+      existing = await prisma.project.findUnique({
+        where: { id }
+      })
+    } else {
+      existing = await prisma.project.findUnique({
+        where: { projectId: numericId }
+      })
     }
-
-    const existing = await prisma.project.findUnique({
-      where: { projectId }
-    })
 
     if (!existing) {
       return NextResponse.json(
@@ -93,9 +124,9 @@ export async function PATCH(
     // TODO: Add owner verification (check wallet signature)
     // For now, anyone can update (fix this with auth)
 
-    // Update only allowed fields
+    // Update only allowed fields - use the database UUID for update
     const project = await prisma.project.update({
-      where: { projectId },
+      where: { id: existing.id },
       data: {
         ...(body.name && { name: body.name }),
         ...(body.category && { category: body.category }),

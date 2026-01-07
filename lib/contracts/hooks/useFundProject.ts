@@ -81,3 +81,35 @@ export function useFundProject() {
     fundError,
   }
 }
+
+// Auto-sync contribution to database after funding success
+export function useFundProjectWithSync() {
+  const fundHook = useFundProject()
+  
+  const syncContribution = async (txHash: string, chainId: number) => {
+    try {
+      const response = await fetch('/api/sync/contributions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionHash: txHash,
+          chainId
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to sync contribution')
+      }
+      
+      return await response.json()
+    } catch (error) {
+      console.error('Error syncing contribution:', error)
+      throw error
+    }
+  }
+
+  return {
+    ...fundHook,
+    syncContribution
+  }
+}

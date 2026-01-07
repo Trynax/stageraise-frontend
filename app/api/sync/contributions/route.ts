@@ -1,0 +1,104 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createPublicClient, http } from 'viem'
+import { bscTestnet } from 'viem/chains'
+import { prisma } from '@/lib/prisma'
+import { getStageRaiseAddress } from '@/lib/contracts/addresses'
+import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
+
+const stageRaiseABI = StageRaiseABI as any
+
+const client = createPublicClient({
+  chain: bscTestnet,
+  transport: http()
+})
+
+// POST /api/sync/contributions - Sync contribution from blockchain after funding
+export async function POST(request: NextRequest) {
+  try {
+    const { transactionHash, chainId } = await request.json()
+
+    if (!transactionHash) {
+      return NextResponse.json(
+        { error: 'Transaction hash is required' },
+        { status: 400 }
+      )
+    }
+
+    // Get transaction receipt
+    const receipt = await client.waitForTransactionReceipt({
+      hash: transactionHash as `0x${string}`
+    })
+
+    // Get transaction to find the funder address
+    const tx = await client.getTransaction({
+      hash: transactionHash as `0x${string}`
+    })
+
+    const funderAddress = tx.from
+    const contractAddress = getStageRaiseAddress(chainId || 97)
+
+    // Parse the input data to get projectId
+    // fundProject(uint32 _projectId, uint96 _amount)
+    const projectIdHex = '0x' + tx.input.slice(10, 74) // Skip 0x + 4 bytes function selector + pad to 32 bytes
+    const projectId = parseInt(projectIdHex, 16)
+
+    // Find the project in database
+    const project = await prisma.project.findUnique({
+      where: { projectId }
+    })
+
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Project not found in database' },
+        { status: 404 }
+      )
+    }
+
+    // Get contributor amount from contract
+    const contributorAmount = await client.readContract({
+      address: contractAddress,
+      abi: stageRaiseABI,
+      functionName: 'getProjectContributorAmount',
+      args: [projectId, funderAddress]
+    }) as bigint
+
+    // Create contribution record
+    const contribution = await prisma.contribution.create({
+      data: {
+        projectId: project.id,
+        contributor: funderAddress.toLowerCase(),
+        amount: Number(contributorAmount) / 1e18,
+        transactionHash,
+        blockNumber: BigInt(tx.blockNumber || 0),
+        chainId: chainId || 97
+      }
+    })
+
+    // Update project cached amounts from contract
+    const projectInfo = await client.readContract({
+      address: contractAddress,
+      abi: stageRaiseABI,
+      functionName: 'getProjectBasicInfo',
+      args: [projectId]
+    }) as any
+
+    await prisma.project.update({
+      where: { id: project.id },
+      data: {
+        cachedRaisedAmount: Number(projectInfo.raisedAmount),
+        cachedTotalContributors: Number(projectInfo.totalContributors)
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      contribution
+    })
+  } catch (error) {
+    console.error('Sync contribution error:', error)
+    return NextResponse.json(
+      { error: 'Failed to sync contribution', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
+  }
+}

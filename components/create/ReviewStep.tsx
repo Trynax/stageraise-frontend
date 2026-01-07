@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { getTokenByAddress, SUPPORTED_TOKENS } from "@/lib/constants/tokens"
+import { useCreateProject } from "@/lib/contracts/hooks"
+import { useAccount, useChainId } from "wagmi"
 
 interface ReviewStepProps {
     formData: any
@@ -13,6 +15,9 @@ interface ReviewStepProps {
 }
 
 export default function ReviewStep({ formData, updateFormData, nextStep, prevStep, currentStep }: ReviewStepProps) {
+    const { address } = useAccount()
+    const chainId = useChainId()
+    const { createProject, isPending, isConfirming, isSuccess, error, hash } = useCreateProject()
     const [editModal, setEditModal] = useState<{
         isOpen: boolean
         field: string
@@ -56,10 +61,55 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
         }
     }
 
-    const handleSubmit = () => {
-        console.log('Submitting project:', formData)
-        nextStep()
+    const handleSubmit = async () => {
+        if (!address) {
+            alert('Please connect your wallet first')
+            return
+        }
+
+        if (!chainId) {
+            alert('Please switch to a supported network')
+            return
+        }
+
+        try {
+            await createProject(formData, chainId)
+        } catch (error) {
+            console.error('Failed to create project:', error)
+            alert('Failed to create project. Please try again.')
+        }
     }
+
+    // When transaction is successful, sync to database and move to success step
+    useEffect(() => {
+        if (isSuccess && hash) {
+            // Sync project to database
+            fetch('/api/projects/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    transactionHash: hash,
+                    chainId 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log('Project synced:', data)
+                nextStep()
+            })
+            .catch(error => {
+                console.error('Failed to sync project:', error)
+                // Still move to success step even if sync fails
+                nextStep()
+            })
+        }
+    }, [isSuccess, hash])
+
+    if (error) {
+        console.error('Transaction error:', error)
+    }
+
+    const isCreating = isPending || isConfirming
 
     return (
         <section className="bg-primary relative">
@@ -89,9 +139,10 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                                     </button>
                                     <button
                                         onClick={handleSubmit}
-                                        className="px-6 py-2 rounded-xl font-semibold transition-all bg-deepGreen text-secondary hover:bg-deepGreen/80"
+                                        disabled={isCreating || !address}
+                                        className="px-6 py-2 rounded-xl font-semibold transition-all bg-deepGreen text-secondary hover:bg-deepGreen/80 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Submit
+                                        {isCreating ? 'Creating...' : 'Submit'}
                                     </button>
                                 </div>
                             </div>
@@ -117,9 +168,10 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                className="flex-1 px-6 py-2 rounded-xl font-semibold transition-all bg-deepGreen text-secondary hover:bg-deepGreen/80"
+                                disabled={isCreating || !address}
+                                className="flex-1 px-6 py-2 rounded-xl font-semibold transition-all bg-deepGreen text-secondary hover:bg-deepGreen/80 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Submit
+                                {isCreating ? 'Creating...' : 'Submit'}
                             </button>
                         </div>
                         <div className="border-t-2 border-dark -mx-4"></div>

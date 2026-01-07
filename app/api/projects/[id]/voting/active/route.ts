@@ -104,7 +104,7 @@ export async function GET(
       isOpen: true,
       voting: {
         projectId,
-        projectName: project.tagline,
+        projectName: project.name,
         milestoneStage: currentStage,
         milestoneTitle: milestone?.title || `Milestone ${currentStage}`,
         milestoneDescription: milestone?.description,
