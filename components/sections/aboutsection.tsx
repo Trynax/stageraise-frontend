@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export function AboutSection() {
   return (
@@ -166,12 +167,18 @@ export function AboutSection() {
         <h1 className=" text-4xl md:text-5xl text-center font-semibold  md:leading-15">The Future of Crowdfunding is <br /> Community-Governed.</h1>
 
          <div className="flex justify-center gap-3 md:gap-6 mb-20">
-                    <button className="px-4 py-3 bg-deepGreen text-white rounded-xl font-semibold text-sm md:text-lg hover:scale-105  transition-transform duration-300 shadow-lg ">
+                    <Link 
+                        href="/create"
+                        className="px-4 py-3 bg-deepGreen text-white rounded-xl font-semibold text-sm md:text-lg hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
+                    >
                         Create Project
-                    </button>
-                    <button className="px-4 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg">
+                    </Link>
+                    <Link 
+                        href="/projects"
+                        className="px-4 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
+                    >
                         Fund project
-                    </button>
+                    </Link>
           </div>
 
       </div>

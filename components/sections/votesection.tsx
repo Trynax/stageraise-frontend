@@ -60,7 +60,7 @@ export function VoteSection(){
                 </>
             ) : (
                 <div className="mt-12 max-w-2xl mx-auto">
-                    <div className="bg-white rounded-3xl border-2 border-dark p-12 text-center shadow-lg">
+                    <div className="bg-primary rounded-3xl p-12 text-center">
                         <div className="mb-6">
                             <svg className="w-24 h-24 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -73,13 +73,13 @@ export function VoteSection(){
                         <div className="flex gap-4 justify-center">
                             <Link 
                                 href="/projects" 
-                                className="inline-block bg-secondary text-dark font-semibold px-6 py-3 rounded-2xl border-2 border-dark hover:scale-105 transition-transform"
+                                className="inline-block bg-secondary text-dark font-semibold px-6 py-3 rounded-2xl hover:scale-105 transition-transform"
                             >
                                 Browse Projects
                             </Link>
                             <Link 
                                 href="/votes" 
-                                className="inline-block bg-white text-dark font-semibold px-6 py-3 rounded-2xl border-2 border-dark hover:bg-gray-50 transition-colors"
+                                className="inline-block bg-white text-dark font-semibold px-6 py-3 rounded-2xl border border-dark hover:bg-gray-50 transition-colors"
                             >
                                 View Past Votes
                             </Link>
