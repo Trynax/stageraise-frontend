@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import type { Project } from '@/lib/types';
 
@@ -23,14 +23,23 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   const description = project.description || project.detailedDescription || '';
   const image = project.image || project.coverImageUrl || project.logoUrl || '/placeholder.jpg';
   const raised = project.raised || parseFloat(project.cachedRaisedAmount || '0');
-  const goal = project.goal || parseFloat(project.targetAmount || '0');
+  const goal = project.goal || project.fundingTarget || parseFloat(project.targetAmount || '0');
   const funders = project.funders || project.cachedTotalContributors || 0;
-  const endDate = project.endDate || project.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  // Memoize endDate to prevent infinite loop - use fundingDeadline from database
+  const endDate = useMemo(() => {
+    return project.endDate || project.fundingDeadline || project.deadline || null;
+  }, [project.endDate, project.fundingDeadline, project.deadline]);
   const status = project.status || (project.cachedIsActive ? 'ongoing' : 'ended');
   const milestoneCount = project.milestones?.length || project.milestones || 0;
   const type = project.type || (milestoneCount > 0 ? 'Milestone Based' : 'Regular');
 
   useEffect(() => {
+    // Don't run timer if no valid endDate
+    if (!endDate) {
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      return;
+    }
+
     const calculateTimeLeft = () => {
       const difference = +new Date(endDate) - +new Date();
       
@@ -45,6 +54,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       return { days: 0, hours: 0, minutes: 0, seconds: 0 };
     };
 
+    // Set initial value
     setTimeLeft(calculateTimeLeft());
 
     const timer = setInterval(() => {

@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     }) as any
 
     // Create project in database
+    // Note: All amounts from contract are in 18 decimals (normalized)
     const project = await prisma.project.create({
       data: {
         projectId,
@@ -59,16 +60,16 @@ export async function POST(request: NextRequest) {
         description: projectInfo.description,
         category: 'Other', // Will be updated via API later
         tags: [],
-        fundingTarget: Number(projectInfo.targetAmount),
+        fundingTarget: Number(projectInfo.targetAmount) / 1e18,
         fundingDeadline: new Date(Number(projectInfo.deadline) * 1000),
-        minContribution: Number(projectInfo.minFunding),
-        maxContribution: Number(projectInfo.maxFunding),
+        minContribution: Number(projectInfo.minFunding) / 1e18,
+        maxContribution: Number(projectInfo.maxFunding) / 1e18,
         votingPeriodDays: 7, // Default, can be updated later
         paymentToken: projectInfo.paymentToken,
         currentMilestone: projectInfo.milestoneBased ? 1 : 0,
         failedVotingCount: 0,
         status: 'active',
-        cachedRaisedAmount: Number(projectInfo.raisedAmount),
+        cachedRaisedAmount: Number(projectInfo.raisedAmount) / 1e18,
         cachedTotalContributors: Number(projectInfo.totalContributors),
         // Create milestones if it's milestone-based
         ...(projectInfo.milestoneBased && projectInfo.milestoneCount > 0 && {

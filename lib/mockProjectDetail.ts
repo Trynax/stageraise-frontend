@@ -20,7 +20,7 @@ The goal of this phase is to deliver a secure, user-friendly platform connected 
     contractAddress: "0xe416F78434D3B068E18bEd48D4a61EeA3526AF68",
     chainId: 97,
     ownerAddress: "0x1234567890123456789012345678901234567890",
-    paymentToken: "0xaB1a4d4f1D656d2450692D237fdD6C7f9146e814", // BUSD
+    paymentToken: "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee", // BUSD
     fundingTarget: 500000,
     fundingDeadline: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days from now
     minContribution: 50,
@@ -455,7 +455,7 @@ Our team consists of veteran game developers from AAA studios, blockchain engine
     contractAddress: "0xe416F78434D3B068E18bEd48D4a61EeA3526AF68",
     chainId: 97,
     ownerAddress: "0x4567890123456789012345678901234567890123",
-    paymentToken: "0xaB1a4d4f1D656d2450692D237fdD6C7f9146e814", // BUSD
+    paymentToken: "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee", // BUSD
     fundingTarget: 800000,
     fundingDeadline: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
     minContribution: 50,

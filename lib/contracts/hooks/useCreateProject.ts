@@ -1,8 +1,8 @@
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { parseUnits } from 'viem'
-import { getStageRaiseAddress, getTokenAddress, TOKEN_DECIMALS } from '../addresses'
+import { getStageRaiseAddress, TOKEN_DECIMALS } from '../addresses'
 import StageRaiseABI from '../StageRaise.abi.json'
-import type { CreateProjectParams, PaymentToken } from '../types'
+import type { CreateProjectParams } from '../types'
 
 const stageRaiseABI = StageRaiseABI as any
 
@@ -16,7 +16,7 @@ interface CreateProjectFormData {
   numberOfMilestones: string
   votingPeriod: string
   projectType: 'milestone' | 'traditional'
-  paymentToken: PaymentToken
+  paymentToken: string // Token address (0x...)
 }
 
 export function useCreateProject() {
@@ -37,9 +37,12 @@ export function useCreateProject() {
     formData: CreateProjectFormData,
     chainId: number
   ) => {
-    const tokenAddress = getTokenAddress(chainId, formData.paymentToken)
-    const decimals = TOKEN_DECIMALS[formData.paymentToken]
-
+    // Payment token is already an address from the form
+    const tokenAddress = formData.paymentToken as `0x${string}`
+    
+    if (!tokenAddress || !tokenAddress.startsWith('0x')) {
+      throw new Error('Invalid payment token address')
+    }
 
     const targetAmount = parseUnits(formData.fundraisingTarget, 18)
     const minFunding = parseUnits(formData.minContribution, 18)

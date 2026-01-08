@@ -5,6 +5,7 @@ import Image from "next/image"
 import { getTokenByAddress, SUPPORTED_TOKENS } from "@/lib/constants/tokens"
 import { useCreateProject } from "@/lib/contracts/hooks"
 import { useAccount, useChainId } from "wagmi"
+import TransactionModal, { TransactionStatus } from "@/components/ui/TransactionModal"
 
 interface ReviewStepProps {
     formData: any
@@ -25,6 +26,10 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
     }>({ isOpen: false, field: '', value: '' })
     const [coverPreview, setCoverPreview] = useState<string | null>(null)
     const [additionalPreviews, setAdditionalPreviews] = useState<string[]>([])
+    
+    // Transaction modal state
+    const [showTxModal, setShowTxModal] = useState(false)
+    const [txStatus, setTxStatus] = useState<TransactionStatus>('pending')
 
     const openEditModal = (field: string, value: any) => {
         setEditModal({ isOpen: true, field, value })
@@ -73,16 +78,28 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
         }
 
         try {
+            setShowTxModal(true)
+            setTxStatus('pending')
             await createProject(formData, chainId)
         } catch (error) {
             console.error('Failed to create project:', error)
-            alert('Failed to create project. Please try again.')
+            setTxStatus('error')
         }
     }
+
+    // Update modal status based on transaction state
+    useEffect(() => {
+        if (isPending) {
+            setTxStatus('pending')
+        } else if (isConfirming && hash) {
+            setTxStatus('confirming')
+        }
+    }, [isPending, isConfirming, hash])
 
     // When transaction is successful, sync to database and move to success step
     useEffect(() => {
         if (isSuccess && hash) {
+            setTxStatus('success')
             // Sync project to database
             fetch('/api/projects/sync', {
                 method: 'POST',
@@ -95,19 +112,30 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
             .then(res => res.json())
             .then(data => {
                 console.log('Project synced:', data)
-                nextStep()
+                // Close modal and move to success step after a delay
+                setTimeout(() => {
+                    setShowTxModal(false)
+                    nextStep()
+                }, 2000)
             })
             .catch(error => {
                 console.error('Failed to sync project:', error)
                 // Still move to success step even if sync fails
-                nextStep()
+                setTimeout(() => {
+                    setShowTxModal(false)
+                    nextStep()
+                }, 2000)
             })
         }
     }, [isSuccess, hash])
 
-    if (error) {
-        console.error('Transaction error:', error)
-    }
+    // Handle transaction errors
+    useEffect(() => {
+        if (error) {
+            console.error('Transaction error:', error)
+            setTxStatus('error')
+        }
+    }, [error])
 
     const isCreating = isPending || isConfirming
 
@@ -557,6 +585,22 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                     </div>
                 </>
             )}
+
+            {/* Transaction Modal */}
+            <TransactionModal
+                isOpen={showTxModal}
+                type="creating"
+                status={txStatus}
+                hash={hash}
+                error={error?.message || (error as any)?.shortMessage}
+                onClose={() => {
+                    setShowTxModal(false)
+                    if (txStatus === 'error') {
+                        setTxStatus('pending')
+                    }
+                }}
+                chainId={chainId}
+            />
         </section>
     )
 }

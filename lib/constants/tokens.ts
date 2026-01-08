@@ -11,7 +11,7 @@ export const SUPPORTED_TOKENS: Token[] = [
   {
     symbol: 'BUSD',
     name: 'Binance USD',
-    address: '0xaB1a4d4f1D656d2450692D237fdD6C7f9146e814', // BSC Testnet BUSD
+    address: '0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee', // BSC Testnet BUSD
     decimals: 18,
     icon: '/icons/BUSD.svg'
   },

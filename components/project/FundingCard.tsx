@@ -1,10 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Token } from "@/lib/constants/tokens"
+import { useFundProjectWithSync } from "@/lib/contracts/hooks"
+import { useAccount, useChainId } from "wagmi"
+import TransactionModal, { TransactionStatus, TransactionType } from "@/components/ui/TransactionModal"
 
 interface FundingCardProps {
+  projectId: number
   token: Token | undefined
   fundingTarget: number
   cachedRaisedAmount: number
@@ -14,6 +18,7 @@ interface FundingCardProps {
 }
 
 export function FundingCard({ 
+  projectId,
   token, 
   fundingTarget, 
   cachedRaisedAmount, 
@@ -22,6 +27,31 @@ export function FundingCard({
   maxContribution
 }: FundingCardProps) {
   const [fundAmount, setFundAmount] = useState('')
+  const { address } = useAccount()
+  const chainId = useChainId()
+  
+  // Transaction modal state
+  const [showTxModal, setShowTxModal] = useState(false)
+  const [txStatus, setTxStatus] = useState<TransactionStatus>('pending')
+  const [txType, setTxType] = useState<TransactionType>('funding')
+  const [currentHash, setCurrentHash] = useState<string | undefined>()
+  const [txError, setTxError] = useState<string | undefined>()
+  
+  const {
+    approveToken,
+    fundProject,
+    isApprovePending,
+    isApproveConfirming,
+    isApproveSuccess,
+    isFundPending,
+    isFundConfirming,
+    isFundSuccess,
+    approveHash,
+    fundHash,
+    approveError,
+    fundError,
+    syncContribution
+  } = useFundProjectWithSync()
 
   const handleAmountChange = (value: string) => {
     const numValue = parseFloat(value)
@@ -36,6 +66,98 @@ export function FundingCard({
     setFundAmount(amount.toString())
   }
 
+  const handleFundProject = async () => {
+    if (!address || !token || !fundAmount) return
+    
+    try {
+      // Step 1: Approve token
+      setShowTxModal(true)
+      setTxType('approve')
+      setTxStatus('pending')
+      setTxError(undefined)
+      
+      await approveToken(token.address as `0x${string}`, fundAmount, token.decimals, chainId)
+    } catch (error: any) {
+      console.error('Approve error:', error)
+      setTxStatus('error')
+      setTxError(error?.message || error?.shortMessage || 'Failed to approve token')
+    }
+  }
+
+  // Handle approve success - proceed to fund
+  useEffect(() => {
+    if (isApproveSuccess && approveHash && token) {
+      setCurrentHash(approveHash)
+      setTxStatus('success')
+      
+      // After short delay, proceed to funding
+      setTimeout(async () => {
+        try {
+          setTxType('funding')
+          setTxStatus('pending')
+          await fundProject(projectId, fundAmount, token.decimals, chainId)
+        } catch (error: any) {
+          console.error('Fund error:', error)
+          setTxStatus('error')
+          setTxError(error?.message || error?.shortMessage || 'Failed to fund project')
+        }
+      }, 1500)
+    }
+  }, [isApproveSuccess, approveHash])
+
+  // Update modal status based on approve state
+  useEffect(() => {
+    if (txType === 'approve') {
+      if (isApprovePending) {
+        setTxStatus('pending')
+      } else if (isApproveConfirming && approveHash) {
+        setTxStatus('confirming')
+        setCurrentHash(approveHash)
+      }
+    }
+  }, [isApprovePending, isApproveConfirming, approveHash, txType])
+
+  // Update modal status based on fund state
+  useEffect(() => {
+    if (txType === 'funding') {
+      if (isFundPending) {
+        setTxStatus('pending')
+      } else if (isFundConfirming && fundHash) {
+        setTxStatus('confirming')
+        setCurrentHash(fundHash)
+      }
+    }
+  }, [isFundPending, isFundConfirming, fundHash, txType])
+
+  // Handle fund success
+  useEffect(() => {
+    if (isFundSuccess && fundHash) {
+      setCurrentHash(fundHash)
+      setTxStatus('success')
+      
+      // Sync to database
+      syncContribution(fundHash, chainId)
+      
+      // Reset form after delay
+      setTimeout(() => {
+        setShowTxModal(false)
+        setFundAmount('')
+      }, 3000)
+    }
+  }, [isFundSuccess, fundHash])
+
+  // Handle errors
+  useEffect(() => {
+    if (approveError) {
+      setTxStatus('error')
+      setTxError((approveError as any)?.shortMessage || approveError.message)
+    }
+    if (fundError) {
+      setTxStatus('error')
+      setTxError((fundError as any)?.shortMessage || fundError.message)
+    }
+  }, [approveError, fundError])
+
   const presetAmounts = [10, 50, 100, 1000, 5000, 10000]
   const validPresets = presetAmounts.filter(amount => 
     amount >= minContribution && (!maxContribution || amount <= maxContribution)
@@ -43,6 +165,7 @@ export function FundingCard({
 
   const numValue = parseFloat(fundAmount)
   const isValidAmount = fundAmount !== '' && !isNaN(numValue) && numValue >= minContribution && (!maxContribution || numValue <= maxContribution)
+  const isProcessing = isApprovePending || isApproveConfirming || isFundPending || isFundConfirming
 
   return (
     <div className="bg-white border border-dark rounded-2xl p-6">
@@ -86,14 +209,15 @@ export function FundingCard({
           Share
         </button>
         <button 
-          disabled={!isValidAmount}
+          onClick={handleFundProject}
+          disabled={!isValidAmount || isProcessing || !address}
           className={`flex-[2] py-3 rounded-xl font-semibold transition-all ${
-            isValidAmount
+            isValidAmount && !isProcessing && address
               ? 'bg-deepGreen text-secondary hover:bg-deepGreen/80'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
-          Fund Project
+          {!address ? 'Connect Wallet' : isProcessing ? 'Processing...' : 'Fund Project'}
         </button>
       </div>
 
@@ -109,6 +233,21 @@ export function FundingCard({
           />
         </div>
       </div>
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={showTxModal}
+        type={txType}
+        status={txStatus}
+        hash={currentHash}
+        error={txError}
+        onClose={() => {
+          setShowTxModal(false)
+          setTxStatus('pending')
+          setTxError(undefined)
+        }}
+        chainId={chainId}
+      />
     </div>
   )
 }

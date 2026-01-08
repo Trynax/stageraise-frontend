@@ -297,6 +297,7 @@ export default function ProjectDetailPage() {
                             {/* Show FundingCard if funding is ongoing (currentMilestone === 0) */}
                             {project.currentMilestone === 0 && !project.status && (
                                 <FundingCard 
+                                    projectId={project.projectId}
                                     token={token}
                                     fundingTarget={project.fundingTarget}
                                     cachedRaisedAmount={project.cachedRaisedAmount}
@@ -309,6 +310,7 @@ export default function ProjectDetailPage() {
 
                             {project.status === 'refundable' && (
                                 <RefundCard
+                                    projectId={project.projectId}
                                     failedAtMilestone={project.currentMilestone}
                                     refundableAmount={project.userContribution || 0}
                                     token={token}
@@ -318,6 +320,7 @@ export default function ProjectDetailPage() {
 
                             {project.activeVoting && !project.status && (
                                 <LiveVotingCard
+                                    projectId={project.projectId}
                                     milestoneStage={project.activeVoting.stage}
                                     milestoneTitle={project.activeVoting.title}
                                     yesVotes={project.activeVoting.yesVotes || 0}
