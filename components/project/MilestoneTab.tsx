@@ -22,9 +22,10 @@ interface MilestoneTabProps {
   currentMilestone: number
   projectTitle?: string
   failedVotingCount?: number
+  isFundingPhase?: boolean 
 }
 
-export function MilestoneTab({ milestones, currentMilestone, projectTitle, failedVotingCount = 0 }: MilestoneTabProps) {
+export function MilestoneTab({ milestones, currentMilestone, projectTitle, failedVotingCount = 0, isFundingPhase = false }: MilestoneTabProps) {
   if (!milestones || milestones.length === 0) {
     return (
       <div className="bg-white border-2 border-dark rounded-2xl p-12 text-center">
@@ -35,7 +36,7 @@ export function MilestoneTab({ milestones, currentMilestone, projectTitle, faile
 
   const getMilestoneStatus = (stage: number) => {
 
-    if (currentMilestone === 0) {
+    if (isFundingPhase) {
       return { text: "", color: "bg-[#EAECF0] text-dark border border-dark" }
     }
     

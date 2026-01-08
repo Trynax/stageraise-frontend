@@ -40,10 +40,10 @@ export function FundingCard({
   const {
     approveToken,
     fundProject,
-    isApprovePending,
+    isApproving,
     isApproveConfirming,
     isApproveSuccess,
-    isFundPending,
+    isFunding,
     isFundConfirming,
     isFundSuccess,
     approveHash,
@@ -108,26 +108,26 @@ export function FundingCard({
   // Update modal status based on approve state
   useEffect(() => {
     if (txType === 'approve') {
-      if (isApprovePending) {
+      if (isApproving) {
         setTxStatus('pending')
       } else if (isApproveConfirming && approveHash) {
         setTxStatus('confirming')
         setCurrentHash(approveHash)
       }
     }
-  }, [isApprovePending, isApproveConfirming, approveHash, txType])
+  }, [isApproving, isApproveConfirming, approveHash, txType])
 
   // Update modal status based on fund state
   useEffect(() => {
     if (txType === 'funding') {
-      if (isFundPending) {
+      if (isFunding) {
         setTxStatus('pending')
       } else if (isFundConfirming && fundHash) {
         setTxStatus('confirming')
         setCurrentHash(fundHash)
       }
     }
-  }, [isFundPending, isFundConfirming, fundHash, txType])
+  }, [isFunding, isFundConfirming, fundHash, txType])
 
   // Handle fund success
   useEffect(() => {
@@ -165,7 +165,7 @@ export function FundingCard({
 
   const numValue = parseFloat(fundAmount)
   const isValidAmount = fundAmount !== '' && !isNaN(numValue) && numValue >= minContribution && (!maxContribution || numValue <= maxContribution)
-  const isProcessing = isApprovePending || isApproveConfirming || isFundPending || isFundConfirming
+  const isProcessing = isApproving || isApproveConfirming || isFunding || isFundConfirming
 
   return (
     <div className="bg-white border border-dark rounded-2xl p-6">

@@ -17,10 +17,11 @@ const CONTRACT_ADDRESS = getStageRaiseAddress(97)
 // GET /api/projects/[id]/voting/active - Get currently active voting session
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const projectId = parseInt(params.id)
+    const { id } = await params
+    const projectId = parseInt(id)
     
     if (isNaN(projectId)) {
       return NextResponse.json(

@@ -20,45 +20,40 @@ export default function VoteDetailPage() {
   useEffect(() => {
     const fetchVoteData = async () => {
       try {
-        // Parse the composite ID
+     
         const [projectId, milestoneStage] = voteId.split('-')
         
-        // Fetch mock data for now
         if (projectId && milestoneStage) {
-          const { getMockProject } = await import('@/lib/mockProjectDetail')
+          // Fetch project from API
+          const response = await fetch(`/api/projects/${projectId}`)
+          const data = await response.json()
           
-          // Determine which mock project to use based on projectId
-          const scenarios: Record<string, 'funding' | 'completed' | 'withVotingHistory' | 'failedRefund'> = {
-            '1': 'funding',
-            '2': 'completed',
-            '3': 'withVotingHistory',
-            '4': 'failedRefund'
-          }
-          
-          const project = getMockProject(scenarios[projectId] || 'withVotingHistory') as any
-          
-          // Find the specific vote from voting history
-          const vote = project.votingHistory?.find(
-            (v: any) => v.stage === parseInt(milestoneStage)
-          )
-          
-          // Find the milestone details
-          const milestone = project.milestones?.find(
-            (m: any) => m.stage === parseInt(milestoneStage)
-          )
-          
-          if (vote && milestone) {
-            setVoteData({
-              ...vote,
-              milestone,
-              projectTitle: project.name,
-              projectImage: project.logoUrl,
-              projectId: project.id,
-              totalMilestones: project.milestones?.length || 0,
-              totalFunders: project.cachedTotalContributors || 0,
-              failedVotingCount: project.failedVotingCount || 0,
-              status: project.status
-            })
+          if (data.success && data.project) {
+            const project = data.project
+            
+            // Find the specific vote from voting history
+            const vote = project.votingHistory?.find(
+              (v: any) => v.stage === parseInt(milestoneStage)
+            )
+            
+            // Find the milestone details
+            const milestone = project.milestones?.find(
+              (m: any) => m.stage === parseInt(milestoneStage)
+            )
+            
+            if (vote && milestone) {
+              setVoteData({
+                ...vote,
+                milestone,
+                projectTitle: project.name,
+                projectImage: project.logoUrl,
+                projectId: project.projectId,
+                totalMilestones: project.milestones?.length || 0,
+                totalFunders: project.cachedTotalContributors || 0,
+                failedVotingCount: project.failedVotingCount || 0,
+                status: project.status
+              })
+            }
           }
         }
         

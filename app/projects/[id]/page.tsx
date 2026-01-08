@@ -22,25 +22,12 @@ export default function ProjectDetailPage() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [project, setProject] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
 
     useEffect(() => {
         const fetchProject = async () => {
             try {
-                if (projectId && ['1', '2', '3', '4'].includes(projectId as string)) {
-                    const { getMockProject } = await import('@/lib/mockProjectDetail')
-                    const scenarios = {
-                        '1': 'funding',
-                        '2': 'completed',
-                        '3': 'withVotingHistory',
-                        '4': 'failedRefund'
-                    } as const
-                    const mockData = getMockProject(scenarios[projectId as '1' | '2' | '3' | '4'])
-                    setProject(mockData)
-                    setLoading(false)
-                    return
-                }
-
-                // Fetch real data for other project IDs
+                // Fetch real data from API
                 const response = await fetch(`/api/projects/${projectId}`)
                 const data = await response.json()
                 if (data.success) {
@@ -57,6 +44,33 @@ export default function ProjectDetailPage() {
             fetchProject()
         }
     }, [projectId])
+
+    // Dynamic countdown timer
+    useEffect(() => {
+        if (!project?.fundingDeadline) return
+
+        const calculateTimeLeft = () => {
+            const now = new Date().getTime()
+            const deadline = new Date(project.fundingDeadline).getTime()
+            const difference = deadline - now
+
+            if (difference > 0) {
+                setTimeLeft({
+                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+                    seconds: Math.floor((difference % (1000 * 60)) / 1000)
+                })
+            } else {
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+            }
+        }
+
+        calculateTimeLeft()
+        const timer = setInterval(calculateTimeLeft, 1000)
+
+        return () => clearInterval(timer)
+    }, [project?.fundingDeadline])
 
     if (loading) {
         return (
@@ -84,13 +98,29 @@ export default function ProjectDetailPage() {
 
     const images = [project.coverImageUrl, ...(project.galleryImageUrls || [])].filter(Boolean)
     const token = getTokenByAddress(project.paymentToken)
-    const fundingDeadline = new Date(project.fundingDeadline)
-    const now = new Date()
-    const daysLeft = Math.max(0, Math.ceil((fundingDeadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
     
     const amountRaisedPercent = project.fundingTarget > 0 
         ? Math.round((project.cachedRaisedAmount / project.fundingTarget) * 100) 
         : 0
+
+    // Determine if we're still in funding phase (deadline not passed)
+    const isFundingPhase = new Date(project.fundingDeadline) > new Date()
+    // Determine if milestone phase has started (funding ended and milestone-based)
+    const isMilestonePhase = !isFundingPhase && project.milestones?.length > 0
+
+    // Format time left display
+    const formatTimeLeft = () => {
+        if (timeLeft.days > 0) {
+            return `${timeLeft.days}D : ${timeLeft.hours}H : ${timeLeft.minutes}M`
+        } else if (timeLeft.hours > 0) {
+            return `${timeLeft.hours}H : ${timeLeft.minutes}M : ${timeLeft.seconds}S`
+        } else if (timeLeft.minutes > 0) {
+            return `${timeLeft.minutes}M : ${timeLeft.seconds}S`
+        } else if (timeLeft.seconds > 0) {
+            return `${timeLeft.seconds}S`
+        }
+        return 'Ended'
+    }
 
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev + 1) % images.length)
@@ -137,23 +167,35 @@ export default function ProjectDetailPage() {
                         <div className="flex gap-3 flex-col flex-[40%]">
                             <div className="flex gap-16 items-center w-full">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <Image src={project.logoUrl || "#"} alt={project.name || "Project Logo"} width={50} height={50} className="rounded-full flex-shrink-0" />
+                                    {project.logoUrl ? (
+                                        <Image src={project.logoUrl} alt={project.name || "Project Logo"} width={50} height={50} className="rounded-full shrink-0" />
+                                    ) : (
+                                        <div className="w-[50px] h-[50px] rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+                                            <span className="text-xl font-bold text-gray-500">{project.name?.charAt(0) || 'P'}</span>
+                                        </div>
+                                    )}
                                      <h1 className="text-xl font-bold truncate">{project.name}</h1>
                                 </div>
                                
-                                <div className="flex gap-3 border-l border-gray-300 pl-3 flex-shrink-0">
-                                    <Link href={project.discordUrl || "#"} className="hover:opacity-70 transition-opacity">
+                                <div className="flex gap-3 border-l border-gray-300 pl-3 shrink-0">
+                                    {project.discordUrl && (
+                                    <Link href={project.discordUrl} className="hover:opacity-70 transition-opacity">
                                     <Image src="/icons/discord-black.svg" alt="Discord" width={20} height={20} />
                                     </Link>
-                                    <Link href={project.twitterUrl || "#"} className="hover:opacity-70 transition-opacity">
+                                    )}
+                                    {project.twitterUrl && (
+                                    <Link href={project.twitterUrl} className="hover:opacity-70 transition-opacity">
                                     <Image src="/icons/X-black.svg" alt="Twitter" width={20} height={20} />
                                     </Link>
-                                    <Link href={project.websiteUrl || "#"} className="hover:opacity-70 transition-opacity">
+                                    )}
+                                    {project.websiteUrl && (
+                                    <Link href={project.websiteUrl} className="hover:opacity-70 transition-opacity">
                                     <Image src="/icons/website-black.svg" alt="Website" width={20} height={20} />
                                     </Link>
-                                    <Link href={project.websiteUrl || "#"} className="hover:opacity-70 transition-opacity">
+                                    )}
+                                    <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="hover:opacity-70 transition-opacity">
                                     <Image src="/icons/share-black.svg" alt="Share" width={20} height={20} />
-                                    </Link>
+                                    </button>
 
                                 </div>
                                 
@@ -185,19 +227,19 @@ export default function ProjectDetailPage() {
 
                             <div className="flex flex-col items-center gap-3 flex-1">
                                 <span className="text-sm text-gray-500">Amount Raised</span>
-                                <span>{project.cachedRaisedAmount}({amountRaisedPercent}%)</span>
+                                <span>{project.cachedRaisedAmount?.toLocaleString() || 0} ({amountRaisedPercent}%)</span>
                             </div>
                             <div className="flex flex-col items-center gap-3 flex-1">
                                 <span className="text-sm text-gray-500">Time Left</span>
-                                <span>{daysLeft}D</span>
+                                <span className="font-mono">{formatTimeLeft()}</span>
                             </div>
                             <div className="flex flex-col items-center gap-3 flex-1">
                                 <span className="text-sm text-gray-500">Funders</span>
-                                <span>{project.cachedTotalContributors}</span>
+                                <span>{project.cachedTotalContributors || 0}</span>
                             </div>
                             <div className="flex flex-col items-center gap-3 flex-1">
                                 <span className="text-sm text-gray-500">Fundraising Target</span>
-                                <span>{project.fundingTarget}</span>
+                                <span>{project.fundingTarget?.toLocaleString() || 0}</span>
                             </div>
 
 
@@ -270,9 +312,10 @@ export default function ProjectDetailPage() {
                             {activeTab === 'milestone' && (
                                 <MilestoneTab 
                                     milestones={project.milestones || []} 
-                                    currentMilestone={project.currentMilestone || 0}
+                                    currentMilestone={project.currentMilestone || 1}
                                     projectTitle={project.name}
                                     failedVotingCount={project.failedVotingCount || 0}
+                                    isFundingPhase={isFundingPhase}
                                 />
                             )}
 
@@ -294,8 +337,8 @@ export default function ProjectDetailPage() {
                   
                         <div className="space-y-6">
                            
-                            {/* Show FundingCard if funding is ongoing (currentMilestone === 0) */}
-                            {project.currentMilestone === 0 && !project.status && (
+                            {/* Show FundingCard if funding deadline hasn't passed */}
+                            {isFundingPhase && project.status !== 'completed' && project.status !== 'refundable' && (
                                 <FundingCard 
                                     projectId={project.projectId}
                                     token={token}
@@ -331,11 +374,12 @@ export default function ProjectDetailPage() {
                                 />
                             )}
 
-                            {project.currentMilestone > 0 && !project.activeVoting && !project.status && (
+                            {/* Show ContributionDetailsCard during milestone phase (not during funding, not during voting) */}
+                            {isMilestonePhase && !project.activeVoting && project.status !== 'completed' && project.status !== 'refundable' && (
                                 <ContributionDetailsCard
                                     token={token}
-                                    userContribution={project.userContribution || 100}
-                                    contributionPercentage={project.userContributionPercent || 10}
+                                    userContribution={project.userContribution || 0}
+                                    contributionPercentage={project.userContributionPercent || 0}
                                     currentMilestone={project.currentMilestone}
                                     totalMilestones={project.milestones?.length || 0}
                                     cachedRaisedAmount={project.cachedRaisedAmount}
@@ -345,7 +389,7 @@ export default function ProjectDetailPage() {
                             )}
 
                             <FundersList 
-                                contributions={project.recentContributions || []}
+                                contributions={project.contributions || []}
                                 token={token}
                             />
                         </div>

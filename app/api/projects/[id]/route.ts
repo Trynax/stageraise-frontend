@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+function serializeProject(project: any) {
+  return JSON.parse(JSON.stringify(project, (key, value) =>
+    typeof value === 'bigint' ? Number(value) : value
+  ))
+}
+
 
 export async function GET(
   request: NextRequest,
@@ -80,7 +86,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      project
+      project: serializeProject(project)
     })
   } catch (error) {
     console.error('Get project error:', error)

@@ -54,20 +54,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get contributor amount from contract
-    const contributorAmount = await client.readContract({
-      address: contractAddress,
-      abi: stageRaiseABI,
-      functionName: 'getProjectContributorAmount',
-      args: [projectId, funderAddress]
-    }) as bigint
+    const amountHex = '0x' + tx.input.slice(74, 138) // Skip selector (8) + projectId (64 chars) = 72, read next 64 chars
+    const contributionAmount = BigInt(amountHex)
 
     // Create contribution record
     const contribution = await prisma.contribution.create({
       data: {
         projectId: project.id,
         contributor: funderAddress.toLowerCase(),
-        amount: Number(contributorAmount) / 1e18,
+        amount: Number(contributionAmount) / 1e18,
         transactionHash,
         blockNumber: BigInt(tx.blockNumber || 0),
         chainId: chainId || 97
@@ -82,11 +77,16 @@ export async function POST(request: NextRequest) {
       args: [projectId]
     }) as any
 
+    const uniqueContributors = await prisma.contribution.groupBy({
+      by: ['contributor'],
+      where: { projectId: project.id }
+    })
+
     await prisma.project.update({
       where: { id: project.id },
       data: {
-        cachedRaisedAmount: Number(projectInfo.raisedAmount),
-        cachedTotalContributors: Number(projectInfo.totalContributors)
+        cachedRaisedAmount: Number(projectInfo.raisedAmount) / 1e18,
+        cachedTotalContributors: uniqueContributors.length
       }
     })
 

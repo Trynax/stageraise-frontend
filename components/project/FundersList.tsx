@@ -40,11 +40,14 @@ export function FundersList({ contributions, token }: FundersListProps) {
   }, [displayCount, contributions.length])
 
   const displayedContributions = contributions.slice(0, displayCount)
+  
+  // Count unique funders (distinct wallet addresses)
+  const uniqueFunders = new Set(contributions.map(c => c.contributor.toLowerCase())).size
 
   return (
     <div className="bg-white border-2 border-dark rounded-2xl p-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold">Funders ({contributions?.length || 0})</h3>
+        <h3 className="text-lg font-bold">Funders ({uniqueFunders})</h3>
         <button className="px-3 py-1 border-1 border-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all flex items-center gap-1">
           New to Old
          <Image src="/icons/sort.svg" alt="Sort Icon" width={16} height={16} />

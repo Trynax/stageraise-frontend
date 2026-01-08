@@ -102,6 +102,7 @@ async function indexProjectFunded(fromBlock: bigint, toBlock: bigint) {
         create: {
           projectId: String(projectId), // Will need to link to actual project
           contributor: funder as string,
+          amount: Number(amount) / 1e18, // Convert from 18 decimals
           transactionHash: log.transactionHash,
           blockNumber: log.blockNumber,
           chainId: CHAIN_ID,
@@ -165,11 +166,7 @@ async function indexVoteCast(fromBlock: bigint, toBlock: bigint) {
       if (project) {
         await prisma.vote.upsert({
           where: {
-            projectId_milestoneStage_voter: {
-              projectId: project.id,
-              milestoneStage: Number(milestoneStage),
-              voter: voter as string
-            }
+            transactionHash: log.transactionHash
           },
           create: {
             projectId: project.id,

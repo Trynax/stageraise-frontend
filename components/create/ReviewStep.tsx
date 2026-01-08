@@ -110,8 +110,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                 })
             })
             .then(res => res.json())
-            .then(data => {
-                console.log('Project synced:', data)
+            .then(() => {
                 // Close modal and move to success step after a delay
                 setTimeout(() => {
                     setShowTxModal(false)
