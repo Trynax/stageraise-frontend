@@ -30,12 +30,16 @@ export function ProjectSection () {
 
     const filteredProjects = projects
         .filter(project => {
+            const fundingDeadline = new Date(project.fundingDeadline);
+            const now = new Date();
+            const isFundingActive = fundingDeadline > now;
             if (activeTab === 'ongoing') {
-                return project.status === 'active' || !project.status;
+        
+                return isFundingActive && (project.status === 'active' || !project.status);
             }
-            return project.status === 'completed' || project.status === 'failed';
+            return !isFundingActive || project.status === 'completed' || project.status === 'failed';
         })
-        .slice(0, 6); // Show max 6 on home page
+        .slice(0, 6);
 
     return (
         <section className="py-20  bg-primary">

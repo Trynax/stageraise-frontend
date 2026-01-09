@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams } from "next/navigation"
+import { useAccount } from "wagmi"
 import Image from "next/image"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
@@ -18,6 +19,7 @@ import Link from "next/link"
 export default function ProjectDetailPage() {
     const params = useParams()
     const projectId = params.id
+    const { address } = useAccount()
     const [activeTab, setActiveTab] = useState<'about' | 'milestone' | 'voting'>('about')
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [project, setProject] = useState<any>(null)
@@ -72,6 +74,14 @@ export default function ProjectDetailPage() {
         return () => clearInterval(timer)
     }, [project?.fundingDeadline])
 
+
+    const userContribution = useMemo(() => {
+        if (!address || !project?.contributions) return 0
+        return project.contributions
+            .filter((c: any) => c.contributor.toLowerCase() === address.toLowerCase())
+            .reduce((sum: number, c: any) => sum + (c.amount || 0), 0)
+    }, [address, project?.contributions])
+
     if (loading) {
         return (
             <>
@@ -107,6 +117,10 @@ export default function ProjectDetailPage() {
     const isFundingPhase = new Date(project.fundingDeadline) > new Date()
     // Determine if milestone phase has started (funding ended and milestone-based)
     const isMilestonePhase = !isFundingPhase && project.milestones?.length > 0
+
+    const userContributionPercent = project.cachedRaisedAmount > 0 
+        ? Math.round((userContribution / project.cachedRaisedAmount) * 100) 
+        : 0
 
     // Format time left display
     const formatTimeLeft = () => {
@@ -227,19 +241,29 @@ export default function ProjectDetailPage() {
 
                             <div className="flex flex-col items-center gap-3 flex-1">
                                 <span className="text-sm text-gray-500">Amount Raised</span>
-                                <span>{project.cachedRaisedAmount?.toLocaleString() || 0} ({amountRaisedPercent}%)</span>
+                                <span>
+                                    {project.cachedRaisedAmount?.toLocaleString() || 0} {token?.symbol || 'BUSD'}
+                                    {isFundingPhase && ` (${amountRaisedPercent}%)`}
+                                </span>
                             </div>
-                            <div className="flex flex-col items-center gap-3 flex-1">
-                                <span className="text-sm text-gray-500">Time Left</span>
-                                <span className="font-mono">{formatTimeLeft()}</span>
-                            </div>
+                            {isFundingPhase ? (
+                                <div className="flex flex-col items-center gap-3 flex-1">
+                                    <span className="text-sm text-gray-500">Time Left</span>
+                                    <span className="font-mono">{formatTimeLeft()}</span>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-3 flex-1">
+                                    <span className="text-sm text-gray-500">Project Balance</span>
+                                    <span>{project.cachedRaisedAmount?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
+                                </div>
+                            )}
                             <div className="flex flex-col items-center gap-3 flex-1">
                                 <span className="text-sm text-gray-500">Funders</span>
                                 <span>{project.cachedTotalContributors || 0}</span>
                             </div>
                             <div className="flex flex-col items-center gap-3 flex-1">
                                 <span className="text-sm text-gray-500">Fundraising Target</span>
-                                <span>{project.fundingTarget?.toLocaleString() || 0}</span>
+                                <span>{project.fundingTarget?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
                             </div>
 
 
@@ -375,16 +399,14 @@ export default function ProjectDetailPage() {
                             )}
 
                             {/* Show ContributionDetailsCard during milestone phase (not during funding, not during voting) */}
-                            {isMilestonePhase && !project.activeVoting && project.status !== 'completed' && project.status !== 'refundable' && (
+                            {isMilestonePhase && !project.activeVoting && project.status !== 'completed' && project.status !== 'refundable' && userContribution > 0 && (
                                 <ContributionDetailsCard
                                     token={token}
-                                    userContribution={project.userContribution || 0}
-                                    contributionPercentage={project.userContributionPercent || 0}
+                                    userContribution={userContribution}
+                                    contributionPercentage={userContributionPercent}
                                     currentMilestone={project.currentMilestone}
                                     totalMilestones={project.milestones?.length || 0}
                                     cachedRaisedAmount={project.cachedRaisedAmount}
-                                    fundingTarget={project.fundingTarget}
-                                    amountRaisedPercent={amountRaisedPercent}
                                 />
                             )}
 

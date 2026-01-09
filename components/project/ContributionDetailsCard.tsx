@@ -9,8 +9,6 @@ interface ContributionDetailsCardProps {
   currentMilestone: number
   totalMilestones: number
   cachedRaisedAmount: number
-  fundingTarget: number
-  amountRaisedPercent: number
 }
 
 export function ContributionDetailsCard({ 
@@ -19,17 +17,15 @@ export function ContributionDetailsCard({
   contributionPercentage,
   currentMilestone,
   totalMilestones,
-  cachedRaisedAmount,
-  fundingTarget,
-  amountRaisedPercent
+  cachedRaisedAmount
 }: ContributionDetailsCardProps) {
   return (
     <div className="bg-white border-2 border-dark rounded-2xl p-6">
       <h3 className="text-xl font-bold mb-2">
-        You contributed {contributionPercentage}% ({userContribution}{token?.symbol || 'BUSD'}) to the project
+        You contributed {contributionPercentage}% ({userContribution} {token?.symbol || 'BUSD'}) to the project
       </h3>
       <p className="text-sm text-gray-600 mb-6">
-        Project is currently at Millston {currentMilestone} out of {totalMilestones}
+        Project is currently at Milestone {currentMilestone} out of {totalMilestones}
       </p>
 
 
@@ -62,12 +58,12 @@ export function ContributionDetailsCard({
         <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mb-2 border-2 border-dark">
           <div 
             className="h-full bg-[#4BBF28] transition-all"
-            style={{ width: `${amountRaisedPercent}%` }}
+            style={{ width: `${contributionPercentage}%` }}
           />
         </div>
         <div className="flex justify-between text-sm font-semibold">
-          <span>${cachedRaisedAmount?.toLocaleString() || 0} raised</span>
-          <span>${fundingTarget?.toLocaleString() || 0}</span>
+          <span>Your contribution: {userContribution?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
+          <span>Total raised: {cachedRaisedAmount?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
         </div>
       </div>
     </div>

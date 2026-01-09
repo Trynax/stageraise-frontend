@@ -145,14 +145,25 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
 
           <div className="text-center mb-4 mt-auto">
-            <p className="text-gray-600 text-xs mb-1">Funding ends in</p>
-            <p className="text-base font-semibold">
-              {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
-            </p>
+            {timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0 ? (
+              <>
+                <p className="text-gray-600 text-xs mb-1">Funding ends in</p>
+                <p className="text-base font-semibold">
+                  {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-dark text-xs mb-1 font-semibold">Funding Ended</p>
+                <p className="text-base font-semibold text-dark">
+                  {endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}
+                </p>
+              </>
+            )}
           </div>
 
           <button className="w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102">
-            Fund project
+            {timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0 ? 'Fund project' : 'View project'}
           </button>
         </div>
       </div>
