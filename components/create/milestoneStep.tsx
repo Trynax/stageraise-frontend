@@ -15,12 +15,15 @@ interface Milestone {
     title: string
     description: string
     amount: string
-    image: File | null
+    images: File[]
 }
+
+const MAX_IMAGES_PER_MILESTONE = 3
 
 export default function MilestoneStep({ formData, updateFormData, nextStep, prevStep, currentStep }: MilestoneStepProps) {
     const [milestones, setMilestones] = useState<Milestone[]>([])
-    const [imagePreviews, setImagePreviews] = useState<(string | null)[]>([])
+    const [imagePreviews, setImagePreviews] = useState<string[][]>([])
+    const [errors, setErrors] = useState<{ [key: number]: { title?: boolean; description?: boolean } }>({})
 
     useEffect(() => {
         const numMilestones = parseInt(formData.numberOfMilestones) || 1
@@ -29,16 +32,16 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
 
         if (formData.milestones && formData.milestones.length === numMilestones) {
             setMilestones(formData.milestones)
-            setImagePreviews(formData.milestones.map(() => null))
+            setImagePreviews(formData.milestones.map((m: Milestone) => m.images?.map(() => '') || []))
         } else {
             const initialMilestones = Array.from({ length: numMilestones }, (_, i) => ({
                 title: '',
                 description: '',
                 amount: amountPerMilestone,
-                image: null
+                images: []
             }))
             setMilestones(initialMilestones)
-            setImagePreviews(Array(numMilestones).fill(null))
+            setImagePreviews(Array(numMilestones).fill([]))
         }
     }, [formData.numberOfMilestones, formData.fundraisingTarget])
 
@@ -47,20 +50,42 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
         updated[index] = { ...updated[index], [field]: value }
         setMilestones(updated)
         updateFormData({ milestones: updated })
+        
+        // Clear error when user types
+        if (field === 'title' || field === 'description') {
+            setErrors(prev => ({
+                ...prev,
+                [index]: { ...prev[index], [field]: false }
+            }))
+        }
     }
 
     const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (file) {
+        if (file && milestones[index].images.length < MAX_IMAGES_PER_MILESTONE) {
             const updated = [...milestones]
-            updated[index] = { ...updated[index], image: file }
+            updated[index] = { ...updated[index], images: [...updated[index].images, file] }
             setMilestones(updated)
             updateFormData({ milestones: updated })
 
             const previews = [...imagePreviews]
-            previews[index] = URL.createObjectURL(file)
+            previews[index] = [...(previews[index] || []), URL.createObjectURL(file)]
             setImagePreviews(previews)
         }
+    }
+
+    const handleRemoveImage = (milestoneIndex: number, imageIndex: number) => {
+        const updated = [...milestones]
+        updated[milestoneIndex] = { 
+            ...updated[milestoneIndex], 
+            images: updated[milestoneIndex].images.filter((_, i) => i !== imageIndex) 
+        }
+        setMilestones(updated)
+        updateFormData({ milestones: updated })
+
+        const previews = [...imagePreviews]
+        previews[milestoneIndex] = (previews[milestoneIndex] || []).filter((_, i) => i !== imageIndex)
+        setImagePreviews(previews)
     }
 
     const handleDeleteMilestone = (index: number) => {
@@ -80,6 +105,11 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
 
             const previews = imagePreviews.filter((_, i) => i !== index)
             setImagePreviews(previews)
+            
+            // Remove errors for deleted milestone
+            const newErrors = { ...errors }
+            delete newErrors[index]
+            setErrors(newErrors)
         }
     }
 
@@ -97,12 +127,35 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
             title: '',
             description: '',
             amount: amountPerMilestone,
-            image: null
+            images: []
         })
         
         setMilestones(updated)
-        setImagePreviews([...imagePreviews, null])
+        setImagePreviews([...imagePreviews, []])
         updateFormData({ milestones: updated, numberOfMilestones: updated.length.toString() })
+    }
+
+    const validateAndContinue = () => {
+        const newErrors: { [key: number]: { title?: boolean; description?: boolean } } = {}
+        let hasErrors = false
+
+        milestones.forEach((milestone, index) => {
+            if (!milestone.title.trim()) {
+                newErrors[index] = { ...newErrors[index], title: true }
+                hasErrors = true
+            }
+            if (!milestone.description.trim()) {
+                newErrors[index] = { ...newErrors[index], description: true }
+                hasErrors = true
+            }
+        })
+
+        if (hasErrors) {
+            setErrors(newErrors)
+            return
+        }
+
+        nextStep()
     }
 
     const calculatePercentage = (index: number) => {
@@ -141,7 +194,7 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
                                         <Image src="/icons/back.svg" alt="Back" width={24} height={24} />
                                     </button>
                                     <button
-                                        onClick={nextStep}
+                                        onClick={validateAndContinue}
                                         className="px-6 py-2 rounded-xl font-semibold transition-all bg-deepGreen text-secondary hover:bg-deepGreen/80"
                                     >
                                         Continue
@@ -169,7 +222,7 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
                                 <Image src="/icons/back.svg" alt="Back" width={24} height={24} />
                             </button>
                             <button
-                                onClick={nextStep}
+                                onClick={validateAndContinue}
                                 className="flex-1 px-6 py-2 rounded-xl font-semibold transition-all bg-deepGreen text-secondary hover:bg-deepGreen/80"
                             >
                                 Continue
@@ -201,45 +254,76 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
 
                                 <div className="space-y-4 px-4 pb-10">
                                     <div>
-                                        <label className="block font-semibold mb-2">Milestone title</label>
+                                        <label className="block font-semibold mb-2">
+                                            Milestone title <span className="text-red-500">*</span>
+                                        </label>
                                         <input
                                             type="text"
                                             value={milestone.title}
                                             onChange={(e) => handleMilestoneChange(index, 'title', e.target.value)}
                                             placeholder="Enter title"
-                                            className="w-full px-4 py-3 border-2 border-dark rounded-xl focus:border-secondary focus:outline-none"
+                                            className={`w-full px-4 py-3 border-2 rounded-xl focus:border-secondary focus:outline-none ${
+                                                errors[index]?.title ? 'border-red-500' : 'border-dark'
+                                            }`}
                                         />
+                                        {errors[index]?.title && (
+                                            <p className="text-red-500 text-sm mt-1">Title is required</p>
+                                        )}
                                     </div>
 
                                     <div>
-                                        <label className="block font-semibold mb-2">Milestone description</label>
+                                        <label className="block font-semibold mb-2">
+                                            Milestone description <span className="text-red-500">*</span>
+                                        </label>
                                         <textarea
                                             value={milestone.description}
                                             onChange={(e) => handleMilestoneChange(index, 'description', e.target.value)}
                                             placeholder="Text placeholder"
                                             rows={6}
-                                            className="w-full px-4 py-3 border-2 border-dark rounded-xl focus:border-secondary focus:outline-none resize-none"
+                                            className={`w-full px-4 py-3 border-2 rounded-xl focus:border-secondary focus:outline-none resize-none ${
+                                                errors[index]?.description ? 'border-red-500' : 'border-dark'
+                                            }`}
                                         />
+                                        {errors[index]?.description && (
+                                            <p className="text-red-500 text-sm mt-1">Description is required</p>
+                                        )}
                                     </div>
 
                                     <div>
-                                        <label className="block font-semibold mb-2">Add more image or video (Optional)</label>
-                                        <label className="block border-2 border border-dark rounded-xl p-12 text-center hover:border-secondary cursor-pointer transition-colors bg-white">
-                                            <input
-                                                type="file"
-                                                accept="image/*,video/*"
-                                                onChange={(e) => handleImageUpload(index, e)}
-                                                className="hidden"
-                                            />
-                                            {imagePreviews[index] ? (
-                                                <img src={imagePreviews[index]!} alt={`Milestone ${index + 1} preview`} className="max-h-64 mx-auto" />
-                                            ) : (
-                                                <>
-                                                    <Image src="/icons/upload.svg" alt="Upload" width={48} height={48} className="mx-auto mb-4" />
-                                                    <p className="font-semibold">Click to upload</p>
-                                                </>
-                                            )}
+                                        <label className="block font-semibold mb-2">
+                                            Add images (Optional) - Max {MAX_IMAGES_PER_MILESTONE}
                                         </label>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {/* Show uploaded images */}
+                                            {(imagePreviews[index] || []).map((preview, imgIndex) => (
+                                                <div key={imgIndex} className="relative aspect-video border-2 border-dark rounded-xl overflow-hidden group">
+                                                    <img src={preview} alt={`Milestone ${index + 1} image ${imgIndex + 1}`} className="w-full h-full object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveImage(index, imgIndex)}
+                                                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            
+                                            {/* Show upload button if under max */}
+                                            {(milestone.images?.length || 0) < MAX_IMAGES_PER_MILESTONE && (
+                                                <label className="aspect-video border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors bg-white">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*,video/*"
+                                                        onChange={(e) => handleImageUpload(index, e)}
+                                                        className="hidden"
+                                                    />
+                                                    <Image src="/icons/upload.svg" alt="Upload" width={32} height={32} className="mb-2" />
+                                                    <p className="text-sm font-semibold">Add Image</p>
+                                                </label>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

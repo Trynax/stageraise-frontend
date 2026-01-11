@@ -11,25 +11,57 @@ interface MediaStepProps {
     currentStep: number
 }
 
+const MAX_ADDITIONAL_IMAGES = 3
+
 export default function MediaStep({ formData, updateFormData, nextStep, prevStep, currentStep }: MediaStepProps) {
-    const [coverPreview, setCoverPreview] = useState<string | null>(null)
-    const [additionalPreviews, setAdditionalPreviews] = useState<string[]>([])
+    const [logoPreview, setLogoPreview] = useState<string | null>(formData.logoPreview || null)
+    const [coverPreview, setCoverPreview] = useState<string | null>(formData.coverPreview || null)
+    const [additionalPreviews, setAdditionalPreviews] = useState<string[]>(formData.additionalPreviews || [])
+
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const preview = URL.createObjectURL(file)
+            setLogoPreview(preview)
+            updateFormData({ logoImage: file, logoPreview: preview })
+        }
+    }
+
+    const handleRemoveLogo = () => {
+        setLogoPreview(null)
+        updateFormData({ logoImage: null, logoPreview: null })
+    }
 
     const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            updateFormData({ coverImage: file })
-            setCoverPreview(URL.createObjectURL(file))
+            const preview = URL.createObjectURL(file)
+            setCoverPreview(preview)
+            updateFormData({ coverImage: file, coverPreview: preview })
         }
     }
 
+    const handleRemoveCover = () => {
+        setCoverPreview(null)
+        updateFormData({ coverImage: null, coverPreview: null })
+    }
+
     const handleAdditionalUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || [])
-        if (files.length) {
-            updateFormData({ additionalImages: [...formData.additionalImages, ...files] })
-            const previews = files.map(file => URL.createObjectURL(file))
-            setAdditionalPreviews([...additionalPreviews, ...previews])
+        const file = e.target.files?.[0]
+        if (file && additionalPreviews.length < MAX_ADDITIONAL_IMAGES) {
+            const preview = URL.createObjectURL(file)
+            const newPreviews = [...additionalPreviews, preview]
+            const newImages = [...(formData.additionalImages || []), file]
+            setAdditionalPreviews(newPreviews)
+            updateFormData({ additionalImages: newImages, additionalPreviews: newPreviews })
         }
+    }
+
+    const handleRemoveAdditionalImage = (index: number) => {
+        const newPreviews = additionalPreviews.filter((_, i) => i !== index)
+        const newImages = (formData.additionalImages || []).filter((_: any, i: number) => i !== index)
+        setAdditionalPreviews(newPreviews)
+        updateFormData({ additionalImages: newImages, additionalPreviews: newPreviews })
     }
 
     return (
@@ -96,49 +128,102 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
                     </div>
 
             <div className="space-y-6">
+                {/* Logo Upload */}
                 <div>
-                    <label className="block font-semibold mb-2">Add Cover photo or video</label>
-                    <label className="block border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-secondary cursor-pointer transition-colors">
-                        <input
-                            type="file"
-                            accept="image/*,video/*"
-                            onChange={handleCoverUpload}
-                            className="hidden"
-                        />
-                        {coverPreview ? (
-                            <img src={coverPreview} alt="Cover preview" className="max-h-64 mx-auto" />
-                        ) : (
-                            <>
-                                <Image src="/icons/upload.svg" alt="Upload" width={48} height={48} className="mx-auto mb-4" />
-                                <p className="font-semibold">Click to Upload</p>
-                            </>
-                        )}
-                    </label>
-                </div>
-
-                <div>
-                    <label className="block font-semibold mb-2">Add more image (Optional)</label>
-                    <label className="block border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-secondary cursor-pointer transition-colors">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleAdditionalUpload}
-                            className="hidden"
-                        />
-                        {additionalPreviews.length > 0 ? (
-                            <div className="grid grid-cols-3 gap-4">
-                                {additionalPreviews.map((preview, index) => (
-                                    <img key={index} src={preview} alt={`Preview ${index}`} className="w-full h-32 object-cover rounded-lg" />
-                                ))}
+                    <label className="block font-semibold mb-2">Logo</label>
+                    <div className="flex gap-4">
+                        {logoPreview ? (
+                            <div className="relative w-32 h-32 border-2 border-dark rounded-xl overflow-hidden group">
+                                <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={handleRemoveLogo}
+                                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </div>
                         ) : (
-                            <>
-                                <Image src="/icons/upload.svg" alt="Upload" width={48} height={48} className="mx-auto mb-4" />
-                                <p className="font-semibold">Click to upload</p>
-                            </>
+                            <label className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleLogoUpload}
+                                    className="hidden"
+                                />
+                                <Image src="/icons/upload.svg" alt="Upload" width={32} height={32} className="mb-2" />
+                                <p className="text-sm font-semibold">Click to Upload</p>
+                            </label>
                         )}
-                    </label>
+                    </div>
+                </div>
+
+                {/* Cover Photo/Video Upload */}
+                <div>
+                    <label className="block font-semibold mb-2">Add Cover photo or video</label>
+                    {coverPreview ? (
+                        <div className="relative border-2 border-dark rounded-xl overflow-hidden group">
+                            <img src={coverPreview} alt="Cover preview" className="w-full max-h-64 object-cover" />
+                            <button
+                                type="button"
+                                onClick={handleRemoveCover}
+                                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    ) : (
+                        <label className="block border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-secondary cursor-pointer transition-colors">
+                            <input
+                                type="file"
+                                accept="image/*,video/*"
+                                onChange={handleCoverUpload}
+                                className="hidden"
+                            />
+                            <Image src="/icons/upload.svg" alt="Upload" width={48} height={48} className="mx-auto mb-4" />
+                            <p className="font-semibold">Click to Upload</p>
+                        </label>
+                    )}
+                </div>
+
+                {/* Additional Images - Grid with max 3 */}
+                <div>
+                    <label className="block font-semibold mb-2">Add more images (Optional) - Max {MAX_ADDITIONAL_IMAGES}</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Show uploaded images */}
+                        {additionalPreviews.map((preview, index) => (
+                            <div key={index} className="relative aspect-video border-2 border-dark rounded-xl overflow-hidden group">
+                                <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveAdditionalImage(index)}
+                                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        ))}
+                        
+                        {/* Show upload button if under max */}
+                        {additionalPreviews.length < MAX_ADDITIONAL_IMAGES && (
+                            <label className="aspect-video border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleAdditionalUpload}
+                                    className="hidden"
+                                />
+                                <Image src="/icons/upload.svg" alt="Upload" width={32} height={32} className="mb-2" />
+                                <p className="text-sm font-semibold">Add Image</p>
+                            </label>
+                        )}
+                    </div>
                 </div>
             </div>
                 </div>

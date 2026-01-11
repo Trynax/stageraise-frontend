@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Token } from "@/lib/constants/tokens"
 import { useFundProjectWithSync } from "@/lib/contracts/hooks"
-import { useAccount, useChainId } from "wagmi"
+import { useAccount, useChainId, useReadContract } from "wagmi"
+import { erc20Abi, formatUnits } from "viem"
 import TransactionModal, { TransactionStatus, TransactionType } from "@/components/ui/TransactionModal"
 
 interface FundingCardProps {
@@ -29,6 +30,24 @@ export function FundingCard({
   const [fundAmount, setFundAmount] = useState('')
   const { address } = useAccount()
   const chainId = useChainId()
+  
+  // Get user's token balance
+  const { data: tokenBalance } = useReadContract({
+    address: token?.address as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && !!token?.address
+    }
+  })
+
+  const formattedBalance = tokenBalance 
+    ? parseFloat(formatUnits(tokenBalance, token?.decimals || 18)).toLocaleString(undefined, { 
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2 
+      })
+    : '0'
   
   // Transaction modal state
   const [showTxModal, setShowTxModal] = useState(false)
@@ -187,6 +206,10 @@ export function FundingCard({
           className="w-full pl-14 pr-4 py-4 border-2 border-dark rounded-xl focus:border-secondary focus:outline-none text-lg"
         />
       </div>
+
+      <p className="text-sm text-gray-600 mb-4">
+        Available {token?.symbol || 'BUSD'}: {formattedBalance}
+      </p>
 
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {validPresets.map(amount => (
