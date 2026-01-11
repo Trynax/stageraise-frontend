@@ -130,10 +130,10 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
             <div className="space-y-6">
                 {/* Logo Upload */}
                 <div>
-                    <label className="block font-semibold mb-2">Logo</label>
-                    <div className="flex gap-4">
+                    <label className="block font-semibold mb-2 text-center">Logo</label>
+                    <div className="flex justify-center">
                         {logoPreview ? (
-                            <div className="relative w-32 h-32 border-2 border-dark rounded-xl overflow-hidden group">
+                            <div className="relative w-40 h-40 border-2 border-dark rounded-xl overflow-hidden group">
                                 <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
                                 <button
                                     type="button"
@@ -146,7 +146,7 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
                                 </button>
                             </div>
                         ) : (
-                            <label className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors">
+                            <label className="w-60 h-40 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors">
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -190,10 +190,14 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
                     )}
                 </div>
 
-                {/* Additional Images - Grid with max 3 */}
+                {/* Additional Images - Dynamic grid based on count */}
                 <div>
                     <label className="block font-semibold mb-2">Add more images (Optional) - Max {MAX_ADDITIONAL_IMAGES}</label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className={`grid gap-4 ${
+                        additionalPreviews.length === 0 ? 'grid-cols-1' :
+                        additionalPreviews.length === 1 ? 'grid-cols-2' :
+                        'grid-cols-3'
+                    }`}>
                         {/* Show uploaded images */}
                         {additionalPreviews.map((preview, index) => (
                             <div key={index} className="relative aspect-video border-2 border-dark rounded-xl overflow-hidden group">
@@ -212,7 +216,7 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
                         
                         {/* Show upload button if under max */}
                         {additionalPreviews.length < MAX_ADDITIONAL_IMAGES && (
-                            <label className="aspect-video border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors">
+                            <label className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors ${additionalPreviews.length === 0 ? 'py-12' : 'aspect-video'}`}>
                                 <input
                                     type="file"
                                     accept="image/*"

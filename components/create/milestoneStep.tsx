@@ -293,7 +293,11 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
                                         <label className="block font-semibold mb-2">
                                             Add images (Optional) - Max {MAX_IMAGES_PER_MILESTONE}
                                         </label>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className={`grid gap-4 ${
+                                            (imagePreviews[index]?.length || 0) === 0 ? 'grid-cols-1' :
+                                            (imagePreviews[index]?.length || 0) === 1 ? 'grid-cols-2' :
+                                            'grid-cols-3'
+                                        }`}>
                                             {/* Show uploaded images */}
                                             {(imagePreviews[index] || []).map((preview, imgIndex) => (
                                                 <div key={imgIndex} className="relative aspect-video border-2 border-dark rounded-xl overflow-hidden group">
@@ -312,7 +316,7 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
                                             
                                             {/* Show upload button if under max */}
                                             {(milestone.images?.length || 0) < MAX_IMAGES_PER_MILESTONE && (
-                                                <label className="aspect-video border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors bg-white">
+                                                <label className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:border-secondary cursor-pointer transition-colors bg-white ${(imagePreviews[index]?.length || 0) === 0 ? 'py-12' : 'aspect-video'}`}>
                                                     <input
                                                         type="file"
                                                         accept="image/*,video/*"
