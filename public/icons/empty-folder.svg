@@ -1,0 +1,9 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Folder back -->
+  <path d="M20 35C20 31.6863 22.6863 29 26 29H45L55 39H94C97.3137 39 100 41.6863 100 45V85C100 88.3137 97.3137 91 94 91H26C22.6863 91 20 88.3137 20 85V35Z" fill="#CBF5BD" stroke="#1F3D2C" stroke-width="2"/>
+  <!-- Folder front -->
+  <path d="M20 50H100V85C100 88.3137 97.3137 91 94 91H26C22.6863 91 20 88.3137 20 85V50Z" fill="#A8E6A3" stroke="#1F3D2C" stroke-width="2"/>
+  <!-- Person silhouette -->
+  <circle cx="60" cy="55" r="8" fill="#1F3D2C" opacity="0.3"/>
+  <path d="M48 78C48 71.3726 53.3726 66 60 66C66.6274 66 72 71.3726 72 78V82H48V78Z" fill="#1F3D2C" opacity="0.3"/>
+</svg>
