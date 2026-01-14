@@ -69,7 +69,20 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Update project cached amounts from contract
+   
+    await prisma.activity.create({
+      data: {
+        userAddress: funderAddress.toLowerCase(),
+        projectId: project.id,
+        type: 'funded',
+        title: `You funded "${project.name}"`,
+        amount: Number(contributionAmount) / 1e18,
+        tokenSymbol: project.paymentToken === '0x...' ? 'BUSD' : 'BUSD', // TODO: Map token address to symbol
+        txHash: transactionHash
+      }
+    })
+
+  
     const projectInfo = await client.readContract({
       address: contractAddress,
       abi: stageRaiseABI,

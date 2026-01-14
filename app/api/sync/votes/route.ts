@@ -94,6 +94,20 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    await prisma.activity.create({
+      data: {
+        userAddress: voterAddress.toLowerCase(),
+        projectId: project.id,
+        type: 'voted',
+        title: `You voted ${voteYes ? 'YES' : 'NO'} on Milestone ${votingRound.milestoneStage} (${project.name})`,
+        txHash: transactionHash,
+        metadata: {
+          milestoneStage: votingRound.milestoneStage,
+          voteYes: voteYes
+        }
+      }
+    })
+
     // Update voting round totals
     const [yesVotes, noVotes] = await Promise.all([
       client.readContract({

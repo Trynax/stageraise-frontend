@@ -65,6 +65,7 @@ model Project {
   votes          Vote[]
   votingRounds   VotingRound[]  // NEW: Track each voting attempt
   updates        ProjectUpdate[]
+  activities     Activity[]
 
   @@index([chainId, projectId])
   @@index([ownerAddress])
@@ -221,4 +222,34 @@ model User {
   isVerified Boolean @default(false)
   
   @@index([address])
+}
+
+// Activity log for user dashboard
+// Tracks actions the user has taken
+model Activity {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  userAddress String   // The user who performed the action
+  
+  projectId   String?  // Related project
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Activity type: "funded", "voted", "withdrew", "refund_requested"
+  type        String
+  
+  // Display info
+  title       String   // e.g., "You funded 'OpenDeFi Wallet Project'"
+  amount      Float?   // Amount if applicable
+  tokenSymbol String?  // BUSD, USDC, etc.
+  
+  // Blockchain reference
+  txHash      String?  // Transaction hash for "View Transaction"
+  
+  // Extra data (vote direction, milestone number, etc.)
+  metadata    Json?
+  
+  @@index([userAddress])
+  @@index([createdAt(sort: Desc)])
+  @@index([type])
 }

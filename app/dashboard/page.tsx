@@ -7,6 +7,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
+import { ActivityList } from "@/components/dashboard/ActivityList"
 
 type TabType = 'activity' | 'projects' | 'voting' | 'contributions'
 
@@ -207,34 +208,36 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Tab Content */}
-                    <div className="min-h-[400px] flex items-center justify-center">
+                    <div className="min-h-[400px]">
                         {activeTab === 'activity' && (
-                            <EmptyState 
-                                title="No activity" 
-                                buttonText="Explore project"
-                                buttonHref="/projects"
-                            />
+                            <ActivityTab address={address} />
                         )}
                         {activeTab === 'projects' && (
-                            <EmptyState 
-                                title="You haven't created any projects yet!" 
-                                buttonText="Create project"
-                                buttonHref="/create"
-                            />
+                            <div className="flex items-center justify-center min-h-[400px]">
+                                <EmptyState 
+                                    title="You haven't created any projects yet!" 
+                                    buttonText="Create project"
+                                    buttonHref="/create"
+                                />
+                            </div>
                         )}
                         {activeTab === 'voting' && (
-                            <EmptyState 
-                                title="You haven't voted on any projects yet!" 
-                                buttonText="Explore voting"
-                                buttonHref="/votes"
-                            />
+                            <div className="flex items-center justify-center min-h-[400px]">
+                                <EmptyState 
+                                    title="You haven't voted on any projects yet!" 
+                                    buttonText="Explore voting"
+                                    buttonHref="/votes"
+                                />
+                            </div>
                         )}
                         {activeTab === 'contributions' && (
-                            <EmptyState 
-                                title="You haven't contributed to any projects yet!" 
-                                buttonText="Fund a project"
-                                buttonHref="/projects"
-                            />
+                            <div className="flex items-center justify-center min-h-[400px]">
+                                <EmptyState 
+                                    title="You haven't contributed to any projects yet!" 
+                                    buttonText="Fund a project"
+                                    buttonHref="/projects"
+                                />
+                            </div>
                         )}
                     </div>
                 </div>
@@ -264,4 +267,43 @@ function EmptyState({ title, buttonText, buttonHref }: { title: string; buttonTe
             </Link>
         </div>
     )
+}
+
+function ActivityTab({ address }: { address: string }) {
+    const [hasActivities, setHasActivities] = useState<boolean | null>(null)
+
+    useEffect(() => {
+        const checkActivities = async () => {
+            try {
+                const response = await fetch(`/api/dashboard/activities?address=${address}&limit=1`)
+                const data = await response.json()
+                setHasActivities(data.success && data.activities.length > 0)
+            } catch {
+                setHasActivities(false)
+            }
+        }
+        checkActivities()
+    }, [address])
+
+    if (hasActivities === null) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-deepGreen"></div>
+            </div>
+        )
+    }
+
+    if (!hasActivities) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <EmptyState 
+                    title="No activity" 
+                    buttonText="Explore project"
+                    buttonHref="/projects"
+                />
+            </div>
+        )
+    }
+
+    return <ActivityList address={address} />
 }

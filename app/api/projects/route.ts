@@ -154,6 +154,22 @@ export async function POST(request: NextRequest) {
       }
     })
 
+
+    await prisma.activity.create({
+      data: {
+        userAddress: body.ownerAddress.toLowerCase(),
+        projectId: project.id,
+        type: 'project_created',
+        title: `You created "${project.name || 'Untitled Project'}"`,
+        amount: body.fundingTarget || null,
+        tokenSymbol: 'USDT',
+        metadata: {
+          projectId: project.projectId,
+          category: project.category
+        }
+      }
+    })
+
     return NextResponse.json({
       success: true,
       project
