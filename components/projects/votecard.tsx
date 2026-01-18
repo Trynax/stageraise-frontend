@@ -6,7 +6,7 @@ import type { Vote } from '@/lib/types';
 
 interface VoteCardProps {
   vote: Vote | any; // Allow both mock and API formats
-  fromPage?: 'project' | 'explore';
+  fromPage?: 'project' | 'explore' | 'dashboard';
 }
 
 export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) {
@@ -18,14 +18,16 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
   });
 
   // Handle both mock data format and API format
-  const projectId = vote.projectId;
+  const projectId = vote.projectId || vote.projectNumericId;
+  const projectDbId = vote.projectDbId || vote.projectId;
   const milestoneStage = vote.milestone || vote.milestoneStage || vote.stage;
   const title = vote.title || vote.projectName || 'Untitled Project';
   const description = vote.description || vote.milestoneTitle || '';
-  const image = vote.image || vote.coverImageUrl || '/placeholder.jpg';
-  const endDate = vote.endDate || vote.votingEndTime;
+  const image = vote.image || vote.logoUrl || vote.coverImageUrl || '/placeholder.jpg';
+  const endDate = vote.endDate || vote.votingEndTime || vote.votingStarted;
   const status = vote.status || (vote.result === 'ongoing' ? 'ongoing' : 'ended');
   const result = vote.result;
+  const isActive = vote.isActive;
   
   // Handle vote counts
   const yesVotes = vote.yesVotes || 0;
@@ -34,8 +36,12 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
   const yesPercentage = vote.yesPercent !== undefined ? vote.yesPercent : (totalVotes > 0 ? Math.round((yesVotes / totalVotes) * 100) : 0);
   const noPercentage = vote.noPercent !== undefined ? vote.noPercent : (totalVotes > 0 ? Math.round((noVotes / totalVotes) * 100) : 0);
 
-  const milestones = vote.milestones || 0;
+  const milestones = vote.milestones || vote.totalMilestones || 0;
   const funders = vote.funders || 0;
+  
+  // Dashboard-specific fields
+  const userHasVoted = vote.userHasVoted;
+  const outcomeMessage = vote.outcomeMessage;
 
   useEffect(() => {
     // If API provides pre-calculated timeRemaining, use that
@@ -184,28 +190,28 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
 
         {/* Status Messages */}
         {result === 'passed' && status === 'ended' && (
-          <div className="bg-white border-2 border-dark rounded-xl p-3 mb-4">
-            <p className="text-sm font-semibold mb-1">Vote Ended</p>
-            <p className="text-xs text-gray-700">
-              This milestone met the required approval threshold. Funds have been released and project progression continues.
+          <div className="bg-white border border-dark rounded-xl p-3 mb-4">
+            <p className="text-sm font-semibold mb-1 text-center">Vote Ended</p>
+            <p className="text-xs ">
+              {outcomeMessage || "This milestone met the required approval threshold. Funds have been released and project progression continues."}
             </p>
           </div>
         )}
 
         {result === 'failed' && status === 'ended' && (
-          <div className="bg-white border-2 border-dark rounded-xl p-3 mb-4">
-            <p className="text-sm font-semibold mb-1">Vote Ended</p>
-            <p className="text-xs text-gray-700">
-              {vote.refundable 
+          <div className="bg-white border border-dark rounded-xl p-3 mb-4">
+            <p className="text-sm font-semibold mb-1 text-center">Vote Ended</p>
+            <p className="text-xs   ">
+              {outcomeMessage || (vote.refundable 
                 ? "After three consecutive failed attempts, the project has been marked as failed. Funders can now manually claim their proportional refunds."
                 : "This milestone did not meet the required approval threshold. The creator may resubmit for another vote."
-              }
+              )}
             </p>
           </div>
         )}
 
         {/* Countdown or Vote Button */}
-        {result === 'ongoing' || status === 'ongoing' ? (
+        {result === 'ongoing' || status === 'ongoing' || isActive ? (
           <>
             <div className="text-center mb-4 mt-auto">
               <p className="text-gray-600 text-xs mb-1">Vote Ends In</p>
@@ -214,15 +220,15 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
               </p>
             </div>
             <Link 
-              href={`/votes/${projectId}-${milestoneStage}?from=${fromPage}`}
+              href={fromPage === 'dashboard' ? `/projects/${projectId}?tab=voting` : `/votes/${projectId}-${milestoneStage}?from=${fromPage}`}
               className="block w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102 text-center"
             >
-              Vote now
+              {userHasVoted ? 'View Vote' : 'Vote now'}
             </Link>
           </>
         ) : (
           <Link 
-            href={`/votes/${projectId}-${milestoneStage}?from=${fromPage}`}
+            href={fromPage === 'dashboard' ? `/projects/${projectId}?tab=voting` : `/votes/${projectId}-${milestoneStage}?from=${fromPage}`}
             className="block w-full bg-white font-semibold text-dark text-base py-3 rounded-2xl transition-all border-2 border-dark hover:bg-gray-50 mt-auto text-center"
           >
             View details
@@ -232,4 +238,3 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
     </div>
   );
 }
- 

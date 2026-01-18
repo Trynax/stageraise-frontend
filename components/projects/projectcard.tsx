@@ -6,9 +6,10 @@ import type { Project } from '@/lib/types';
 
 interface ProjectCardProps {
   project: Project | any; // Allow both mock and real project types
+  variant?: 'default' | 'created' | 'contribution'; // Dashboard variants
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, variant = 'default' }: ProjectCardProps) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -30,8 +31,18 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     return project.endDate || project.fundingDeadline || project.deadline || null;
   }, [project.endDate, project.fundingDeadline, project.deadline]);
   const status = project.status || (project.cachedIsActive ? 'ongoing' : 'ended');
-  const milestoneCount = project.milestones?.length || project.milestones || 0;
+  const milestoneCount = project.milestones?.length || project.totalMilestones || project.milestones || 0;
   const type = project.type || (milestoneCount > 0 ? 'Milestone Based' : 'Regular');
+
+  // Dashboard-specific fields
+  const currentMilestone = project.currentMilestone || 0;
+  const totalMilestones = project.totalMilestones || milestoneCount;
+  const displayStatus = project.displayStatus || 'funding';
+  const milestoneStatus = project.milestoneStatus;
+  const hasActiveVoting = project.hasActiveVoting;
+  const userContribution = project.userContribution;
+  const isRefundEligible = project.isRefundEligible;
+  const statusMessage = project.statusMessage;
 
   useEffect(() => {
     // Don't run timer if no valid endDate
@@ -119,7 +130,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                 </svg>
               </div>
-              <span className="font-semibold">{funders} funders</span>
+              <span className="font-semibold">{funders} Funders</span>
             </div>
           </div>
 
@@ -143,28 +154,165 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             )}
           </div>
 
+          {/* Dashboard variant: Contribution info */}
+          {variant === 'contribution' && userContribution !== undefined && (
+            <div className="space-y-2 mb-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Your Contribution</span>
+                <span className="font-bold">{userContribution.toLocaleString()} BUSD</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Refund Eligible</span>
+                <span className="font-bold">{isRefundEligible ? 'Yes' : 'NO'}</span>
+              </div>
+              {milestoneStatus && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Milestone</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                    displayStatus === 'completed'
+                      ? 'bg-green-100 text-green-700 border-green-300'
+                      : displayStatus === 'failed'
+                      ? 'bg-red-100 text-red-700 border-red-300'
+                      : displayStatus === 'in_progress'
+                      ? 'bg-[#DC6803]/10 text-[#DC6803] border-[#DC6803]'
+                      : displayStatus === 'voting'
+                      ? 'bg-orange-100 text-orange-700 border-orange-300'
+                      : 'bg-secondary text-dark border-dark'
+                  }`}>
+                    {milestoneStatus}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
-          <div className="text-center mb-4 mt-auto">
-            {timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0 ? (
-              <>
-                <p className="text-gray-600 text-xs mb-1">Funding ends in</p>
-                <p className="text-base font-semibold">
-                  {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-dark text-xs mb-1 font-semibold">Funding Ended</p>
-                <p className="text-base font-semibold text-dark">
-                  {endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}
-                </p>
-              </>
-            )}
-          </div>
+          {/* Dashboard variant: Voting buttons for contribution */}
+          {variant === 'contribution' && hasActiveVoting && (
+            <div className="mb-4">
+              <p className="text-xs text-gray-600 mb-2">
+                Vote on this milestone to help decide if funds should be released for next milestone
+              </p>
+              <div className="flex gap-2">
+                <Link href={`/projects/${projectId}?tab=voting&vote=yes`} className="flex-1">
+                  <button className="w-full py-2 border-2 border-green-500 text-green-600 rounded-xl font-semibold hover:bg-green-50 transition-colors">
+                    Yes
+                  </button>
+                </Link>
+                <Link href={`/projects/${projectId}?tab=voting&vote=no`} className="flex-1">
+                  <button className="w-full py-2 border-2 border-red-500 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-colors">
+                    No
+                  </button>
+                </Link>
+              </div>
+            </div>
+          )}
 
-          <button className="w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102">
-            {timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0 ? 'Fund project' : 'View project'}
-          </button>
+          {/* Dashboard variant: Status message */}
+          {(variant === 'contribution' || variant === 'created') && statusMessage && !hasActiveVoting && (
+            <div className=" border border-dark rounded-xl p-3 mb-4">
+              <p className="text-xs ">{statusMessage}</p>
+            </div>
+          )}
+
+         
+          {variant === 'contribution' && isRefundEligible && (
+            <div className="mb-4">
+              <Link href={`/projects/${projectId}?action=refund`}>
+                <button className="w-full py-1 bg-red-100 border-2 border-red-300 text-red-700 rounded-xl font-semibold hover:bg-red-200 transition-colors">
+                  Request for Refund
+                </button>
+              </Link>
+            </div>
+          )}
+
+   
+          {variant === 'created' && (
+            <div className="mt-auto">
+              {milestoneStatus && (
+                <div className="mb-2">
+                  <span className={`block w-full text-center px-3 py-1 rounded-xl text-xs font-semibold border ${
+                    displayStatus === 'completed'
+                      ? 'bg-green-100 text-green-700 border-green-300'
+                      : displayStatus === 'failed'
+                      ? 'bg-red-100 text-red-700 border-red-300'
+                      : displayStatus === 'in_progress'
+                      ? 'bg-[#DC6803]/10 text-[#DC6803] border-[#DC6803]'
+                      : displayStatus === 'voting'
+                      ? 'bg-orange-100 text-orange-700 border-orange-300'
+                      : 'bg-secondary text-dark border-dark'
+                  }`}>
+                    {milestoneStatus}
+                  </span>
+                </div>
+              )}
+              {hasActiveVoting && (
+                <div className="mb-2">
+                  <span className="block w-full text-center px-3 py-1 rounded-xl text-xs font-semibold bg-orange-100 text-orange-300 border border-orange-300">
+                    Ongoing Voting
+                  </span>
+                </div>
+              )}
+              {displayStatus === 'failed' && (
+                <div className="mb-2">
+                  <span className="block w-full text-center px-3 py-1 rounded-xl text-xs font-semibold bg-red-100 text-red-700 border border-red-300">
+                    Project Failed
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {variant === 'default' && (
+            <div className="text-center mb-4 mt-auto">
+              {timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0 ? (
+                <>
+                  <p className="text-gray-600 text-xs mb-1">Funding ends in</p>
+                  <p className="text-base font-semibold">
+                    {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-dark text-xs mb-1 font-semibold">Funding Ended</p>
+                  <p className="text-base font-semibold text-dark">
+                    {endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+     
+          {variant === 'created' && displayStatus === 'funding' && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
+            <div className="text-center mb-4">
+              <p className="text-gray-600 text-xs mb-1">Funding ends in</p>
+              <p className="text-base font-semibold">
+                {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
+              </p>
+            </div>
+          )}
+
+          {/* Action buttons based on variant */}
+          {variant === 'contribution' && hasActiveVoting ? (
+            <div className="flex gap-2 mt-auto">
+              <Link href={`/projects/${projectId}?tab=voting`} className="flex-1">
+                <button className="w-full bg-white font-semibold text-dark text-sm py-3 rounded-2xl transition-all duration-300 border-2 border-dark hover:bg-gray-50">
+                  View milestone
+                </button>
+              </Link>
+              <Link href={`/projects/${projectId}`} className="flex-1">
+                <button className="w-full bg-secondary font-semibold text-dark text-sm py-3 rounded-2xl transition-all duration-300 border border-dark hover:scale-102">
+                  View project
+                </button>
+              </Link>
+            </div>
+          ) : (
+            <button className="w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102 mt-auto">
+              {variant === 'default' && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) 
+                ? 'Fund project' 
+                : 'View project'}
+            </button>
+          )}
         </div>
       </div>
     </Link>

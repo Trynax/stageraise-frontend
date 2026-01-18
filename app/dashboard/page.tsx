@@ -8,6 +8,9 @@ import Link from "next/link"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
 import { ActivityList } from "@/components/dashboard/ActivityList"
+import { ProjectsCreatedTab } from "@/components/dashboard/ProjectsCreatedTab"
+import { VotingTab } from "@/components/dashboard/VotingTab"
+import { ContributionsTab } from "@/components/dashboard/ContributionsTab"
 
 type TabType = 'activity' | 'projects' | 'voting' | 'contributions'
 
@@ -213,31 +216,13 @@ export default function DashboardPage() {
                             <ActivityTab address={address} />
                         )}
                         {activeTab === 'projects' && (
-                            <div className="flex items-center justify-center min-h-[400px]">
-                                <EmptyState 
-                                    title="You haven't created any projects yet!" 
-                                    buttonText="Create project"
-                                    buttonHref="/create"
-                                />
-                            </div>
+                            <ProjectsTab address={address} />
                         )}
                         {activeTab === 'voting' && (
-                            <div className="flex items-center justify-center min-h-[400px]">
-                                <EmptyState 
-                                    title="You haven't voted on any projects yet!" 
-                                    buttonText="Explore voting"
-                                    buttonHref="/votes"
-                                />
-                            </div>
+                            <VotingTabWrapper address={address} />
                         )}
                         {activeTab === 'contributions' && (
-                            <div className="flex items-center justify-center min-h-[400px]">
-                                <EmptyState 
-                                    title="You haven't contributed to any projects yet!" 
-                                    buttonText="Fund a project"
-                                    buttonHref="/projects"
-                                />
-                            </div>
+                            <ContributionsTabWrapper address={address} />
                         )}
                     </div>
                 </div>
@@ -306,4 +291,121 @@ function ActivityTab({ address }: { address: string }) {
     }
 
     return <ActivityList address={address} />
+}
+
+function ProjectsTab({ address }: { address: string }) {
+    const [hasProjects, setHasProjects] = useState<boolean | null>(null)
+
+    useEffect(() => {
+        const checkProjects = async () => {
+            try {
+                const response = await fetch(`/api/dashboard/projects?address=${address}&limit=1`)
+                const data = await response.json()
+                setHasProjects(data.success && data.projects.length > 0)
+            } catch {
+                setHasProjects(false)
+            }
+        }
+        checkProjects()
+    }, [address])
+
+    if (hasProjects === null) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-deepGreen"></div>
+            </div>
+        )
+    }
+
+    if (!hasProjects) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <EmptyState 
+                    title="You haven't created any projects yet!" 
+                    buttonText="Create project"
+                    buttonHref="/create"
+                />
+            </div>
+        )
+    }
+
+    return <ProjectsCreatedTab address={address} />
+}
+
+function VotingTabWrapper({ address }: { address: string }) {
+    const [hasVotes, setHasVotes] = useState<boolean | null>(null)
+
+    useEffect(() => {
+        const checkVotes = async () => {
+            try {
+                const response = await fetch(`/api/dashboard/voting?address=${address}&limit=1`)
+                const data = await response.json()
+                setHasVotes(data.success && data.votes.length > 0)
+            } catch {
+                setHasVotes(false)
+            }
+        }
+        checkVotes()
+    }, [address])
+
+    if (hasVotes === null) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-deepGreen"></div>
+            </div>
+        )
+    }
+
+    if (!hasVotes) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <EmptyState 
+                    title="You haven't voted on any projects yet!" 
+                    buttonText="Explore voting"
+                    buttonHref="/votes"
+                />
+            </div>
+        )
+    }
+
+    return <VotingTab address={address} />
+}
+
+function ContributionsTabWrapper({ address }: { address: string }) {
+    const [hasContributions, setHasContributions] = useState<boolean | null>(null)
+
+    useEffect(() => {
+        const checkContributions = async () => {
+            try {
+                const response = await fetch(`/api/dashboard/contributions?address=${address}&limit=1`)
+                const data = await response.json()
+                setHasContributions(data.success && data.contributions.length > 0)
+            } catch {
+                setHasContributions(false)
+            }
+        }
+        checkContributions()
+    }, [address])
+
+    if (hasContributions === null) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-deepGreen"></div>
+            </div>
+        )
+    }
+
+    if (!hasContributions) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <EmptyState 
+                    title="You haven't contributed to any projects yet!" 
+                    buttonText="Fund a project"
+                    buttonHref="/projects"
+                />
+            </div>
+        )
+    }
+
+    return <ContributionsTab address={address} />
 }
