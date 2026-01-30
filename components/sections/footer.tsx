@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+
 
 export function Footer() {
   const [language, setLanguage] = useState('EN');
@@ -12,7 +14,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
          
           <div className="md:col-span-1">
-            <h2 className="text-3xl font-bold mb-4">LOGO</h2>
+            <Link href="/" className="inline-block mb-4">
+              <Image src="/images/logo.svg" alt="Stage Raise Logo" width={150} height={40} />
+            </Link>
             <p className="text-gray-700 text-sm leading-relaxed mb-6">
               A decentralized crowdfunding platform where milestones decide the money not hope.
             </p>
