@@ -35,7 +35,7 @@ export function Header() {
                 </Link>
             </div>
 
-            <div className="hidden lg:flex flex-1 justify-center gap-8">
+            <div className="hidden lg:flex flex-1 justify-center gap-4 md:gap-2 xl:gap-12 text-sm">
                 <Link href="/projects" className="nav-link">Explore Projects</Link>
                 <Link href="/votes" className="nav-link">Explore Voting</Link>
                 <Link href="/how-it-works" className="nav-link">How it works</Link>
@@ -52,7 +52,7 @@ export function Header() {
                 </div>
 
                 <div className="sm:hidden">
-                    <ButtonConnect accountStatus="avatar" />
+                    <ButtonConnect accountStatus="avatar" chainStatus="none" />
                 </div>
 
                 <button 
