@@ -31,7 +31,7 @@ export function Header() {
         <header className="flex fixed top-0 left-0 right-0 z-50 items-center gap-3 sm:gap-5 px-4 sm:px-8 lg:px-32 py-3 sm:py-4 bg-primary w-full border-b-3 border-dark">
             <div className="flex items-center">
                 <Link href="/" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center">
-                    <Image src="/images/logo.svg" alt="Stage Raise Logo" width={130} height={40} />
+                    <Image src="/images/logo.svg" alt="Stage Raise Logo" width={150} height={40} />
                 </Link>
             </div>
 
@@ -45,7 +45,7 @@ export function Header() {
         
             <div className="flex-1 lg:hidden"></div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1 sm:gap-3">
                
                 <div className="hidden sm:block">
 
@@ -57,7 +57,7 @@ export function Header() {
                 </div>
 
                 <button 
-                    className="lg:hidden p-2"
+                    className="lg:hidden "
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 >
                     <Image src="/icons/menuhamburger.svg" alt="Menu" width={24} height={24} />
