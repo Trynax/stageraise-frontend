@@ -1,0 +1,8 @@
+<svg width="363" height="363" viewBox="0 0 363 363" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Scaled down 80% and centered for better visual padding -->
+  <g transform="translate(36.3 36.3) scale(0.8)">
+    <path d="M0 49.1V9.1C0 4.1 2 0 4.6 0H358.3C360.8 0 362.9 4.1 362.9 9.1V49.1H0Z" fill="#3A9E1B"/>
+    <path d="M362.6 70.1001H0.400391V176.2H362.6V70.1001Z" fill="#3A9E1B"/>
+    <path d="M0.400391 355.4V212.5H362.6V355.4C362.6 359.5 360.6 362.8 358 362.8H5.00039C2.40039 362.8 0.400391 359.5 0.400391 355.4Z" fill="#3A9E1B"/>
+  </g>
+</svg>
