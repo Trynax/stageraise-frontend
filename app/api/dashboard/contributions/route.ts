@@ -27,14 +27,11 @@ export async function GET(request: NextRequest) {
             _count: true
         })
 
-        // Typed view over the grouped contribution result to satisfy TypeScript strict checking
-        type ContributionGroup = { projectId: string; _sum: { amount?: number | null } };
+        const projectIds = contributionsByProject.map(c => c.projectId)
 
-        const projectIds = (contributionsByProject as ContributionGroup[]).map(c => c.projectId)
-
-        // Create a map of project contributions (typed)
-        const contributionMap = new Map<string, number>(
-            (contributionsByProject as ContributionGroup[]).map(c => [c.projectId, c._sum?.amount ?? 0] as [string, number])
+        // Create a map of project contributions
+        const contributionMap = new Map(
+            contributionsByProject.map(c => [c.projectId, c._sum.amount || 0])
         )
 
         // Get projects with their details
@@ -65,25 +62,7 @@ export async function GET(request: NextRequest) {
         ])
 
         // Transform projects with contribution info
-        // Add a local typed view for projects returned by Prisma to avoid implicit `any` errors during build
-        type ProjectWithRelations = {
-            id: string
-            projectId: string | number
-            name?: string | null
-            description?: string | null
-            coverImageUrl?: string | null
-            logoUrl?: string | null
-            fundingTarget?: number | null
-            fundingDeadline?: string | Date
-            cachedRaisedAmount?: number | null
-            cachedTotalContributors?: number | null
-            milestones: any[]
-            currentMilestone: number
-            status?: string | null
-            votingRounds: any[]
-        }
-
-        const transformedContributions = (projects as ProjectWithRelations[]).map((project) => {
+        const transformedContributions = projects.map(project => {
             const userContribution = contributionMap.get(project.id) || 0
             const totalMilestones = project.milestones.length
             const currentMilestone = project.currentMilestone
@@ -96,7 +75,7 @@ export async function GET(request: NextRequest) {
             let statusMessage = null
 
             const now = new Date()
-            const fundingEnded = project.fundingDeadline ? (new Date(project.fundingDeadline) < now) : false
+            const fundingEnded = new Date(project.fundingDeadline) < now
 
             if (project.status === 'completed') {
                 displayStatus = 'completed'
