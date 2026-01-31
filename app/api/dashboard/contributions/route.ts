@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         ])
 
         // Transform projects with contribution info
-        const transformedContributions = projects.map(project => {
+       const transformedContributions = projects.map((project: any) => {
             const userContribution = contributionMap.get(project.id) || 0
             const totalMilestones = project.milestones.length
             const currentMilestone = project.currentMilestone
