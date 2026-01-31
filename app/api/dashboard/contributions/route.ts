@@ -65,7 +65,25 @@ export async function GET(request: NextRequest) {
         ])
 
         // Transform projects with contribution info
-        const transformedContributions = projects.map(project => {
+        // Add a local typed view for projects returned by Prisma to avoid implicit `any` errors during build
+        type ProjectWithRelations = {
+            id: string
+            projectId: string | number
+            name?: string | null
+            description?: string | null
+            coverImageUrl?: string | null
+            logoUrl?: string | null
+            fundingTarget?: number | null
+            fundingDeadline?: string | Date
+            cachedRaisedAmount?: number | null
+            cachedTotalContributors?: number | null
+            milestones: any[]
+            currentMilestone: number
+            status?: string | null
+            votingRounds: any[]
+        }
+
+        const transformedContributions = (projects as ProjectWithRelations[]).map((project) => {
             const userContribution = contributionMap.get(project.id) || 0
             const totalMilestones = project.milestones.length
             const currentMilestone = project.currentMilestone
@@ -78,7 +96,7 @@ export async function GET(request: NextRequest) {
             let statusMessage = null
 
             const now = new Date()
-            const fundingEnded = new Date(project.fundingDeadline) < now
+            const fundingEnded = project.fundingDeadline ? (new Date(project.fundingDeadline) < now) : false
 
             if (project.status === 'completed') {
                 displayStatus = 'completed'
