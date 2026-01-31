@@ -9,6 +9,8 @@ interface ButtonConnectProps {
 
 export function ButtonConnect({ accountStatus = "full", chainStatus = "icon" }: ButtonConnectProps) {
     return (
-        <ConnectButton showBalance={false}  chainStatus={chainStatus} accountStatus={accountStatus} />
+        <div style={{ whiteSpace: "nowrap", minWidth: 140 }}>
+            <ConnectButton showBalance={false} chainStatus={chainStatus} accountStatus={accountStatus} />
+        </div>
     )
 }

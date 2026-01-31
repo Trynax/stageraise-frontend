@@ -60,7 +60,7 @@ export function Header() {
                     className="lg:hidden "
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 >
-                    <Image src="/icons/menuhamburger.svg" alt="Menu" width={24} height={24} />
+                    <Image src="/icons/menuhamburger.svg" alt="Menu" width={50} height={50} />
                 </button>
 
             </div>
