@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
             _count: true
         })
 
-        const projectIds = contributionsByProject.map(c => c.projectId)
+    const projectIds = contributionsByProject.map((c) => c.projectId) as string[]
 
         // Create a map of project contributions
         const contributionMap = new Map(
