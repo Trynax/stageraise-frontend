@@ -19,17 +19,17 @@ export function AboutSection() {
           <div className="border-2 rounded-xl border-dark">
             <div className="bg-[#CBF5BD] px-8 py-4 rounded-t-xl">
               <h3 className="text-sm text-[#296219] mb-2 font-semibold">For Creators</h3>
-              <h2 className="text-2xl font-bold  text-dark">Raise funds with Trust</h2>
+              <h2 className="text-2xl font-bold  text-dark">Raise funds with trust and accountability</h2>
             </div>
             
             <ul className="space-y-3 flex flex-col px-8 py-6 gap-3">
               {[
                 'Create a project.',
-                'Set Goals, millstones, deadlines.',
+                'Set goals, milestones, and deadlines.',
                 'Choose funding mode.',
                 'Receive transparent funding.',
                 'Unlock funds only when you deliver.',
-                'Build trust that last beyond one project.'
+                'Build trust that lasts beyond one project.'
               ].map((item, index) => (
                 <li key={index} className="flex items-center gap-4">
                   <div className="w-6 h-6 bg-[#0e2c076d] rounded flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -46,7 +46,7 @@ export function AboutSection() {
           <div className="border-2 rounded-xl border-dark">
             <div className="bg-[#F6EFE6] px-8 py-4 rounded-t-xl">
               <h3 className="text-sm text-[#764536] mb-2 font-semibold">For Funders</h3>
-              <h2 className="text-2xl font-bold  text-dark">Back Project with Confidence</h2>
+              <h2 className="text-2xl font-bold  text-dark">Back Projects with Confidence</h2>
             </div>
             
             <ul className="space-y-3 flex flex-col px-8 py-6 gap-3">
@@ -54,10 +54,10 @@ export function AboutSection() {
             {[
                 'Discover high-quality projects.',
                 'Fund within fair USD limits.',
-                'Vote on milestones completion.',
+                'Vote on milestone completion.',
                 'Track progress live onchain.',
-                'Request refunds if creators fail.',
-                'Support creators who actually delivers.'
+                'Claim refunds if creators fail a set of milestones.',
+                'Support creators who actually deliver.'
               ].map((item, index) => (
                 <li key={index} className="flex items-center gap-4">
                   <div className="w-6 h-6 bg-[#331d1770] rounded flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -88,7 +88,7 @@ export function AboutSection() {
             { icon: '/icons/danger.svg', text: 'No milestone verification' },
             { icon: '/icons/protection.svg', text: 'No funder protection' },
             { icon: '/icons/cancel.svg', text: 'No refund system' },
-            { icon: '/icons/lock.svg', text: 'Decentralize rules' },
+            { icon: '/icons/lock.svg', text: 'Decentralized rules' },
             { icon: '/icons/coin.svg', text: 'Heavy fees' },
             { icon: '/icons/closedeye.svg', text: 'Zero transparency' }
           ].map((item, index) => (
@@ -121,32 +121,32 @@ export function AboutSection() {
               },
               {
                 icon: "icons/check.svg",
-                title: 'Two Funding Models Your Rules',
+                title: 'Two Funding Models — Your Rules',
                 description: 'Traditional all-or-nothing mode or our flagship Milestone Mode with step-by-step fund release controlled by community governance.',
                 tagline: "It's built for everyone."
               },
               {
                 icon:"icons/coin-green.svg",
-                title: 'USD-Based Contribution Limits',
-                description: 'Real-time ETH/USD conversion with fair contribution boundaries. Protection from crypto volatility and market manipulation.',
-                tagline: 'Smart limits, not static ones.'
+                title: 'Stablecoin Support & Limits',
+                description: 'Supports USDC, USDT, and BUSD with configurable min/max contribution limits per contributor to reduce volatility and prevent whale dominance.',
+                tagline: 'Stable funding, fair participation.'
               },
               {
                 icon: "icons/voting.svg",
                 title: 'Community Voting That Matters',
-                description: 'Voted has consequences. Approve, Fully on-chain, fully transparent. No double-voting. No central authority altering outcomes.',
+                description: 'Votes have consequences. Fully on-chain and transparent. No double-voting. No central authority altering outcomes.',
                 tagline: 'Real accountability.'
               },
               {
                 icon: "icons/refreshgreen.svg",
                 title: 'Refund Guarantee',
-                description: 'After 3 failed milestones, automatic refund eligibility kicks in. Proportional refunds with remaining unspent funds.',
+                description: 'If a project fails 3 milestone votes, funders can claim refunds for remaining unspent funds. Refunds are proportional to contributions.',
                 tagline: 'You deliver or they exit.'
               },
               {
                 icon: "icons/shieldgreen.svg",
                 title: 'Security You Can See',
-                description: 'Chainlink price feeds, smart contract audits, gas-optimized architecture, immutable records, and transparent transactions.',
+                description: 'Smart contract audits, gas-optimized architecture, immutable records, and transparent transactions.',
                 tagline: "If it's not on-chain, it's not verified."
               }
             ].map((feature, index) => (
@@ -171,15 +171,15 @@ export function AboutSection() {
                         href="/create"
                         className="px-4 py-3 bg-deepGreen text-white rounded-xl font-semibold text-sm md:text-lg hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
                     >
-                        Create Project
+                        Start a Project
                     </Link>
                     <Link 
                         href="/projects"
                         className="px-4 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
                     >
-                        Fund project
+                        Browse Projects
                     </Link>
-          </div>
+                </div>
 
       </div>
     </section>

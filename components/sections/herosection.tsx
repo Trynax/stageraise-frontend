@@ -26,7 +26,7 @@ export function HeroSection() {
                             WebkitTextStroke: '2px black',
                             paintOrder: 'stroke fill'
                         }}>
-                            Fund Bold Ideas.{' '}
+                            Fund bold ideas.
                         </span>
                         <span className="text-secondary" style={{ 
                             WebkitTextStroke: '2px black',
@@ -54,13 +54,13 @@ export function HeroSection() {
                         href="/create"
                         className="px-4 py-3 bg-deepGreen text-white rounded-xl font-semibold text-sm md:text-lg hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
                     >
-                        Create Project
+                        Start a Project
                     </Link>
                     <Link 
                         href="/projects"
                         className="px-4 py-3 bg-white text-gray-900 rounded-xl font-semibold text-sm md:text-lg border-2 border-gray-900 hover:scale-105 transition-transform duration-300 shadow-lg inline-block text-center"
                     >
-                        Fund project
+                        Browse Projects
                     </Link>
                 </div>
 
@@ -72,44 +72,44 @@ export function HeroSection() {
     <div className="flex animate-scroll gap-8 py-4 sm:py-6">
    
         <div className="flex items-center gap-3 shrink-0">
-            <Image src="/icons/shield.svg" alt="Verification Icon" width={22} height={22} />
-            <span className="font-semibold text-gray-900 whitespace-nowrap">On-Chain Verification</span>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} />
-            <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-            <Image src="/icons/squares.svg" alt="Squares Icon" width={22} height={22} />
+            <Image src="/icons/squares.svg" alt="Milestones Icon" width={22} height={22} />
             <span className="font-semibold text-gray-900 whitespace-nowrap">Milestone-Based Funding</span>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} /> 
-            <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
+            <Image src="/icons/shield.svg" alt="Voting Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Weighted Voting</span>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+            <Image src="/icons/refresh.svg" alt="Refunds Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Refunds</span>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+            <Image src="/icons/shield.svg" alt="Stablecoin Icon" width={22} height={22} /> 
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Stablecoin Support</span>
         </div>
 
        
         <div className="flex items-center gap-3 shrink-0">
-            <Image src="/icons/shield.svg" alt="Verification Icon" width={22} height={22} />
-            <span className="font-semibold text-gray-900 whitespace-nowrap">On-Chain Verification</span>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} />
-            <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-            <Image src="/icons/squares.svg" alt="Squares Icon" width={22} height={22} />
+            <Image src="/icons/squares.svg" alt="Milestones Icon" width={22} height={22} />
             <span className="font-semibold text-gray-900 whitespace-nowrap">Milestone-Based Funding</span>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-            <Image src="/icons/refresh.svg" alt="Refresh Icon" width={22} height={22} /> 
-            <span className="font-semibold text-gray-900 whitespace-nowrap">Automatic Refunds</span>
+            <Image src="/icons/shield.svg" alt="Voting Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Weighted Voting</span>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+            <Image src="/icons/refresh.svg" alt="Refunds Icon" width={22} height={22} />
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Refunds</span>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+            <Image src="/icons/shield.svg" alt="Stablecoin Icon" width={22} height={22} /> 
+            <span className="font-semibold text-gray-900 whitespace-nowrap">Stablecoin Support</span>
         </div>
     </div>
     </div>

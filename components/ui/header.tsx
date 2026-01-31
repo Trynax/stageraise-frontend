@@ -36,9 +36,9 @@ export function Header() {
             </div>
 
             <div className="hidden lg:flex flex-1 justify-center gap-4 md:gap-2 xl:gap-12 text-sm">
-                <Link href="/projects" className="nav-link">Explore Projects</Link>
-                <Link href="/votes" className="nav-link">Explore Voting</Link>
-                <Link href="/how-it-works" className="nav-link">How it works</Link>
+                <Link href="/projects" className="nav-link">Projects</Link>
+                <Link href="/votes" className="nav-link">Votes</Link>
+                <Link href="/how-it-works" className="nav-link">Learn</Link>
                 <Link href="/about" className="nav-link">About</Link>
             </div>
 
@@ -110,21 +110,21 @@ export function Header() {
                             className="text-lg font-medium hover:text-deepGreen transition-colors"
                             onClick={() => setMobileMenuOpen(false)}
                         >
-                            Explore Project
+                            Projects
                         </Link>
                         <Link 
                             href="/votes" 
                             className="text-lg font-medium hover:text-deepGreen transition-colors"
                             onClick={() => setMobileMenuOpen(false)}
                         >
-                            Explore Voting
+                            Votes
                         </Link>
                         <Link 
                             href="/how-it-works" 
                             className="text-lg font-medium hover:text-deepGreen transition-colors"
                             onClick={() => setMobileMenuOpen(false)}
                         >
-                            How it&apos;s works
+                            Learn
                         </Link>
                         <Link 
                             href="/about" 

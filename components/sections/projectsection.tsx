@@ -6,7 +6,7 @@ import Image from "next/image"
 import ProjectCard from "@/components/projects/projectcard"
 
 export function ProjectSection () {
-    const [activeTab, setActiveTab] = useState<'ongoing' | 'ended'>('ongoing');
+    const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -33,7 +33,7 @@ export function ProjectSection () {
             const fundingDeadline = new Date(project.fundingDeadline);
             const now = new Date();
             const isFundingActive = fundingDeadline > now;
-            if (activeTab === 'ongoing') {
+            if (activeTab === 'active') {
         
                 return isFundingActive && (project.status === 'active' || !project.status);
             }
@@ -52,24 +52,24 @@ export function ProjectSection () {
 
             <div className="border border-dark flex rounded-lg md:w-92 mx-auto mt-12"> 
                <button
-                onClick={() => setActiveTab('ongoing')}
+                onClick={() => setActiveTab('active')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'ongoing'
+                activeTab === 'active'
                     ? 'bg-secondary text-dark'
                     : 'text-[#9CA3AF] hover:text-gray-800'
-                }`}
-            >
-                Ongoing
+                }`}>
+            
+                Active
             </button>
             <button
-                onClick={() => setActiveTab('ended')}
+                onClick={() => setActiveTab('completed')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'ended'
+                activeTab === 'completed'
                     ? 'bg-secondary text-dark'
                     : 'text-[#9CA3AF] hover:text-gray-800'
-                }`}
-            >
-                Ended
+                }`}>
+            
+                Completed
              </button>
             </div>
 
@@ -103,20 +103,20 @@ export function ProjectSection () {
                             </svg>
                         </div>
                         <h3 className="text-2xl font-bold mb-3">
-                            {activeTab === 'ongoing' ? 'No Active Projects Yet' : 'No Ended Projects'}
+                            {activeTab === 'active' ? 'No Active Projects Yet' : 'No Completed Projects Yet'}
                         </h3>
                         <p className="text-gray-600 mb-6">
-                            {activeTab === 'ongoing' 
-                                ? "Be the first to launch a project on StageRaise! Create milestone-based funding with community governance."
+                            {activeTab === 'active' 
+                                ? "Be the first to launch on StageRaise — create milestone-based funding with community verification."
                                 : "No projects have completed their funding yet. Check back later!"
                             }
                         </p>
-                        {activeTab === 'ongoing' && (
+                        {activeTab === 'active' && (
                             <Link 
                                 href="/create" 
                                 className="inline-block bg-secondary text-dark font-semibold px-8 py-3 rounded-2xl  hover:scale-105 transition-transform"
                             >
-                                Create Your Project
+                                Start a Project
                             </Link>
                         )}
                     </div>

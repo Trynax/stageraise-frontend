@@ -81,7 +81,7 @@ export function VoteSection(){
                                 href="/votes" 
                                 className="inline-block bg-white text-dark font-semibold px-6 py-3 rounded-2xl border border-dark hover:bg-gray-50 transition-colors"
                             >
-                                View Past Votes
+                                Past Votes
                             </Link>
                         </div>
                     </div>
