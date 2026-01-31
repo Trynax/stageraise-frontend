@@ -27,11 +27,14 @@ export async function GET(request: NextRequest) {
             _count: true
         })
 
-        const projectIds = contributionsByProject.map(c => c.projectId)
+        // Typed view over the grouped contribution result to satisfy TypeScript strict checking
+        type ContributionGroup = { projectId: string; _sum: { amount?: number | null } };
 
-        // Create a map of project contributions
-        const contributionMap = new Map(
-            contributionsByProject.map(c => [c.projectId, c._sum.amount || 0])
+        const projectIds = (contributionsByProject as ContributionGroup[]).map(c => c.projectId)
+
+        // Create a map of project contributions (typed)
+        const contributionMap = new Map<string, number>(
+            (contributionsByProject as ContributionGroup[]).map(c => [c.projectId, c._sum?.amount ?? 0] as [string, number])
         )
 
         // Get projects with their details
