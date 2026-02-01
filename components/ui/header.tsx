@@ -45,7 +45,16 @@ export function Header() {
         
             <div className="flex-1 lg:hidden"></div>
 
-            <div className="flex items-center gap-1 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+
+
+                {
+                    isConnected && address && (
+                        <button className="border px-3 py-1 bg-secondary text-dark rounded-lg font-semibold text-sm hover:bg-secondary/80 transition-colors hidden sm:inline-flex">
+                            Dashboard
+                        </button>
+                    )
+                }
                
                 <div className="hidden sm:block">
 
@@ -57,10 +66,10 @@ export function Header() {
                 </div>
 
                 <button 
-                    className="lg:hidden "
+                    className="lg:hidden flex items-center justify-center"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 >
-                    <Image src="/icons/menuhamburger.svg" alt="Menu" width={50} height={50} />
+                    <Image src="/icons/menuhamburger.svg" alt="Menu" width={32} height={32} />
                 </button>
 
             </div>
