@@ -50,9 +50,9 @@ export function Header() {
 
                 {
                     isConnected && address && (
-                        <button className="border px-3 py-1 bg-secondary text-dark rounded-lg font-semibold text-sm hover:bg-secondary/80 transition-colors hidden sm:inline-flex">
+                         <Link href="/dashboard" className="border px-3 py-1 bg-secondary text-dark rounded-lg font-semibold text-sm hover:bg-secondary/80 transition-colors hidden sm:inline-flex">
                             Dashboard
-                        </button>
+                         </Link>
                     )
                 }
                
