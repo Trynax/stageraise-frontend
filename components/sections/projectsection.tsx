@@ -42,7 +42,7 @@ export function ProjectSection () {
         .slice(0, 6);
 
     return (
-        <section className="py-20  bg-primary">
+        <section className="py-20 bg-primary">
 
             <h1 className="text-4xl md:text-5xl font-bold text-center">Funds Projects That Are <span className="text-secondary" style={{ 
                             WebkitTextStroke: '2px black',
@@ -96,7 +96,7 @@ export function ProjectSection () {
                 </>
             ) : (
                 <div className="mt-12 max-w-2xl mx-auto">
-                    <div className="bg-primary rounded-3xl border-dark p-12 text-center">
+                    <div className="bg-primary rounded-3xl border-dark p-4 md:p-12 text-center">
                         <div className="mb-6">
                             <svg className="w-24 h-24 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
