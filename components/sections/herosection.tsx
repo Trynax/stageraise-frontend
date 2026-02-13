@@ -41,8 +41,8 @@ export function HeroSection() {
                         }}>
                             Only When They Deliver.
                         </span>
-                    </h1>
-                    
+                    </h1>                    
+
                     <p className="text-xl text-gray-900 font-medium max-w-4xl mx-auto">
                         A decentralized crowdfunding platform where milestones decide the money not hope.
                     </p>

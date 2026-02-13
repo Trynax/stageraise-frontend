@@ -177,9 +177,9 @@ export default function ProjectDetailPage() {
                             </>
                         )}
                     </div>
-                    <div className="border-2 border-dark px-4 py-2 rounded-xl mt-6 flex gap-8">
-                        <div className="flex gap-3 flex-col flex-[40%]">
-                            <div className="flex gap-16 items-center w-full">
+                    <div className="border-2 border-dark px-4 py-3 rounded-xl mt-6 flex flex-col md:flex-row gap-4 md:gap-6">
+                        <div className="flex gap-3 flex-col min-w-0 md:flex-[38%]">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 w-full min-w-0">
                                 <div className="flex items-center gap-3 min-w-0">
                                     {project.logoUrl ? (
                                         <Image src={project.logoUrl} alt={project.name || "Project Logo"} width={50} height={50} className="rounded-full shrink-0" />
@@ -191,7 +191,7 @@ export default function ProjectDetailPage() {
                                      <h1 className="text-xl font-bold truncate">{project.name}</h1>
                                 </div>
                                
-                                <div className="flex gap-3 border-l border-gray-300 pl-3 shrink-0">
+                                <div className="flex items-center gap-3 border-l border-gray-300 pl-3 shrink-0">
                                     {project.discordUrl && (
                                     <Link href={project.discordUrl} className="hover:opacity-70 transition-opacity">
                                     <Image src="/icons/discord-black.svg" alt="Discord" width={20} height={20} />
@@ -212,12 +212,12 @@ export default function ProjectDetailPage() {
                                     </button>
 
                                 </div>
-                                
+
                             </div>
 
                             <div className ="flex items-center gap-2 flex-wrap">
-                                <div className="flex items-center bg-secondary px-2 py-1 border border-dark rounded-full">
-                                    <Image src={"/icons/squares.svg"} alt="milestones" width={14} height={14}></Image>
+                                <div className="flex items-center bg-deepGreen text-[#CBF5BD] px-2 py-1 border border-dark rounded-full">
+                                    <Image src={"/icons/squaresnew.svg"} alt="milestones" width={14} height={14}></Image>
                                     {
                                         project.currentMilestone > 0 ? (
                                             <span className="ml-2 text-xs font-semibold whitespace-nowrap">{project.currentMilestone}/{project.milestones.length} Milestones</span>
@@ -226,60 +226,62 @@ export default function ProjectDetailPage() {
                                         )
                                     }
                                 </div>
-                                <div className="flex items-center bg-secondary px-2 py-1 border border-dark rounded-full">
-                                     <Image src={"/icons/clock.svg"} alt="milestones" width={14} height={14}></Image>
+                                <div className="flex items-center bg-deepGreen text-[#CBF5BD] px-2 py-1 border border-dark rounded-full">
+                                     <Image src={"/icons/clocknew.svg"} alt="milestones" width={14} height={14}></Image>
                                      <span className="ml-2 text-xs font-semibold whitespace-nowrap">Voting Period ({project.votingPeriodDays}D)</span>
 
                                 </div>
-                                    <span className="bg-secondary px-2 py-1 border border-dark rounded-full text-xs font-semibold whitespace-nowrap">Created On {new Date(project.createdAt).toLocaleDateString()}</span>
+                                    <span className="bg-deepGreen text-[#CBF5BD] px-2 py-1 border border-dark rounded-full text-xs font-semibold whitespace-nowrap">Created On {new Date(project.createdAt).toLocaleDateString()}</span>
 
                             </div>
 
                         </div>
 
-                        <div className="flex gap-2 flex-[40%] justify-between">
+                        <div className="w-full md:flex-[62%] md:border-gray-300 md:pl-6 mt-4">
+                            <div className="flex  md:gap-10 md:justify-between overflow-x-auto md:overflow-visible pb-1">
 
-                            <div className="flex flex-col items-center gap-3 flex-1">
+                            <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
                                 <span className="text-sm text-gray-500">Amount Raised</span>
-                                <span>
+                                <span className="whitespace-nowrap font-semibold">
                                     {project.cachedRaisedAmount?.toLocaleString() || 0} {token?.symbol || 'BUSD'}
                                     {isFundingPhase && ` (${amountRaisedPercent}%)`}
                                 </span>
                             </div>
                             {isFundingPhase ? (
-                                <div className="flex flex-col items-center gap-3 flex-1">
+                                <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
                                     <span className="text-sm text-gray-500">Time Left</span>
-                                    <span className="font-mono">{formatTimeLeft()}</span>
+                                    <span className="font-mono whitespace-nowrap font-semibold">{formatTimeLeft()}</span>
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center gap-3 flex-1">
+                                <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
                                     <span className="text-sm text-gray-500">Project Balance</span>
-                                    <span>{project.cachedRaisedAmount?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
+                                    <span className="whitespace-nowrap font-semibold">{project.cachedRaisedAmount?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
                                 </div>
                             )}
-                            <div className="flex flex-col items-center gap-3 flex-1">
+                            <div className="flex flex-col items-center gap-4 shrink-0 min-w-[120px] md:min-w-0 md:flex-1">
                                 <span className="text-sm text-gray-500">Funders</span>
-                                <span>{project.cachedTotalContributors || 0}</span>
+                                <span className="whitespace-nowrap font-semibold">{project.cachedTotalContributors || 0}</span>
                             </div>
-                            <div className="flex flex-col items-center gap-3 flex-1">
+                            <div className="flex flex-col items-center gap-4 shrink-0 min-w-[170px] md:min-w-0 md:flex-1">
                                 <span className="text-sm text-gray-500">Fundraising Target</span>
-                                <span>{project.fundingTarget?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
+                                <span className="whitespace-nowrap font-semibold">{project.fundingTarget?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
                             </div>
 
 
 
+                            </div>
                         </div>
 
                     </div>
 
                     <div className="grid lg:grid-cols-3 gap-6 mt-8">
                       
-                        <div className="lg:col-span-2">
+                        <div className="lg:col-span-2 order-2 lg:order-1">
                        
-                            <div className="flex gap-0 mb-6 bg-white border-2 border-dark rounded-2xl p-0.5">
+                            <div className="flex gap-0 mb-6 bg-white border-2 border-dark rounded-2xl p-px">
                                 <button
                                     onClick={() => setActiveTab('about')}
-                                    className={`flex-1 px-2 py-1 font-semibold transition-all rounded-xl ${
+                                    className={`flex-1 text-sm px-1 py-2 font-semibold transition-all rounded-xl ${
                                         activeTab === 'about'
                                             ? 'bg-secondary text-dark'
                                             : 'bg-white text-dark hover:bg-gray-50'
@@ -292,7 +294,7 @@ export default function ProjectDetailPage() {
                                 )}
                                 <button
                                     onClick={() => setActiveTab('milestone')}
-                                    className={`flex-1 px-2 py-1 font-semibold transition-all rounded-xl ${
+                                    className={`flex-1 text-sm px-2 py-2 font-semibold transition-all rounded-xl ${
                                         activeTab === 'milestone'
                                             ? 'bg-secondary text-dark'
                                             : 'bg-white text-dark hover:bg-gray-50'
@@ -305,7 +307,7 @@ export default function ProjectDetailPage() {
                                 )}
                                 <button
                                     onClick={() => setActiveTab('voting')}
-                                    className={`flex-1 px-2 py-1 font-semibold transition-all rounded-xl ${
+                                    className={`flex-1 text-sm px-2 py-2 font-semibold transition-all rounded-xl ${
                                         activeTab === 'voting'
                                             ? 'bg-secondary text-dark'
                                             : 'bg-white text-dark hover:bg-gray-50'
@@ -359,7 +361,7 @@ export default function ProjectDetailPage() {
                         </div>
 
                   
-                        <div className="space-y-6">
+                        <div className="space-y-6 order-1 lg:order-2">
                            
                             {/* Show FundingCard if funding deadline hasn't passed */}
                             {isFundingPhase && project.status !== 'completed' && project.status !== 'refundable' && (
