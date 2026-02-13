@@ -130,6 +130,21 @@ export async function PATCH(
     // TODO: Add owner verification (check wallet signature)
     // For now, anyone can update (fix this with auth)
 
+    const milestoneUpserts = Array.isArray(body.milestones)
+      ? body.milestones
+          .map((m: any) => {
+            const stage = Number.parseInt(String(m?.stage), 10)
+            if (!Number.isFinite(stage) || stage <= 0) return null
+            return {
+              stage,
+              title: typeof m?.title === 'string' ? m.title : undefined,
+              description: typeof m?.description === 'string' ? m.description : undefined,
+              deliverables: m?.deliverables,
+            }
+          })
+          .filter(Boolean)
+      : []
+
     // Update only allowed fields - use the database UUID for update
     const project = await prisma.project.update({
       where: { id: existing.id },
@@ -144,6 +159,26 @@ export async function PATCH(
         ...(body.twitterUrl && { twitterUrl: body.twitterUrl }),
         ...(body.discordUrl && { discordUrl: body.discordUrl }),
         ...(body.telegramUrl && { telegramUrl: body.telegramUrl }),
+        ...(milestoneUpserts.length > 0 && {
+          milestones: {
+            upsert: milestoneUpserts.map((m: any) => ({
+              where: {
+                projectId_stage: { projectId: existing.id, stage: m.stage },
+              },
+              update: {
+                ...(m.title !== undefined && { title: m.title }),
+                ...(m.description !== undefined && { description: m.description }),
+                ...(m.deliverables !== undefined && { deliverables: m.deliverables }),
+              },
+              create: {
+                stage: m.stage,
+                title: m.title ?? `Milestone ${m.stage}`,
+                description: m.description ?? '',
+                deliverables: m.deliverables ?? [],
+              },
+            })),
+          },
+        }),
         updatedAt: new Date()
       },
       include: {

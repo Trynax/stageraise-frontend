@@ -339,6 +339,7 @@ export default function ProjectDetailPage() {
                                 <MilestoneTab 
                                     milestones={project.milestones || []} 
                                     currentMilestone={project.currentMilestone || 1}
+                                    projectId={projectId as string}
                                     projectTitle={project.name}
                                     failedVotingCount={project.failedVotingCount || 0}
                                     isFundingPhase={isFundingPhase}

@@ -15,7 +15,7 @@ const client = createPublicClient({
 // POST /api/projects/sync - Sync a project from blockchain to database after creation
 export async function POST(request: NextRequest) {
   try {
-    const { transactionHash, chainId } = await request.json()
+    const { transactionHash, chainId, metadata } = await request.json()
 
     if (!transactionHash) {
       return NextResponse.json(
@@ -23,6 +23,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const tags = Array.isArray(metadata?.tags) ? metadata.tags.filter((t: any) => typeof t === 'string') : []
+    const milestonesMetadata = Array.isArray(metadata?.milestones) ? metadata.milestones : []
 
     // Get transaction receipt
     const receipt = await client.waitForTransactionReceipt({
@@ -58,8 +61,8 @@ export async function POST(request: NextRequest) {
         ownerAddress: projectInfo.owner.toLowerCase(),
         name: projectInfo.name,
         description: projectInfo.description,
-        category: 'Other', // Will be updated via API later
-        tags: [],
+        category: typeof metadata?.category === 'string' ? metadata.category : 'Other',
+        tags,
         fundingTarget: Number(projectInfo.targetAmount) / 1e18,
         fundingDeadline: new Date(Number(projectInfo.deadline) * 1000),
         minContribution: Number(projectInfo.minFunding) / 1e18,
@@ -71,15 +74,23 @@ export async function POST(request: NextRequest) {
         status: 'active',
         cachedRaisedAmount: Number(projectInfo.raisedAmount) / 1e18,
         cachedTotalContributors: Number(projectInfo.totalContributors),
+        ...(typeof metadata?.websiteUrl === 'string' && { websiteUrl: metadata.websiteUrl }),
+        ...(typeof metadata?.twitterUrl === 'string' && { twitterUrl: metadata.twitterUrl }),
+        ...(typeof metadata?.discordUrl === 'string' && { discordUrl: metadata.discordUrl }),
+        ...(typeof metadata?.telegramUrl === 'string' && { telegramUrl: metadata.telegramUrl }),
         // Create milestones if it's milestone-based
         ...(projectInfo.milestoneBased && projectInfo.milestoneCount > 0 && {
           milestones: {
-            create: Array.from({ length: Number(projectInfo.milestoneCount) }, (_, i) => ({
-              stage: i + 1,
-              title: `Milestone ${i + 1}`,
-              description: 'Please update this milestone description',
-              deliverables: []
-            }))
+            create: Array.from({ length: Number(projectInfo.milestoneCount) }, (_, i) => {
+              const stage = i + 1
+              const provided = milestonesMetadata.find((m: any) => Number(m?.stage) === stage)
+              return {
+                stage,
+                title: typeof provided?.title === 'string' && provided.title.trim().length > 0 ? provided.title : `Milestone ${stage}`,
+                description: typeof provided?.description === 'string' ? provided.description : '',
+                deliverables: provided?.deliverables ?? []
+              }
+            })
           }
         })
       },

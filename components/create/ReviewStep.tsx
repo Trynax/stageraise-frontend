@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { getTokenByAddress, SUPPORTED_TOKENS } from "@/lib/constants/tokens"
 import { useCreateProject } from "@/lib/contracts/hooks"
@@ -19,6 +19,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
     const { address } = useAccount()
     const chainId = useChainId()
     const { createProject, isPending, isConfirming, isSuccess, error, hash } = useCreateProject()
+    const handledSuccessHashRef = useRef<string | null>(null)
     const [editModal, setEditModal] = useState<{
         isOpen: boolean
         field: string
@@ -99,6 +100,22 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
     // When transaction is successful, sync to database and move to success step
     useEffect(() => {
         if (isSuccess && hash) {
+            if (handledSuccessHashRef.current === hash) return
+            handledSuccessHashRef.current = hash
+
+            const tags = typeof formData?.tagline === 'string'
+                ? formData.tagline.split(',').map((t: string) => t.trim()).filter(Boolean)
+                : []
+
+            const milestones = Array.isArray(formData?.milestones)
+                ? formData.milestones.map((m: any, idx: number) => ({
+                    stage: idx + 1,
+                    title: m?.title,
+                    description: m?.description,
+                    deliverables: []
+                }))
+                : []
+
             setTxStatus('success')
             // Sync project to database
             fetch('/api/projects/sync', {
@@ -106,7 +123,15 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     transactionHash: hash,
-                    chainId 
+                    chainId,
+                    metadata: {
+                        ...(tags.length > 0 && { tags }),
+                        websiteUrl: formData?.website,
+                        twitterUrl: formData?.twitter,
+                        discordUrl: formData?.discord,
+                        telegramUrl: formData?.telegram,
+                        ...(milestones.length > 0 && { milestones })
+                    }
                 })
             })
             .then(res => res.json())
@@ -126,7 +151,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                 }, 2000)
             })
         }
-    }, [isSuccess, hash])
+    }, [isSuccess, hash, chainId, formData, nextStep])
 
     // Handle transaction errors
     useEffect(() => {

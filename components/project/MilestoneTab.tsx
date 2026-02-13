@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 
 interface ProofDocument {
   cid: string
@@ -9,7 +10,7 @@ interface ProofDocument {
 }
 
 interface Milestone {
-  id: number
+  id: string
   stage: number
   title: string
   description: string
@@ -20,12 +21,13 @@ interface Milestone {
 interface MilestoneTabProps {
   milestones: Milestone[]
   currentMilestone: number
+  projectId?: string | number
   projectTitle?: string
   failedVotingCount?: number
   isFundingPhase?: boolean 
 }
 
-export function MilestoneTab({ milestones, currentMilestone, projectTitle, failedVotingCount = 0, isFundingPhase = false }: MilestoneTabProps) {
+export function MilestoneTab({ milestones, currentMilestone, projectId, projectTitle, failedVotingCount = 0, isFundingPhase = false }: MilestoneTabProps) {
   if (!milestones || milestones.length === 0) {
     return (
       <div className="bg-white border-2 border-dark rounded-2xl p-12 text-center">
@@ -62,7 +64,7 @@ export function MilestoneTab({ milestones, currentMilestone, projectTitle, faile
         return (
           <div key={milestone.id} className="bg-white border-2 border-dark rounded-2xl p-6">
             <div className="flex items-start gap-4 mb-3">
-              <h3 className="text-xl font-bold">{projectTitle || milestone.title}</h3>
+              <h3 className="text-xl font-bold">{milestone.title || projectTitle}</h3>
               <span className={`px-3 py-1 ${status.color} rounded-full text-sm font-medium whitespace-nowrap`}>
                 {milestone.stage}/{totalMilestones} Milestone {status.text}
               </span>
@@ -92,9 +94,22 @@ export function MilestoneTab({ milestones, currentMilestone, projectTitle, faile
               </div>
             )}
 
-            <button className="w-full py-3 border border-dark rounded-xl hover:bg-gray-50 transition-colors">
-              View Details
-            </button>
+            {projectId ? (
+              <Link
+                href={`/projects/${projectId}/milestones/${milestone.stage}?from=project`}
+                className="block w-full py-3 border border-dark rounded-xl hover:bg-gray-50 transition-colors text-center"
+              >
+                View Details
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="w-full py-3 border border-dark rounded-xl opacity-50 cursor-not-allowed"
+              >
+                View Details
+              </button>
+            )}
           </div>
         )
       })}
