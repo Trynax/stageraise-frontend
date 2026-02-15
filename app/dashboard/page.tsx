@@ -25,21 +25,14 @@ export default function DashboardPage() {
         projectsFunded: 0,
         projectsCreated: 0
     })
-    const [loading, setLoading] = useState(true)
     const [copied, setCopied] = useState(false)
-    const [mounted, setMounted] = useState(false)
-
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
 
  
     useEffect(() => {
-        if (mounted && !isConnecting && !isReconnecting && !isConnected) {
+        if (!isConnecting && !isReconnecting && !isConnected) {
             router.push('/')
         }
-    }, [mounted, isConnected, isConnecting, isReconnecting, router])
+    }, [isConnected, isConnecting, isReconnecting, router])
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -53,8 +46,6 @@ export default function DashboardPage() {
                 }
             } catch (error) {
                 console.error('Error fetching stats:', error)
-            } finally {
-                setLoading(false)
             }
         }
 
@@ -82,7 +73,7 @@ export default function DashboardPage() {
         }).format(amount)
     }
 
-    if (!mounted || isConnecting || isReconnecting) {
+    if (isConnecting || isReconnecting) {
         return (
             <>
                 <Header />
@@ -113,12 +104,12 @@ export default function DashboardPage() {
                 </div>
                 <div className="px-4 md:px-32 py-8">
                     <div className="bg-primary rounded-2xl border-2 border-dark p-4 mb-6">
-                        <div className="flex justify-between gap-3">
-                            <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-2 lg:gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="w-full flex flex-nowrap items-center gap-2 sm:gap-3 overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                                 <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden">
                                     <Image src="/icons/profile.svg" alt="Profile" width={48} height={48} />
                                 </div>
-                                <span className="font-mono text-lg font-semibold">{formatAddress(address)}</span>
+                                <span className="font-mono text-base sm:text-lg font-semibold">{formatAddress(address)}</span>
                                 <div className="hidden md:block w-px h-8 bg-gray-300 mx-2"></div>
                                 <button 
                                     onClick={copyAddress}
@@ -129,28 +120,28 @@ export default function DashboardPage() {
                                 </button>
                                 <button
                                     onClick={() => disconnect()}
-                                    className="flex items-center gap-2 px-4 py-2 border-2 border-dark rounded-xl hover:bg-gray-100 transition-colors"
+                                    className="flex items-center gap-2 px-3 sm:px-4 py-2 border-2 border-dark rounded-xl hover:bg-gray-100 transition-colors"
                                 >
-                                    <span className="text-sm">Disconnect</span>
+                                    <span className="hidden sm:inline text-sm">Disconnect</span>
                                     <Image src="/icons/disconnect.svg" alt="Disconnect" width={16} height={16} />
                                 </button>
                             </div>
 
   
-                            <div className="flex flex-wrap gap-4 lg:gap-4">
-                                <div className="text-center">
+                            <div className="w-full flex gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                <div className="text-center min-w-[150px] shrink-0">
                                     <p className="text-sm text-gray-500">Funding Received</p>
                                     <p className="text-xl font-bold">{formatCurrency(stats.fundingReceived)}</p>
                                 </div>
-                                <div className="text-center">
+                                <div className="text-center min-w-[150px] shrink-0">
                                     <p className="text-sm text-gray-500">Amount Funded</p>
                                     <p className="text-xl font-bold">{formatCurrency(stats.amountFunded)}</p>
                                 </div>
-                                <div className="text-center">
+                                <div className="text-center min-w-[150px] shrink-0">
                                     <p className="text-sm text-gray-500">Project Funded</p>
                                     <p className="text-xl font-bold">{stats.projectsFunded}</p>
                                 </div>
-                                <div className="text-center">
+                                <div className="text-center min-w-[150px] shrink-0">
                                     <p className="text-sm text-gray-500">Project Created</p>
                                     <p className="text-xl font-bold">{stats.projectsCreated}</p>
                                 </div>
@@ -158,10 +149,11 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="flex gap-0 mb-6 bg-white border border-dark rounded-xl p-0.5">
+                    <div className="mb-6 bg-white border border-dark rounded-xl p-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                        <div className="flex w-max min-w-full gap-1 md:gap-0">
                         <button
                             onClick={() => setActiveTab('activity')}
-                            className={`flex-1 px-2 py-1 font-semibold transition-all rounded-xl ${
+                            className={`shrink-0 whitespace-nowrap px-3 py-2 text-sm md:text-base font-semibold transition-all rounded-xl md:flex-1 ${
                                 activeTab === 'activity'
                                     ? 'bg-secondary text-dark'
                                     : 'bg-white text-dark hover:bg-gray-50'
@@ -169,12 +161,9 @@ export default function DashboardPage() {
                         >
                             Activity
                         </button>
-                        {(activeTab !== 'activity' && activeTab !== 'projects') && (
-                            <div className="w-[0.5px] bg-gray-300 self-center h-8 z-10"></div>
-                        )}
                         <button
                             onClick={() => setActiveTab('projects')}
-                            className={`flex-1 px-2 py-1 font-semibold transition-all rounded-xl ${
+                            className={`shrink-0 whitespace-nowrap px-3 py-2 text-sm md:text-base font-semibold transition-all rounded-xl md:flex-1 ${
                                 activeTab === 'projects'
                                     ? 'bg-secondary text-dark'
                                     : 'bg-white text-dark hover:bg-gray-50'
@@ -182,12 +171,9 @@ export default function DashboardPage() {
                         >
                             Projects created
                         </button>
-                        {(activeTab !== 'projects' && activeTab !== 'voting') && (
-                            <div className="w-[0.5px] bg-gray-300 self-center h-8 z-10"></div>
-                        )}
                         <button
                             onClick={() => setActiveTab('voting')}
-                            className={`flex-1 px-2 py-1 font-semibold transition-all rounded-xl ${
+                            className={`shrink-0 whitespace-nowrap px-3 py-2 text-sm md:text-base font-semibold transition-all rounded-xl md:flex-1 ${
                                 activeTab === 'voting'
                                     ? 'bg-secondary text-dark'
                                     : 'bg-white text-dark hover:bg-gray-50'
@@ -195,12 +181,9 @@ export default function DashboardPage() {
                         >
                             Voting
                         </button>
-                        {(activeTab !== 'voting' && activeTab !== 'contributions') && (
-                            <div className="w-[0.5px] bg-gray-300 self-center h-8 z-10"></div>
-                        )}
                         <button
                             onClick={() => setActiveTab('contributions')}
-                            className={`flex-1 px-2 py-1 font-semibold transition-all rounded-xl ${
+                            className={`shrink-0 whitespace-nowrap px-3 py-2 text-sm md:text-base font-semibold transition-all rounded-xl md:flex-1 ${
                                 activeTab === 'contributions'
                                     ? 'bg-secondary text-dark'
                                     : 'bg-white text-dark hover:bg-gray-50'
@@ -208,6 +191,7 @@ export default function DashboardPage() {
                         >
                             Contributions
                         </button>
+                        </div>
                     </div>
 
                     {/* Tab Content */}

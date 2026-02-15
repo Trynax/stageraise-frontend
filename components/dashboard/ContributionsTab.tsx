@@ -7,8 +7,15 @@ interface ContributionsTabProps {
     address: string
 }
 
+interface DashboardContribution {
+    id: string | number
+    projectId: number
+    name: string
+    [key: string]: unknown
+}
+
 export function ContributionsTab({ address }: ContributionsTabProps) {
-    const [contributions, setContributions] = useState<any[]>([])
+    const [contributions, setContributions] = useState<DashboardContribution[]>([])
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
@@ -21,7 +28,7 @@ export function ContributionsTab({ address }: ContributionsTabProps) {
                 const data = await response.json()
 
                 if (data.success) {
-                    setContributions(data.contributions)
+                    setContributions(data.contributions as DashboardContribution[])
                     setTotalPages(data.pagination.totalPages)
                 }
             } catch (error) {

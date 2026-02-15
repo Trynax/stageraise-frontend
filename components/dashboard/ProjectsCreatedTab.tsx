@@ -7,8 +7,13 @@ interface ProjectsCreatedTabProps {
     address: string
 }
 
+interface DashboardCreatedProject {
+    id: string | number
+    [key: string]: unknown
+}
+
 export function ProjectsCreatedTab({ address }: ProjectsCreatedTabProps) {
-    const [projects, setProjects] = useState<any[]>([])
+    const [projects, setProjects] = useState<DashboardCreatedProject[]>([])
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
@@ -21,7 +26,7 @@ export function ProjectsCreatedTab({ address }: ProjectsCreatedTabProps) {
                 const data = await response.json()
 
                 if (data.success) {
-                    setProjects(data.projects)
+                    setProjects(data.projects as DashboardCreatedProject[])
                     setTotalPages(data.pagination.totalPages)
                 }
             } catch (error) {

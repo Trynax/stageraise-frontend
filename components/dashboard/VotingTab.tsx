@@ -7,8 +7,17 @@ interface VotingTabProps {
     address: string
 }
 
+interface DashboardVote {
+    id: string | number
+    projectNumericId: number
+    projectName: string
+    milestoneTitle: string
+    totalMilestones: number
+    [key: string]: unknown
+}
+
 export function VotingTab({ address }: VotingTabProps) {
-    const [votes, setVotes] = useState<any[]>([])
+    const [votes, setVotes] = useState<DashboardVote[]>([])
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
@@ -21,7 +30,7 @@ export function VotingTab({ address }: VotingTabProps) {
                 const data = await response.json()
 
                 if (data.success) {
-                    setVotes(data.votes)
+                    setVotes(data.votes as DashboardVote[])
                     setTotalPages(data.pagination.totalPages)
                 }
             } catch (error) {

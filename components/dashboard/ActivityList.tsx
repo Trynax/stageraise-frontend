@@ -46,7 +46,30 @@ function formatTimeAgo(date: string): string {
     return then.toLocaleDateString()
 }
 
-function getActionButton(activity: Activity) {
+function formatActivityMeta(activity: Activity): string {
+    if (activity.amount && activity.tokenSymbol) {
+        return `${activity.amount} ${activity.tokenSymbol}`
+    }
+    return activity.type.replace(/_/g, " ")
+}
+
+function formatAmountDisplay(activity: Activity): string {
+    if (activity.amount && activity.tokenSymbol) {
+        return `${activity.amount} ${activity.tokenSymbol}`
+    }
+    return "-------------"
+}
+
+function formatActivityTitle(activity: Activity): string {
+    if (activity.amount && activity.tokenSymbol) {
+        return `${activity.title} - ${activity.amount} ${activity.tokenSymbol}`
+    }
+    return activity.title
+}
+
+function getActionButton(activity: Activity, fullWidth = false) {
+    const buttonClass = `px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium ${fullWidth ? "w-full flex justify-center" : "inline-flex"}`
+
     switch (activity.type) {
         case 'funded':
         case 'withdrew':
@@ -55,7 +78,7 @@ function getActionButton(activity: Activity) {
                 <Link
                     href={`https://testnet.bscscan.com/tx/${activity.txHash}`}
                     target="_blank"
-                    className="px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                    className={buttonClass}
                 >
                     View Transaction
                 </Link>
@@ -65,7 +88,7 @@ function getActionButton(activity: Activity) {
             return activity.project ? (
                 <Link
                     href={`/projects/${activity.project.id}`}
-                    className="px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                    className={buttonClass}
                 >
                     View Project
                 </Link>
@@ -122,22 +145,22 @@ export function ActivityList({ address }: ActivityListProps) {
     return (
         <div className="w-full">
             {/* Header */}
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-start mb-6">
                 <div>
                     <h2 className="text-2xl font-bold">Recent Activity</h2>
                     <p className="text-gray-500 text-sm">All actions associated with your wallet</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full md:w-auto">
                     <button
                         onClick={() => setFilterType(filterType ? '' : 'funded')}
-                        className="flex items-center gap-2 px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex flex-1 md:flex-none items-center justify-center gap-2 px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
                     >
                         <Image src="/icons/filter.svg" alt="Filter" width={16} height={16} />
                         <span className="text-sm">Filter</span>
                     </button>
                     <button
                         onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                        className="flex items-center gap-2 px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex flex-1 md:flex-none items-center justify-center gap-2 px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
                     >
                         <span className="text-sm">{sortOrder === 'desc' ? 'New to Old' : 'Old to New'}</span>
                         <Image src="/icons/sort.svg" alt="Sort" width={16} height={16} />
@@ -145,34 +168,65 @@ export function ActivityList({ address }: ActivityListProps) {
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="border border-dark rounded-xl overflow-hidden">
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-3">
+                {activities.map((activity) => {
+                    const iconConfig = typeIcons[activity.type] || { icon: '/icons/coin.svg' }
+                    const displayText = formatActivityTitle(activity)
+
+                    return (
+                        <div key={activity.id} className="border border-dark rounded-xl bg-white p-4">
+                            <div className="flex items-start gap-3 mb-4">
+                                <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0">
+                                    <Image src={iconConfig.icon} alt={activity.type} width={32} height={32} />
+                                </div>
+                                <p className="text-base font-semibold leading-tight">{displayText}</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 mb-1">Time</p>
+                                    <p className="text-sm font-semibold">{formatTimeAgo(activity.createdAt)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 mb-1">Details</p>
+                                    <p className="text-sm font-semibold">{formatActivityMeta(activity)}</p>
+                                </div>
+                            </div>
+
+                            {getActionButton(activity, true)}
+                        </div>
+                    )
+                })}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block border border-dark rounded-xl overflow-hidden">
                 {/* Table Header */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-dark font-semibold text-sm">
-                    <div className="col-span-6">Event</div>
-                    <div className="col-span-3 text-center">Time</div>
+                    <div className="col-span-5">Event</div>
+                    <div className="col-span-2 text-center">Amount</div>
+                    <div className="col-span-2 text-center">Time</div>
                     <div className="col-span-3 text-center">Action</div>
                 </div>
 
                 {/* Table Body */}
                 {activities.map((activity) => {
                     const iconConfig = typeIcons[activity.type] || { icon: '/icons/coin.svg' }
-                    
-                    // Build display text with amount if applicable
-                    let displayText = activity.title
-                    if (activity.amount && activity.tokenSymbol) {
-                        displayText += ` - ${activity.amount} ${activity.tokenSymbol}`
-                    }
+                    const displayText = formatActivityTitle(activity)
                     
                     return (
                         <div key={activity.id} className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-200 last:border-b-0 items-center">
-                            <div className="col-span-6 flex items-center gap-3">
+                            <div className="col-span-5 flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0`}>
                                     <Image src={iconConfig.icon} alt={activity.type} width={30} height={30} />
                                 </div>
                                 <span className="text-sm">{displayText}</span>
                             </div>
-                            <div className="col-span-3 text-center text-sm text-gray-500">
+                            <div className="col-span-2 text-center text-sm">
+                                {formatAmountDisplay(activity)}
+                            </div>
+                            <div className="col-span-2 text-center text-sm text-gray-500">
                                 {formatTimeAgo(activity.createdAt)}
                             </div>
                             <div className="col-span-3 flex justify-center">
@@ -185,11 +239,11 @@ export function ActivityList({ address }: ActivityListProps) {
 
            
             {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6">
                     <button
                         onClick={() => setPage(p => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full sm:w-auto px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Previous
                     </button>
@@ -216,7 +270,7 @@ export function ActivityList({ address }: ActivityListProps) {
                     <button
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full sm:w-auto px-4 py-2 border border-dark rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Next
                     </button>
