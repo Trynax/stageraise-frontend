@@ -3,14 +3,90 @@
 import { useState, useEffect } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
+
+type VoteResult = "ongoing" | "passed" | "failed"
+
+interface ApiVotingHistoryItem {
+  stage: number
+  result: VoteResult
+  yesVotes: number
+  noVotes: number
+  totalVoters: number
+  votingEnded: string
+}
+
+interface ApiMilestone {
+  stage: number
+  title: string
+  description: string
+  deliverables?: string | string[] | null
+  proofDocuments?: Array<string | { url?: string }> | null
+}
+
+interface ApiProject {
+  name: string
+  logoUrl?: string | null
+  projectId: number
+  milestones?: ApiMilestone[]
+  votingHistory?: ApiVotingHistoryItem[]
+  cachedTotalContributors?: number | null
+  failedVotingCount?: number | null
+  status?: string | null
+}
+
+interface VoteDetailMilestone {
+  stage: number
+  title: string
+  description: string
+  deliverables: string
+  proofDocuments: string[]
+}
+
+interface VoteDetail {
+  stage: number
+  result: VoteResult
+  yesVotes: number
+  noVotes: number
+  totalVoters: number
+  votingEnded: string
+  milestone: VoteDetailMilestone
+  projectTitle: string
+  projectImage: string
+  projectId: number
+  totalMilestones: number
+  totalFunders: number
+  failedVotingCount: number
+  status: string | null
+}
+
+function normalizeProofDocuments(
+  proofDocuments?: Array<string | { url?: string }> | null
+): string[] {
+  if (!proofDocuments || proofDocuments.length === 0) return []
+
+  return proofDocuments
+    .map((doc) => {
+      if (typeof doc === "string") return doc
+      if (typeof doc?.url === "string") return doc.url
+      return ""
+    })
+    .filter((doc): doc is string => Boolean(doc))
+}
+
+function normalizeDeliverables(deliverables?: string | string[] | null): string {
+  if (!deliverables) return ""
+  if (Array.isArray(deliverables)) return deliverables.join(", ")
+  return deliverables
+}
 
 export default function VoteDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const voteId = params.id as string // Format: "projectId-milestoneStage" e.g., "3-2"
-  const [voteData, setVoteData] = useState<any>(null)
+  const [voteData, setVoteData] = useState<VoteDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [userVote, setUserVote] = useState<'yes' | 'no' | null>(null)
   
@@ -26,33 +102,39 @@ export default function VoteDetailPage() {
         if (projectId && milestoneStage) {
           // Fetch project from API
           const response = await fetch(`/api/projects/${projectId}`)
-          const data = await response.json()
+          const data = (await response.json()) as { success?: boolean; project?: ApiProject }
           
           if (data.success && data.project) {
             const project = data.project
             
             // Find the specific vote from voting history
             const vote = project.votingHistory?.find(
-              (v: any) => v.stage === parseInt(milestoneStage)
+              (v) => v.stage === parseInt(milestoneStage, 10)
             )
             
             // Find the milestone details
             const milestone = project.milestones?.find(
-              (m: any) => m.stage === parseInt(milestoneStage)
+              (m) => m.stage === parseInt(milestoneStage, 10)
             )
             
             if (vote && milestone) {
               setVoteData({
                 ...vote,
-                milestone,
+                milestone: {
+                  ...milestone,
+                  deliverables: normalizeDeliverables(milestone.deliverables),
+                  proofDocuments: normalizeProofDocuments(milestone.proofDocuments),
+                },
                 projectTitle: project.name,
-                projectImage: project.logoUrl,
+                projectImage: project.logoUrl || "",
                 projectId: project.projectId,
                 totalMilestones: project.milestones?.length || 0,
                 totalFunders: project.cachedTotalContributors || 0,
                 failedVotingCount: project.failedVotingCount || 0,
-                status: project.status
+                status: project.status || null,
               })
+              setLoading(false)
+              return
             }
           }
         }
@@ -76,12 +158,12 @@ export default function VoteDetailPage() {
           <div className="bg-secondary py-3 px-6 mt-20">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center gap-2 text-sm">
-                <a 
+                <Link
                   href={fromPage === 'explore' ? '/votes' : '/projects'} 
                   className="hover:underline"
                 >
                   {fromPage === 'explore' ? 'Explore page' : 'Project page'}
-                </a>
+                </Link>
                 <span>›</span>
                 <span className="font-semibold">Voting details</span>
               </div>
@@ -109,12 +191,12 @@ export default function VoteDetailPage() {
           <div className="bg-secondary py-3 px-6 mt-20">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center gap-2 text-sm">
-                <a 
+                <Link
                   href={fromPage === 'explore' ? '/votes' : '/projects'} 
                   className="hover:underline"
                 >
                   {fromPage === 'explore' ? 'Explore page' : 'Project page'}
-                </a>
+                </Link>
                 <span>›</span>
                 <span className="font-semibold">Voting details</span>
               </div>
@@ -124,9 +206,9 @@ export default function VoteDetailPage() {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-600 mb-4">Vote not found</p>
-              <a href="/votes" className="text-deepGreen hover:underline">
+              <Link href="/votes" className="text-deepGreen hover:underline">
                 Back to voting page
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -155,12 +237,12 @@ export default function VoteDetailPage() {
         <div className="bg-secondary py-4 px-4 md:px-32 mt-18">
           <div className="mx-auto">
             <div className="flex items-center gap-2 text-sm">
-              <a 
+              <Link
                 href={fromPage === 'explore' ? '/votes' : `/projects/${voteData?.projectId}`} 
                 className="text-[#475467] text-xs"
               >
                 {fromPage === 'explore' ? 'Explore page' : 'Project page'}
-              </a>
+              </Link>
               <span>›</span>
               <span className="text-sm">Voting details</span>
             </div>
@@ -170,7 +252,7 @@ export default function VoteDetailPage() {
         <div className="px-4 md:px-32 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-            <div className="lg:col-span-2 space-y-6">
+            <div className="order-2 lg:order-1 lg:col-span-2 space-y-6">
               <div className="border-2 border-dark rounded-2xl">
                <div className="px-3 py-2 bg-secondary rounded-t-2xl">
                  <h2 className="text-lg font-semibold">Milestone Objective</h2>
@@ -197,9 +279,9 @@ export default function VoteDetailPage() {
 
           
                 {voteData.milestone.proofDocuments && voteData.milestone.proofDocuments.length > 0 && (
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {voteData.milestone.proofDocuments.slice(0, 3).map((doc: string, idx: number) => (
-                      <div key={idx} className="relative w-32 h-32 rounded-xl overflow-hidden shrink-0 border-2 border-dark">
+                      <div key={idx} className="relative aspect-square w-full rounded-xl overflow-hidden border-2 border-dark">
                         <Image
                           src={doc}
                           alt={`Proof ${idx + 1}`}
@@ -224,9 +306,9 @@ export default function VoteDetailPage() {
                   {voteData.milestone.deliverables || 'No deliverables specified'}
                 </p>
                 {voteData.milestone.proofDocuments && voteData.milestone.proofDocuments.length > 0 && (
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {voteData.milestone.proofDocuments.map((doc: string, idx: number) => (
-                      <div key={idx} className="relative w-32 h-32 rounded-xl overflow-hidden shrink-0 border-2 border-dark">
+                      <div key={idx} className="relative aspect-square w-full rounded-xl overflow-hidden border-2 border-dark">
                         <Image
                           src={doc}
                           alt={`Proof ${idx + 1}`}
@@ -241,8 +323,9 @@ export default function VoteDetailPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="bg-white border-2 border-dark rounded-2xl p-6 sticky top-6">
+            <div className="order-1 lg:order-2 lg:col-span-1">
+              <div className="space-y-4 lg:sticky lg:top-6">
+                <div className="bg-white border-2 border-dark rounded-2xl p-6">
 
                 {isVotingLive && (
                   <div className="flex items-center gap-2 mb-4">
@@ -288,16 +371,16 @@ export default function VoteDetailPage() {
                       You vote {userVote === 'yes' ? 'YES' : 'NO'}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="flex flex-col gap-3">
                       <button
                         onClick={() => handleVote('no')}
-                        className="py-3 border-2 border-dark rounded-xl font-semibold hover:bg-red-50 transition-colors"
+                        className="py-3 border bg-[#FEE4E2] border-[#D92D20] rounded-lg font-semibold text-[#D92D20]"
                       >
                         No
                       </button>
                       <button
                         onClick={() => handleVote('yes')}
-                        className="py-3 bg-secondary border-2 border-dark rounded-xl font-semibold hover:bg-opacity-80 transition-colors"
+                        className="py-3 border bg-[#E5FBDD] border-[#3A9E1B] rounded-lg font-semibold text-[#3A9E1B]"
                       >
                         Yes
                       </button>
@@ -326,6 +409,11 @@ export default function VoteDetailPage() {
                     </p>
                   </div>
                 )}
+                </div>
+                <p className="p-2 bg-[#FFFAEB] border border-[#DC6803] text-[#DC6803] rounded-lg text-left text-sm">
+                  Note: This vote governs the continuation of the project and the release of locked funds.
+                  We recommend reviewing the milestone objectives, expected achievements, and submitted proof before participating.
+                </p>
               </div>
             </div>
           </div>
