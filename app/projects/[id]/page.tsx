@@ -14,6 +14,7 @@ import { VotingTab } from "@/components/project/VotingTab"
 import { ContributionDetailsCard } from "@/components/project/ContributionDetailsCard"
 import { LiveVotingCard } from "@/components/project/LiveVotingCard"
 import { RefundCard } from "@/components/project/RefundCard"
+import { CreatorWithdrawCard } from "@/components/project/CreatorWithdrawCard"
 import Link from "next/link"
 
 export default function ProjectDetailPage() {
@@ -121,6 +122,12 @@ export default function ProjectDetailPage() {
     const userContributionPercent = project.cachedRaisedAmount > 0 
         ? Math.round((userContribution / project.cachedRaisedAmount) * 100) 
         : 0
+
+    const isCreator = Boolean(
+        address &&
+        project?.ownerAddress &&
+        address.toLowerCase() === project.ownerAddress.toLowerCase()
+    )
 
     // Format time left display
     const formatTimeLeft = () => {
@@ -363,54 +370,63 @@ export default function ProjectDetailPage() {
 
                   
                         <div className="space-y-6 order-1 lg:order-2">
-                           
-                            {/* Show FundingCard if funding deadline hasn't passed */}
-                            {isFundingPhase && project.status !== 'completed' && project.status !== 'refundable' && (
-                                <FundingCard 
+                            {isCreator ? (
+                                <CreatorWithdrawCard
                                     projectId={project.projectId}
                                     token={token}
-                                    fundingTarget={project.fundingTarget}
-                                    cachedRaisedAmount={project.cachedRaisedAmount}
-                                    amountRaisedPercent={amountRaisedPercent}
-                                    minContribution={project.minContribution}
-                                    maxContribution={project.maxContribution}
+                                    fallbackProjectBalance={project.cachedRaisedAmount || 0}
                                 />
-                            )}
+                            ) : (
+                                <>
+                                    {/* Show FundingCard if funding deadline hasn't passed */}
+                                    {isFundingPhase && project.status !== 'completed' && project.status !== 'refundable' && (
+                                        <FundingCard 
+                                            projectId={project.projectId}
+                                            token={token}
+                                            fundingTarget={project.fundingTarget}
+                                            cachedRaisedAmount={project.cachedRaisedAmount}
+                                            amountRaisedPercent={amountRaisedPercent}
+                                            minContribution={project.minContribution}
+                                            maxContribution={project.maxContribution}
+                                        />
+                                    )}
 
 
-                            {project.status === 'refundable' && (
-                                <RefundCard
-                                    projectId={project.projectId}
-                                    failedAtMilestone={project.currentMilestone}
-                                    refundableAmount={project.userContribution || 0}
-                                    token={token}
-                                />
-                            )}
+                                    {project.status === 'refundable' && (
+                                        <RefundCard
+                                            projectId={project.projectId}
+                                            failedAtMilestone={project.currentMilestone}
+                                            refundableAmount={project.userContribution || 0}
+                                            token={token}
+                                        />
+                                    )}
 
 
-                            {project.activeVoting && !project.status && (
-                                <LiveVotingCard
-                                    projectId={project.projectId}
-                                    milestoneStage={project.activeVoting.stage}
-                                    milestoneTitle={project.activeVoting.title}
-                                    yesVotes={project.activeVoting.yesVotes || 0}
-                                    noVotes={project.activeVoting.noVotes || 0}
-                                    totalVotes={(project.activeVoting.yesVotes || 0) + (project.activeVoting.noVotes || 0)}
-                                    votingEndTime={new Date(project.activeVoting.votingEndTime)}
-                                    userVote={project.activeVoting.userVote}
-                                />
-                            )}
+                                    {project.activeVoting && !project.status && (
+                                        <LiveVotingCard
+                                            projectId={project.projectId}
+                                            milestoneStage={project.activeVoting.stage}
+                                            milestoneTitle={project.activeVoting.title}
+                                            yesVotes={project.activeVoting.yesVotes || 0}
+                                            noVotes={project.activeVoting.noVotes || 0}
+                                            totalVotes={(project.activeVoting.yesVotes || 0) + (project.activeVoting.noVotes || 0)}
+                                            votingEndTime={new Date(project.activeVoting.votingEndTime)}
+                                            userVote={project.activeVoting.userVote}
+                                        />
+                                    )}
 
-                            {/* Show ContributionDetailsCard during milestone phase (not during funding, not during voting) */}
-                            {isMilestonePhase && !project.activeVoting && project.status !== 'completed' && project.status !== 'refundable' && userContribution > 0 && (
-                                <ContributionDetailsCard
-                                    token={token}
-                                    userContribution={userContribution}
-                                    contributionPercentage={userContributionPercent}
-                                    currentMilestone={project.currentMilestone}
-                                    totalMilestones={project.milestones?.length || 0}
-                                    cachedRaisedAmount={project.cachedRaisedAmount}
-                                />
+                                    {/* Show ContributionDetailsCard during milestone phase (not during funding, not during voting) */}
+                                    {isMilestonePhase && !project.activeVoting && project.status !== 'completed' && project.status !== 'refundable' && userContribution > 0 && (
+                                        <ContributionDetailsCard
+                                            token={token}
+                                            userContribution={userContribution}
+                                            contributionPercentage={userContributionPercent}
+                                            currentMilestone={project.currentMilestone}
+                                            totalMilestones={project.milestones?.length || 0}
+                                            cachedRaisedAmount={project.cachedRaisedAmount}
+                                        />
+                                    )}
+                                </>
                             )}
 
                             <FundersList 
