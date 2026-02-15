@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
+import { useAccount } from "wagmi"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
+import { SetupMilestoneVoteModal } from "@/components/project/SetupMilestoneVoteModal"
 
 type ProofDocumentNormalized = {
   url: string
@@ -44,6 +46,7 @@ function formatDeliverables(deliverables: unknown): string[] {
 export default function MilestoneDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const { address } = useAccount()
   const projectId = params.id as string
   const stageParam = params.stage as string
   const milestoneStage = Number.parseInt(stageParam, 10)
@@ -51,6 +54,7 @@ export default function MilestoneDetailPage() {
 
   const [project, setProject] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [isVoteModalOpen, setIsVoteModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -153,6 +157,15 @@ export default function MilestoneDetailPage() {
   }
 
   const totalMilestones = project.milestones?.length || 0
+  const isCreator = Boolean(
+    address &&
+    project?.ownerAddress &&
+    address.toLowerCase() === project.ownerAddress.toLowerCase()
+  )
+  const isCompleted = status.text === "Completed"
+  const isInProgress = status.text === "In Progress"
+  const shouldShowSetupButton = isCreator && !isCompleted
+  const canSetupVote = isInProgress
 
   return (
     <>
@@ -180,13 +193,30 @@ export default function MilestoneDetailPage() {
 
         <div className="px-4 md:px-32 py-10">
           <div>
-            <div className="flex items-start gap-2  md:gap-6 flex-wrap mb-3">
-              <h1 className="text-2xl md:text-3xl font-bold">{milestone.title || `Milestone ${milestoneStage}`}</h1>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className={`px-3 py-1 ${status.color} rounded-full text-sm font-medium whitespace-nowrap`}>
-                  {milestone.stage}/{totalMilestones} Milestone {status.text}
-                </span>
+            <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
+              <div className="flex items-start gap-2 md:gap-6 flex-wrap">
+                <h1 className="text-2xl md:text-3xl font-bold">{milestone.title || `Milestone ${milestoneStage}`}</h1>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`px-3 py-1 ${status.color} rounded-full text-sm font-medium whitespace-nowrap`}>
+                    {milestone.stage}/{totalMilestones} Milestone {status.text}
+                  </span>
+                </div>
               </div>
+
+              {shouldShowSetupButton && (
+                <button
+                  type="button"
+                  onClick={() => setIsVoteModalOpen(true)}
+                  disabled={!canSetupVote}
+                  className={`px-8 py-2 rounded-xl border border-dark font-semibold transition-colors ${
+                    canSetupVote
+                      ? "bg-secondary text-dark hover:bg-secondary/80"
+                      : "bg-[#E5FBDD] text-[#98A2B3] cursor-not-allowed"
+                  }`}
+                >
+                  Set up Vote
+                </button>
+              )}
             </div>
 
             <div className="text-dark whitespace-pre-line leading-relaxed text-sm">
@@ -231,6 +261,14 @@ export default function MilestoneDetailPage() {
         </div>
       </main>
       <Footer />
+      <SetupMilestoneVoteModal
+        isOpen={isVoteModalOpen}
+        onClose={() => setIsVoteModalOpen(false)}
+        projectId={project.projectId}
+        milestoneOptions={[{ stage: milestone.stage, title: milestone.title || `Milestone ${milestone.stage}` }]}
+        defaultMilestoneStage={milestone.stage}
+        lockMilestone
+      />
     </>
   )
 }

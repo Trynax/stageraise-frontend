@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useAccount } from "wagmi"
 import Image from "next/image"
@@ -27,26 +27,25 @@ export default function ProjectDetailPage() {
     const [loading, setLoading] = useState(true)
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
 
-    useEffect(() => {
-        const fetchProject = async () => {
-            try {
-                // Fetch real data from API
-                const response = await fetch(`/api/projects/${projectId}`)
-                const data = await response.json()
-                if (data.success) {
-                    setProject(data.project)
-                }
-            } catch (error) {
-                console.error('Error fetching project:', error)
-            } finally {
-                setLoading(false)
+    const fetchProject = useCallback(async () => {
+        try {
+            const response = await fetch(`/api/projects/${projectId}`)
+            const data = await response.json()
+            if (data.success) {
+                setProject(data.project)
             }
-        }
-
-        if (projectId) {
-            fetchProject()
+        } catch (error) {
+            console.error('Error fetching project:', error)
+        } finally {
+            setLoading(false)
         }
     }, [projectId])
+
+    useEffect(() => {
+        if (projectId) {
+            void fetchProject()
+        }
+    }, [projectId, fetchProject])
 
     // Dynamic countdown timer
     useEffect(() => {
@@ -347,9 +346,12 @@ export default function ProjectDetailPage() {
                                     milestones={project.milestones || []} 
                                     currentMilestone={project.currentMilestone || 1}
                                     projectId={projectId as string}
+                                    contractProjectId={project.projectId}
                                     projectTitle={project.name}
                                     failedVotingCount={project.failedVotingCount || 0}
                                     isFundingPhase={isFundingPhase}
+                                    isCreator={isCreator}
+                                    onVoteSetupSuccess={fetchProject}
                                 />
                             )}
 

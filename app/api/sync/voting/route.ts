@@ -15,7 +15,7 @@ const client = createPublicClient({
 // POST /api/sync/voting/open - Sync voting session opening
 export async function POST(request: NextRequest) {
   try {
-    const { projectId, chainId, action } = await request.json()
+    const { projectId, chainId, action, proofSummary, proofDocuments } = await request.json()
 
     if (!projectId) {
       return NextResponse.json(
@@ -73,27 +73,68 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'open' && votingStatus) {
-      // Create or update voting round
-      const votingRound = await prisma.votingRound.upsert({
+      const normalizedProofSummary =
+        typeof proofSummary === 'string' && proofSummary.trim().length > 0
+          ? proofSummary.trim()
+          : undefined
+
+      const normalizedProofDocuments = Array.isArray(proofDocuments)
+        ? proofDocuments
+            .filter((doc: unknown) => {
+              if (!doc || typeof doc !== 'object') return false
+              const maybeDoc = doc as { url?: unknown; filename?: unknown; mediaType?: unknown }
+              return (
+                typeof maybeDoc.url === 'string' &&
+                maybeDoc.url.length > 0 &&
+                typeof maybeDoc.filename === 'string' &&
+                maybeDoc.filename.length > 0 &&
+                (maybeDoc.mediaType === 'image' || maybeDoc.mediaType === 'video')
+              )
+            })
+            .map((doc) => ({
+              url: (doc as { url: string }).url,
+              filename: (doc as { filename: string }).filename,
+              mediaType: (doc as { mediaType: 'image' | 'video' }).mediaType
+            }))
+        : []
+
+      const proofPayload =
+        normalizedProofSummary || normalizedProofDocuments.length > 0
+          ? {
+              summary: normalizedProofSummary ?? null,
+              files: normalizedProofDocuments,
+            }
+          : undefined
+
+      const stage = Number(milestoneStage)
+      const activeRound = await prisma.votingRound.findFirst({
         where: {
-          projectId_milestoneStage_votingStarted: {
-            projectId: project.id,
-            milestoneStage: Number(milestoneStage),
-            votingStarted: new Date()
-          }
-        },
-        update: {
-          votingEnded: new Date(Number(votingEndTime) * 1000)
-        },
-        create: {
           projectId: project.id,
-          milestoneStage: Number(milestoneStage),
-          votingStarted: new Date(),
-          votingEnded: new Date(Number(votingEndTime) * 1000),
-          result: 'ongoing',
-          isActive: true
-        }
+          milestoneStage: stage,
+          isActive: true,
+        },
+        orderBy: { createdAt: 'desc' },
       })
+
+      const votingRound = activeRound
+        ? await prisma.votingRound.update({
+            where: { id: activeRound.id },
+            data: {
+              votingEnded: new Date(Number(votingEndTime) * 1000),
+              ...(proofPayload && { proofDocuments: proofPayload }),
+            },
+          })
+        : await prisma.votingRound.create({
+            data: {
+              projectId: project.id,
+              milestoneStage: stage,
+              votingStarted: new Date(),
+              votingEnded: new Date(Number(votingEndTime) * 1000),
+              result: 'ongoing',
+              isActive: true,
+              ...(proofPayload && { proofDocuments: proofPayload }),
+            },
+          })
 
       return NextResponse.json({
         success: true,

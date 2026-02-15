@@ -2,6 +2,8 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
+import { SetupMilestoneVoteModal } from "@/components/project/SetupMilestoneVoteModal"
 
 interface ProofDocument {
   cid: string
@@ -22,12 +24,27 @@ interface MilestoneTabProps {
   milestones: Milestone[]
   currentMilestone: number
   projectId?: string | number
+  contractProjectId?: number
   projectTitle?: string
   failedVotingCount?: number
-  isFundingPhase?: boolean 
+  isFundingPhase?: boolean
+  isCreator?: boolean
+  onVoteSetupSuccess?: () => void
 }
 
-export function MilestoneTab({ milestones, currentMilestone, projectId, projectTitle, failedVotingCount = 0, isFundingPhase = false }: MilestoneTabProps) {
+export function MilestoneTab({
+  milestones,
+  currentMilestone,
+  projectId,
+  contractProjectId,
+  projectTitle,
+  failedVotingCount = 0,
+  isFundingPhase = false,
+  isCreator = false,
+  onVoteSetupSuccess,
+}: MilestoneTabProps) {
+  const [selectedMilestoneForVote, setSelectedMilestoneForVote] = useState<Milestone | null>(null)
+
   if (!milestones || milestones.length === 0) {
     return (
       <div className="bg-white border-2 border-dark rounded-2xl p-12 text-center">
@@ -56,10 +73,15 @@ export function MilestoneTab({ milestones, currentMilestone, projectId, projectT
   }
 
   return (
+    <>
     <div className="space-y-4">
       {milestones.map((milestone) => {
         const status = getMilestoneStatus(milestone.stage)
         const totalMilestones = milestones.length
+        const isCompleted = status.text === "Completed"
+        const isInProgress = status.text === "In Progress"
+        const shouldShowSetupButton = isCreator && !isCompleted
+        const canSetupVote = isInProgress
 
         return (
           <div key={milestone.id} className="bg-white border-2 border-dark rounded-2xl p-6">
@@ -94,7 +116,38 @@ export function MilestoneTab({ milestones, currentMilestone, projectId, projectT
               </div>
             )}
 
-            {projectId ? (
+            {shouldShowSetupButton ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {projectId ? (
+                  <Link
+                    href={`/projects/${projectId}/milestones/${milestone.stage}?from=project`}
+                    className="block w-full py-3 border border-dark rounded-xl hover:bg-gray-50 transition-colors text-center"
+                  >
+                    View Details
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full py-3 border border-dark rounded-xl opacity-50 cursor-not-allowed"
+                  >
+                    View Details
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={!canSetupVote || !contractProjectId}
+                  onClick={() => setSelectedMilestoneForVote(milestone)}
+                  className={`w-full py-3 border border-dark rounded-xl font-semibold transition-colors ${
+                    canSetupVote && contractProjectId
+                      ? "bg-secondary text-dark hover:bg-secondary/80"
+                      : "bg-[#E5FBDD] text-[#98A2B3] cursor-not-allowed"
+                  }`}
+                >
+                  Set up Vote
+                </button>
+              </div>
+            ) : projectId ? (
               <Link
                 href={`/projects/${projectId}/milestones/${milestone.stage}?from=project`}
                 className="block w-full py-3 border border-dark rounded-xl hover:bg-gray-50 transition-colors text-center"
@@ -114,5 +167,19 @@ export function MilestoneTab({ milestones, currentMilestone, projectId, projectT
         )
       })}
     </div>
+    {selectedMilestoneForVote && contractProjectId && (
+      <SetupMilestoneVoteModal
+        isOpen={Boolean(selectedMilestoneForVote)}
+        onClose={() => setSelectedMilestoneForVote(null)}
+        projectId={contractProjectId}
+        milestoneOptions={[
+          { stage: selectedMilestoneForVote.stage, title: selectedMilestoneForVote.title || `Milestone ${selectedMilestoneForVote.stage}` },
+        ]}
+        defaultMilestoneStage={selectedMilestoneForVote.stage}
+        lockMilestone
+        onSuccess={onVoteSetupSuccess}
+      />
+    )}
+    </>
   )
 }

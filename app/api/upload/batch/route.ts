@@ -24,12 +24,22 @@ export async function POST(request: NextRequest) {
     const uploads = await Promise.all(
       files.map(async (file) => {
 
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+        const validTypes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+          'video/mp4',
+          'video/webm',
+          'video/quicktime'
+        ]
         if (!validTypes.includes(file.type)) {
           throw new Error(`Invalid file type: ${file.name}`)
         }
 
-        const maxSize = 10 * 1024 * 1024
+        const isVideo = file.type.startsWith('video/')
+        const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024
         if (file.size > maxSize) {
           throw new Error(`File too large: ${file.name}`)
         }
@@ -43,7 +53,7 @@ export async function POST(request: NextRequest) {
           cloudinary.uploader.upload_stream(
             {
               folder: 'stageraise/projects',
-              resource_type: 'image',
+              resource_type: 'auto',
               transformation: [
                 { quality: 'auto', fetch_format: 'auto' }
               ]
@@ -63,7 +73,8 @@ export async function POST(request: NextRequest) {
           height: result.height,
           format: result.format,
           size: result.bytes,
-          type: file.type
+          type: file.type,
+          resourceType: result.resource_type
         }
       })
     )

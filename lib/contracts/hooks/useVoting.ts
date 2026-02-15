@@ -39,8 +39,22 @@ export function useOpenVoting() {
 // With auto-sync
 export function useOpenVotingWithSync() {
   const openVotingHook = useOpenVoting()
+
+  interface OpenVotingSyncPayload {
+    milestoneStage?: number
+    proofSummary?: string
+    proofDocuments?: Array<{
+      url: string
+      filename: string
+      mediaType: "image" | "video"
+    }>
+  }
   
-  const syncVotingOpen = async (projectId: number, chainId: number) => {
+  const syncVotingOpen = async (
+    projectId: number,
+    chainId: number,
+    payload?: OpenVotingSyncPayload
+  ) => {
     try {
       const response = await fetch('/api/sync/voting', {
         method: 'POST',
@@ -48,7 +62,8 @@ export function useOpenVotingWithSync() {
         body: JSON.stringify({
           projectId,
           chainId,
-          action: 'open'
+          action: 'open',
+          ...payload
         })
       })
       
