@@ -11,6 +11,7 @@ interface CreatorWithdrawCardProps {
   projectId: number
   token: Token | undefined
   fallbackProjectBalance?: number
+  onWithdrawSuccess?: () => void
 }
 
 const EXPLORER_URLS: Record<number, string> = {
@@ -42,13 +43,14 @@ export function CreatorWithdrawCard({
   projectId,
   token,
   fallbackProjectBalance = 0,
+  onWithdrawSuccess,
 }: CreatorWithdrawCardProps) {
   const { address } = useAccount()
   const chainId = useChainId()
   const tokenDecimals = token?.decimals || 18
 
-  const { balance } = useProjectBalance(projectId, chainId)
-  const { withdrawableAmount } = useWithdrawableAmount(projectId, chainId)
+  const { balance, refetch: refetchBalance } = useProjectBalance(projectId, chainId)
+  const { withdrawableAmount, refetch: refetchWithdrawable } = useWithdrawableAmount(projectId, chainId)
   const { withdrawFunds, isPending, isConfirming, isSuccess, hash, error } = useWithdraw()
 
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
@@ -165,11 +167,15 @@ export function CreatorWithdrawCard({
         })
       } catch (syncError) {
         console.error("Failed to sync withdrawal:", syncError)
+      } finally {
+        refetchBalance()
+        refetchWithdrawable()
+        onWithdrawSuccess?.()
       }
     }
 
     void syncWithdrawal()
-  }, [isSuccess, hash, chainId, projectId, submittedWithdrawal])
+  }, [isSuccess, hash, chainId, projectId, submittedWithdrawal, refetchBalance, refetchWithdrawable, onWithdrawSuccess])
 
   return (
     <>

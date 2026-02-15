@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { useParams } from "next/navigation"
-import { useAccount } from "wagmi"
+import { useAccount, useChainId } from "wagmi"
 import Image from "next/image"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
@@ -16,16 +16,24 @@ import { LiveVotingCard } from "@/components/project/LiveVotingCard"
 import { RefundCard } from "@/components/project/RefundCard"
 import { CreatorWithdrawCard } from "@/components/project/CreatorWithdrawCard"
 import Link from "next/link"
+import { useProjectBalance } from "@/lib/contracts/hooks"
+import { formatUnits } from "viem"
 
 export default function ProjectDetailPage() {
     const params = useParams()
     const projectId = params.id
     const { address } = useAccount()
+    const chainId = useChainId()
     const [activeTab, setActiveTab] = useState<'about' | 'milestone' | 'voting'>('about')
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [project, setProject] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+    const resolvedProjectId = typeof project?.projectId === 'number' ? project.projectId : 0
+    const {
+        balance: onchainProjectBalance,
+        refetch: refetchOnchainProjectBalance
+    } = useProjectBalance(resolvedProjectId, chainId, resolvedProjectId > 0)
 
     const fetchProject = useCallback(async () => {
         try {
@@ -108,6 +116,12 @@ export default function ProjectDetailPage() {
 
     const images = [project.coverImageUrl, ...(project.galleryImageUrls || [])].filter(Boolean)
     const token = getTokenByAddress(project.paymentToken)
+    const parsedOnchainBalance = onchainProjectBalance !== undefined
+        ? Number.parseFloat(formatUnits(onchainProjectBalance, token?.decimals || 18))
+        : Number.NaN
+    const displayProjectBalance = Number.isFinite(parsedOnchainBalance)
+        ? parsedOnchainBalance
+        : (project.cachedRaisedAmount || 0)
     
     const amountRaisedPercent = project.fundingTarget > 0 
         ? Math.round((project.cachedRaisedAmount / project.fundingTarget) * 100) 
@@ -261,7 +275,7 @@ export default function ProjectDetailPage() {
                             ) : (
                                 <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
                                     <span className="text-sm text-gray-500">Project Balance</span>
-                                    <span className="whitespace-nowrap font-semibold">{project.cachedRaisedAmount?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
+                                    <span className="whitespace-nowrap font-semibold">{displayProjectBalance.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
                                 </div>
                             )}
                             <div className="flex flex-col items-center gap-4 shrink-0 min-w-[120px] md:min-w-0 md:flex-1">
@@ -377,6 +391,10 @@ export default function ProjectDetailPage() {
                                     projectId={project.projectId}
                                     token={token}
                                     fallbackProjectBalance={project.cachedRaisedAmount || 0}
+                                    onWithdrawSuccess={() => {
+                                        void fetchProject()
+                                        void refetchOnchainProjectBalance()
+                                    }}
                                 />
                             ) : (
                                 <>

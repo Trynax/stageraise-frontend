@@ -47,24 +47,35 @@ function formatTimeAgo(date: string): string {
 }
 
 function formatActivityMeta(activity: Activity): string {
-    if (activity.amount && activity.tokenSymbol) {
-        return `${activity.amount} ${activity.tokenSymbol}`
+    if (activity.amount !== null && activity.tokenSymbol) {
+        return `${formatTokenAmount(activity.amount)} ${activity.tokenSymbol}`
     }
     return activity.type.replace(/_/g, " ")
 }
 
 function formatAmountDisplay(activity: Activity): string {
-    if (activity.amount && activity.tokenSymbol) {
-        return `${activity.amount} ${activity.tokenSymbol}`
+    if (activity.amount !== null && activity.tokenSymbol) {
+        return `${formatTokenAmount(activity.amount)} ${activity.tokenSymbol}`
     }
     return "-------------"
 }
 
 function formatActivityTitle(activity: Activity): string {
-    if (activity.amount && activity.tokenSymbol) {
-        return `${activity.title} - ${activity.amount} ${activity.tokenSymbol}`
+    if (activity.amount !== null && activity.tokenSymbol) {
+        return `${activity.title} - ${formatTokenAmount(activity.amount)} ${activity.tokenSymbol}`
     }
     return activity.title
+}
+
+function formatTokenAmount(amount: number): string {
+    if (!Number.isFinite(amount)) return "0"
+    if (amount === 0) return "0"
+    if (Math.abs(amount) < 0.000001) return "<0.000001"
+    return new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 6,
+        notation: "standard"
+    }).format(amount)
 }
 
 function getActionButton(activity: Activity, fullWidth = false) {

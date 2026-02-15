@@ -1,10 +1,11 @@
 
 import { useReadContract } from 'wagmi'
+import type { Abi } from 'viem'
 import { getStageRaiseAddress } from '../addresses'
 import StageRaiseABI from '../StageRaise.abi.json'
 import type { ProjectInfo } from '../types'
 
-const stageRaiseABI = StageRaiseABI as any
+const stageRaiseABI = StageRaiseABI as Abi
 
 export function useProjectData(projectId: number, chainId: number) {
   const { 
@@ -43,12 +44,15 @@ export function useProjectCount(chainId: number) {
 }
 
 
-export function useProjectBalance(projectId: number, chainId: number) {
+export function useProjectBalance(projectId: number, chainId: number, enabled = true) {
   const { data, isLoading, error, refetch } = useReadContract({
     address: getStageRaiseAddress(chainId),
     abi: stageRaiseABI,
     functionName: 'getProjectBalance',
     args: [projectId],
+    query: {
+      enabled: enabled && projectId > 0,
+    },
   })
 
   return {
@@ -60,12 +64,15 @@ export function useProjectBalance(projectId: number, chainId: number) {
 }
 
 
-export function useWithdrawableAmount(projectId: number, chainId: number) {
+export function useWithdrawableAmount(projectId: number, chainId: number, enabled = true) {
   const { data, isLoading, error, refetch } = useReadContract({
     address: getStageRaiseAddress(chainId),
     abi: stageRaiseABI,
     functionName: 'getAmountWithdrawableForAProject',
     args: [projectId],
+    query: {
+      enabled: enabled && projectId > 0,
+    },
   })
 
   return {
