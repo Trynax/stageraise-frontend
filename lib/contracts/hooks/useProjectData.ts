@@ -1,23 +1,33 @@
 
 import { useReadContract } from 'wagmi'
 import type { Abi } from 'viem'
-import { getStageRaiseAddress } from '../addresses'
+import { STAGERAISE_ADDRESSES } from '../addresses'
 import StageRaiseABI from '../StageRaise.abi.json'
 import type { ProjectInfo } from '../types'
 
 const stageRaiseABI = StageRaiseABI as Abi
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
+
+function getStageRaiseAddressIfSupported(chainId: number): `0x${string}` | undefined {
+  const address = STAGERAISE_ADDRESSES[chainId as keyof typeof STAGERAISE_ADDRESSES]
+  return address as `0x${string}` | undefined
+}
 
 export function useProjectData(projectId: number, chainId: number) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { 
     data: project, 
     isLoading, 
     error,
     refetch 
   } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectBasicInfo',
     args: [projectId],
+    query: {
+      enabled: Boolean(stageRaiseAddress),
+    },
   })
 
   return {
@@ -30,10 +40,14 @@ export function useProjectData(projectId: number, chainId: number) {
 
 
 export function useProjectCount(chainId: number) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data, isLoading, error } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectCount',
+    query: {
+      enabled: Boolean(stageRaiseAddress),
+    },
   })
 
   return {
@@ -45,13 +59,14 @@ export function useProjectCount(chainId: number) {
 
 
 export function useProjectBalance(projectId: number, chainId: number, enabled = true) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data, isLoading, error, refetch } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectBalance',
     args: [projectId],
     query: {
-      enabled: enabled && projectId > 0,
+      enabled: Boolean(stageRaiseAddress) && enabled && projectId > 0,
     },
   })
 
@@ -65,13 +80,14 @@ export function useProjectBalance(projectId: number, chainId: number, enabled = 
 
 
 export function useWithdrawableAmount(projectId: number, chainId: number, enabled = true) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data, isLoading, error, refetch } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getAmountWithdrawableForAProject',
     args: [projectId],
     query: {
-      enabled: enabled && projectId > 0,
+      enabled: Boolean(stageRaiseAddress) && enabled && projectId > 0,
     },
   })
 
@@ -89,11 +105,15 @@ export function useContributorAmount(
   address: `0x${string}`,
   chainId: number
 ) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data, isLoading, error, refetch } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectContributorAmount',
     args: [projectId, address],
+    query: {
+      enabled: Boolean(stageRaiseAddress),
+    },
   })
 
   return {
@@ -105,11 +125,15 @@ export function useContributorAmount(
 }
 
 export function useProjectPaymentToken(projectId: number, chainId: number) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data, isLoading, error } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectPaymentToken',
     args: [projectId],
+    query: {
+      enabled: Boolean(stageRaiseAddress),
+    },
   })
 
   return {
