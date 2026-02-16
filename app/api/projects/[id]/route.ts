@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
-function serializeProject(project: any) {
+function serializeProject<T>(project: T): T {
   return JSON.parse(JSON.stringify(project, (key, value) =>
     typeof value === 'bigint' ? Number(value) : value
   ))
@@ -18,7 +19,30 @@ interface RoundProofPayload {
   files?: unknown
 }
 
-function enrichProjectWithVoting(project: any) {
+interface ProjectVotingRoundShape {
+  milestoneStage: number
+  result: string
+  yesVotes: number
+  noVotes: number
+  totalVoters: number
+  votingStarted: Date | string
+  votingEnded?: Date | string | null
+  isActive: boolean
+  proofDocuments?: unknown
+}
+
+interface ProjectMilestoneShape {
+  stage: number
+  title?: string | null
+}
+
+interface ProjectWithVotingRelations {
+  votingRounds?: ProjectVotingRoundShape[] | null
+  milestones?: ProjectMilestoneShape[] | null
+  [key: string]: unknown
+}
+
+function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(project: T) {
   const votingRounds = Array.isArray(project.votingRounds) ? project.votingRounds : []
   const milestones = Array.isArray(project.milestones) ? project.milestones : []
 
@@ -208,20 +232,36 @@ export async function PATCH(
     // TODO: Add owner verification (check wallet signature)
     // For now, anyone can update (fix this with auth)
 
-    const milestoneUpserts = Array.isArray(body.milestones)
-      ? body.milestones
-          .map((m: any) => {
-            const stage = Number.parseInt(String(m?.stage), 10)
-            if (!Number.isFinite(stage) || stage <= 0) return null
-            return {
-              stage,
-              title: typeof m?.title === 'string' ? m.title : undefined,
-              description: typeof m?.description === 'string' ? m.description : undefined,
-              deliverables: m?.deliverables,
-            }
-          })
-          .filter(Boolean)
+    interface MilestoneInput {
+      stage?: unknown
+      title?: unknown
+      description?: unknown
+      deliverables?: unknown
+    }
+
+    interface MilestoneUpsertData {
+      stage: number
+      title?: string
+      description?: string
+      deliverables?: Prisma.InputJsonValue
+    }
+
+    const milestoneInputs = Array.isArray(body.milestones)
+      ? (body.milestones as MilestoneInput[])
       : []
+
+    const milestoneUpserts: MilestoneUpsertData[] = milestoneInputs
+      .map((m: MilestoneInput): MilestoneUpsertData | null => {
+        const stage = Number.parseInt(String(m?.stage), 10)
+        if (!Number.isFinite(stage) || stage <= 0) return null
+        return {
+          stage,
+          title: typeof m?.title === 'string' ? m.title : undefined,
+          description: typeof m?.description === 'string' ? m.description : undefined,
+          deliverables: m?.deliverables as Prisma.InputJsonValue | undefined,
+        }
+      })
+      .filter((m): m is MilestoneUpsertData => m !== null)
 
     // Update only allowed fields - use the database UUID for update
     const project = await prisma.project.update({
@@ -239,7 +279,7 @@ export async function PATCH(
         ...(body.telegramUrl && { telegramUrl: body.telegramUrl }),
         ...(milestoneUpserts.length > 0 && {
           milestones: {
-            upsert: milestoneUpserts.map((m: any) => ({
+            upsert: milestoneUpserts.map((m) => ({
               where: {
                 projectId_stage: { projectId: existing.id, stage: m.stage },
               },

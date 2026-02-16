@@ -4,14 +4,58 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { Vote } from '@/lib/types';
 
+interface TimeRemaining {
+  days?: number
+  hours?: number
+  minutes?: number
+  total?: number
+}
+
+interface VoteCardVote {
+  id: string | number
+  projectId?: Vote['projectId'] | string
+  projectNumericId?: number | string
+  title?: Vote['title']
+  description?: Vote['description']
+  image?: Vote['image']
+  milestone?: Vote['milestone']
+  yesVotes?: Vote['yesVotes']
+  noVotes?: Vote['noVotes']
+  totalVotes?: Vote['totalVotes']
+  milestones?: Vote['milestones']
+  funders?: Vote['funders']
+  communityVote?: Vote['communityVote']
+  refundable?: Vote['refundable']
+  startDate?: Vote['startDate'] | null
+  endDate?: Vote['endDate'] | null
+  stage?: number
+  milestoneStage?: number
+  projectName?: string
+  milestoneTitle?: string
+  logoUrl?: string
+  coverImageUrl?: string
+  votingEndTime?: string | null
+  votingEnded?: string | null
+  votingStarted?: string | null
+  status?: string
+  result?: Vote['result']
+  isActive?: boolean
+  timeRemaining?: TimeRemaining
+  yesPercent?: number
+  noPercent?: number
+  totalMilestones?: number
+  userHasVoted?: boolean
+  outcomeMessage?: string
+}
+
 interface VoteCardProps {
-  vote: Vote & Record<string, unknown>; // Allow both mock and API formats
-  fromPage?: 'project' | 'explore' | 'dashboard';
+  vote: VoteCardVote
+  fromPage?: 'project' | 'explore' | 'dashboard'
 }
 
 function getTimeLeft(
   endDate: string | undefined,
-  timeRemaining?: { days?: number; hours?: number; minutes?: number }
+  timeRemaining?: TimeRemaining
 ) {
   if (!endDate && timeRemaining) {
     return {
@@ -40,18 +84,22 @@ function getTimeLeft(
   return { days: 0, hours: 0, minutes: 0, seconds: 0 };
 }
 
+function toNumber(value: number | undefined, fallback = 0) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
 export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) {
   // Handle both mock data format and API format
-  const projectId = vote.projectId || vote.projectNumericId;
-  const milestoneStage = vote.milestone || vote.milestoneStage || vote.stage;
-  const title = vote.title || vote.projectName || 'Untitled Project';
-  const description = vote.description || vote.milestoneTitle || '';
-  const image = vote.image || vote.logoUrl || vote.coverImageUrl || '/placeholder.jpg';
-  const endDate = vote.endDate || vote.votingEndTime || vote.votingEnded || vote.votingStarted;
-  const status = vote.status || (vote.result === 'ongoing' ? 'ongoing' : 'ended');
+  const projectId = vote.projectId ?? vote.projectNumericId ?? 0;
+  const milestoneStage = vote.milestone ?? vote.milestoneStage ?? vote.stage ?? 1;
+  const title = vote.title ?? vote.projectName ?? 'Untitled Project';
+  const description = vote.description ?? vote.milestoneTitle ?? '';
+  const image = vote.image ?? vote.logoUrl ?? vote.coverImageUrl ?? '/placeholder.jpg';
+  const endDate = vote.endDate ?? vote.votingEndTime ?? vote.votingEnded ?? vote.votingStarted;
+  const status = vote.status ?? (vote.result === 'ongoing' ? 'ongoing' : 'ended');
   const result = vote.result;
   const isActive = vote.isActive;
-  const hasPositiveTimeRemaining = Boolean(vote.timeRemaining && Number(vote.timeRemaining.total) > 0);
+  const hasPositiveTimeRemaining = Boolean(vote.timeRemaining && toNumber(vote.timeRemaining.total) > 0);
   const isOngoing =
     status === 'ongoing' ||
     status === 'active' ||
@@ -61,21 +109,25 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
   const detailHref = `/votes/${projectId}-${milestoneStage}?from=${fromPage}`;
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(
     typeof endDate === 'string' ? endDate : undefined,
-    vote.timeRemaining as { days?: number; hours?: number; minutes?: number } | undefined
+    vote.timeRemaining
   ));
   
   // Handle vote counts
-  const yesVotes = vote.yesVotes || 0;
-  const noVotes = vote.noVotes || 0;
-  const totalVotes = vote.totalVotes || (yesVotes + noVotes) || 0;
-  const yesPercentage = vote.yesPercent !== undefined ? vote.yesPercent : (totalVotes > 0 ? Math.round((yesVotes / totalVotes) * 100) : 0);
-  const noPercentage = vote.noPercent !== undefined ? vote.noPercent : (totalVotes > 0 ? Math.round((noVotes / totalVotes) * 100) : 0);
+  const yesVotes = toNumber(vote.yesVotes);
+  const noVotes = toNumber(vote.noVotes);
+  const totalVotes = toNumber(vote.totalVotes, yesVotes + noVotes);
+  const yesPercentage = typeof vote.yesPercent === 'number'
+    ? vote.yesPercent
+    : (totalVotes > 0 ? Math.round((yesVotes / totalVotes) * 100) : 0);
+  const noPercentage = typeof vote.noPercent === 'number'
+    ? vote.noPercent
+    : (totalVotes > 0 ? Math.round((noVotes / totalVotes) * 100) : 0);
 
-  const milestones = vote.milestones || vote.totalMilestones || 0;
-  const funders = vote.funders || 0;
+  const milestones = toNumber(vote.milestones ?? vote.totalMilestones);
+  const funders = toNumber(vote.funders);
   
   // Dashboard-specific fields
-  const userHasVoted = vote.userHasVoted;
+  const userHasVoted = Boolean(vote.userHasVoted);
   const outcomeMessage = vote.outcomeMessage;
 
   useEffect(() => {
@@ -83,7 +135,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
       setTimeLeft(
         getTimeLeft(
           typeof endDate === 'string' ? endDate : undefined,
-          vote.timeRemaining as { days?: number; hours?: number; minutes?: number } | undefined
+          vote.timeRemaining
         )
       );
     }, 1000);
