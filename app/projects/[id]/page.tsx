@@ -379,7 +379,7 @@ export default function ProjectDetailPage() {
                                     totalFunders={project.cachedTotalContributors || 0}
                                     failedVotingCount={project.failedVotingCount || 0}
                                     status={project.status}
-                                    projectId={project.id}
+                                    projectId={project.projectId}
                                 />
                             )}
                         </div>
@@ -422,7 +422,7 @@ export default function ProjectDetailPage() {
                                     )}
 
 
-                                    {project.activeVoting && !project.status && (
+                                    {project.activeVoting && project.status !== 'completed' && project.status !== 'refundable' && (
                                         <LiveVotingCard
                                             projectId={project.projectId}
                                             milestoneStage={project.activeVoting.stage}

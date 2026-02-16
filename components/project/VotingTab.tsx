@@ -5,11 +5,13 @@ import VoteCard from "../projects/votecard"
 
 interface VotingHistory {
   stage: number
-  result: 'passed' | 'failed'
+  result: 'ongoing' | 'passed' | 'failed'
   yesVotes: number
   noVotes: number
   totalVoters: number
-  votingEnded: string
+  votingStarted?: string | null
+  votingEnded?: string | null
+  isActive?: boolean
 }
 
 interface VotingTabProps {
@@ -46,8 +48,8 @@ export function VotingTab({
     )
   }
 
-  const votes = [...votingHistory].reverse().map((vote, index) => ({
-    id: vote.stage.toString(),
+  const votes = [...votingHistory].map((vote, index) => ({
+    id: `${vote.stage}-${index}`,
     projectId,
     title: projectTitle,
     description: projectDescription,
@@ -60,10 +62,11 @@ export function VotingTab({
     funders: totalFunders,
     communityVote: true,
     refundable: failedVotingCount >= 3 && status === 'refundable' && index === 0,
-    startDate: vote.votingEnded,
-    endDate: vote.votingEnded,
-    status: 'ended' as const,
+    startDate: vote.votingStarted || vote.votingEnded,
+    endDate: vote.votingEnded || vote.votingStarted,
+    status: (vote.result === 'ongoing' || vote.isActive) ? 'ongoing' : 'ended',
     result: vote.result,
+    isActive: vote.result === 'ongoing' || vote.isActive,
   }))
 
   return (

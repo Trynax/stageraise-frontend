@@ -1,13 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
+import { useAccount, useChainId } from "wagmi"
+import { useVoteWithSync } from "@/lib/contracts/hooks"
+import TransactionModal, { TransactionStatus } from "@/components/ui/TransactionModal"
 
 type VoteResult = "ongoing" | "passed" | "failed"
+
+interface ProofMediaItem {
+  url: string
+  filename?: string
+  mediaType: "image" | "video"
+}
 
 interface ApiVotingHistoryItem {
   stage: number
@@ -15,7 +24,11 @@ interface ApiVotingHistoryItem {
   yesVotes: number
   noVotes: number
   totalVoters: number
-  votingEnded: string
+  votingStarted?: string | null
+  votingEnded?: string | null
+  isActive?: boolean
+  proofSummary?: string | null
+  proofDocuments?: ProofMediaItem[]
 }
 
 interface ApiMilestone {
@@ -37,6 +50,20 @@ interface ApiProject {
   status?: string | null
 }
 
+interface ApiActiveVotingResponse {
+  success?: boolean
+  isOpen?: boolean
+  voting?: {
+    milestoneStage: number
+    votingEndTime: string
+    votesForYes: string
+    votesForNo: string
+    totalVoters: number
+    proofSummary?: string | null
+    proofDocuments?: ProofMediaItem[]
+  }
+}
+
 interface VoteDetailMilestone {
   stage: number
   title: string
@@ -52,6 +79,8 @@ interface VoteDetail {
   noVotes: number
   totalVoters: number
   votingEnded: string
+  proofSummary?: string | null
+  proofDocuments: ProofMediaItem[]
   milestone: VoteDetailMilestone
   projectTitle: string
   projectImage: string
@@ -76,6 +105,20 @@ function normalizeProofDocuments(
     .filter((doc): doc is string => Boolean(doc))
 }
 
+function normalizeVoteProofDocuments(
+  proofDocuments?: ProofMediaItem[] | null
+): ProofMediaItem[] {
+  if (!proofDocuments || proofDocuments.length === 0) return []
+
+  return proofDocuments
+    .filter((doc) => doc && typeof doc.url === "string" && doc.url.length > 0)
+    .map((doc) => ({
+      url: doc.url,
+      filename: doc.filename || "proof",
+      mediaType: doc.mediaType === "video" ? "video" : "image",
+    }))
+}
+
 function normalizeDeliverables(deliverables?: string | string[] | null): string {
   if (!deliverables) return ""
   if (Array.isArray(deliverables)) return deliverables.join(", ")
@@ -85,10 +128,29 @@ function normalizeDeliverables(deliverables?: string | string[] | null): string 
 export default function VoteDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const { address } = useAccount()
+  const chainId = useChainId()
   const voteId = params.id as string // Format: "projectId-milestoneStage" e.g., "3-2"
   const [voteData, setVoteData] = useState<VoteDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [userVote, setUserVote] = useState<'yes' | 'no' | null>(null)
+  const [showTxModal, setShowTxModal] = useState(false)
+  const [txError, setTxError] = useState<string | undefined>()
+  const [pendingVoteChoice, setPendingVoteChoice] = useState<'yes' | 'no' | null>(null)
+  const processedHashRef = useRef<string | null>(null)
+  const { vote: submitVote, isPending, isConfirming, isSuccess, hash, error, syncVote } = useVoteWithSync()
+  const hookErrorMessage =
+    typeof (error as { shortMessage?: string } | undefined)?.shortMessage === "string"
+      ? (error as { shortMessage: string }).shortMessage
+      : error?.message
+  const resolvedTxError = txError || hookErrorMessage
+  const txStatus: TransactionStatus = resolvedTxError
+    ? "error"
+    : isSuccess
+      ? "success"
+      : isConfirming
+        ? "confirming"
+        : "pending"
   
   // Get referrer from URL params (from=project or from=explore)
   const fromPage = searchParams.get('from') || 'project'
@@ -106,20 +168,65 @@ export default function VoteDetailPage() {
           
           if (data.success && data.project) {
             const project = data.project
+            const parsedStage = parseInt(milestoneStage, 10)
             
             // Find the specific vote from voting history
-            const vote = project.votingHistory?.find(
-              (v) => v.stage === parseInt(milestoneStage, 10)
+            const stageVotes = (project.votingHistory || []).filter(
+              (v) => v.stage === parsedStage
             )
+            const vote = stageVotes.find((v) => v.result === "ongoing" || v.isActive) || stageVotes[0]
             
             // Find the milestone details
             const milestone = project.milestones?.find(
-              (m) => m.stage === parseInt(milestoneStage, 10)
+              (m) => m.stage === parsedStage
             )
             
             if (vote && milestone) {
               setVoteData({
                 ...vote,
+                votingEnded: vote.votingEnded || vote.votingStarted || new Date().toISOString(),
+                proofSummary: vote.proofSummary || null,
+                proofDocuments: normalizeVoteProofDocuments(vote.proofDocuments),
+                milestone: {
+                  ...milestone,
+                  deliverables: normalizeDeliverables(milestone.deliverables),
+                  proofDocuments: normalizeProofDocuments(milestone.proofDocuments),
+                },
+                projectTitle: project.name,
+                projectImage: project.logoUrl || "",
+                projectId: project.projectId,
+                totalMilestones: project.milestones?.length || 0,
+                totalFunders: project.cachedTotalContributors || 0,
+                failedVotingCount: project.failedVotingCount || 0,
+                status: project.status || null,
+              })
+              setLoading(false)
+              return
+            }
+
+            // Fallback for currently active votes that may not yet exist in votingHistory.
+            const activeVotingResponse = await fetch(`/api/projects/${projectId}/voting/active`)
+            const activeVotingData = (await activeVotingResponse.json()) as ApiActiveVotingResponse
+
+            if (
+              activeVotingData.success &&
+              activeVotingData.isOpen &&
+              activeVotingData.voting &&
+              activeVotingData.voting.milestoneStage === parsedStage &&
+              milestone
+            ) {
+              const yesVotes = Number(activeVotingData.voting.votesForYes || 0)
+              const noVotes = Number(activeVotingData.voting.votesForNo || 0)
+
+              setVoteData({
+                stage: parsedStage,
+                result: "ongoing",
+                yesVotes,
+                noVotes,
+                totalVoters: activeVotingData.voting.totalVoters || yesVotes + noVotes,
+                votingEnded: activeVotingData.voting.votingEndTime,
+                proofSummary: activeVotingData.voting.proofSummary || null,
+                proofDocuments: normalizeVoteProofDocuments(activeVotingData.voting.proofDocuments),
                 milestone: {
                   ...milestone,
                   deliverables: normalizeDeliverables(milestone.deliverables),
@@ -148,6 +255,56 @@ export default function VoteDetailPage() {
 
     fetchVoteData()
   }, [voteId])
+
+  const handleVote = (voteChoice: 'yes' | 'no') => {
+    if (!voteData || !address) return
+
+    try {
+      setPendingVoteChoice(voteChoice)
+      setTxError(undefined)
+      setShowTxModal(true)
+      submitVote(voteData.projectId, voteChoice === "yes", chainId)
+    } catch (submitError: unknown) {
+      const message =
+        submitError && typeof submitError === "object" && "message" in submitError
+          ? String((submitError as { message?: string }).message)
+          : "Failed to submit vote"
+      setTxError(message)
+      setShowTxModal(true)
+    }
+  }
+
+  useEffect(() => {
+    if (!isSuccess || !hash) return
+    if (processedHashRef.current === hash) return
+    processedHashRef.current = hash
+
+    if (pendingVoteChoice) {
+      setTimeout(() => {
+        setUserVote(pendingVoteChoice)
+        setVoteData((prev) => {
+          if (!prev) return prev
+          const yesIncrement = pendingVoteChoice === "yes" ? 1 : 0
+          const noIncrement = pendingVoteChoice === "no" ? 1 : 0
+          return {
+            ...prev,
+            yesVotes: prev.yesVotes + yesIncrement,
+            noVotes: prev.noVotes + noIncrement,
+            totalVoters: prev.totalVoters + 1,
+          }
+        })
+        setPendingVoteChoice(null)
+      }, 0)
+    }
+
+    void (async () => {
+      try {
+        await syncVote(hash, chainId)
+      } catch (syncError) {
+        console.error("Failed to sync vote:", syncError)
+      }
+    })()
+  }, [isSuccess, hash, pendingVoteChoice, syncVote, chainId])
 
   if (loading) {
     return (
@@ -225,11 +382,6 @@ export default function VoteDetailPage() {
     ? Math.round((voteData.noVotes / voteData.totalVoters) * 100) 
     : 0
 
-  const handleVote = (vote: 'yes' | 'no') => {
-  
-    setUserVote(vote)
-  }
-
   return (
     <>
       <Header />
@@ -303,21 +455,44 @@ export default function VoteDetailPage() {
                 
                <div className="px-3 py-4">
                  <p className="text-dark text-sm leading-relaxed mb-4">
-                  {voteData.milestone.deliverables || 'No deliverables specified'}
+                  {voteData.proofSummary || voteData.milestone.deliverables || 'No proof summary provided'}
                 </p>
-                {voteData.milestone.proofDocuments && voteData.milestone.proofDocuments.length > 0 && (
+                {voteData.proofDocuments && voteData.proofDocuments.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {voteData.milestone.proofDocuments.map((doc: string, idx: number) => (
-                      <div key={idx} className="relative aspect-square w-full rounded-xl overflow-hidden border-2 border-dark">
-                        <Image
-                          src={doc}
-                          alt={`Proof ${idx + 1}`}
-                          fill
-                          className="object-cover"
-                        />
+                    {voteData.proofDocuments.map((doc, idx) => (
+                      <div key={`${doc.url}-${idx}`} className="relative aspect-square w-full rounded-xl overflow-hidden border-2 border-dark">
+                        {doc.mediaType === "video" ? (
+                          <video
+                            src={doc.url}
+                            controls
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Image
+                            src={doc.url}
+                            alt={doc.filename || `Proof ${idx + 1}`}
+                            fill
+                            className="object-cover"
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
+                ) : (
+                  voteData.milestone.proofDocuments && voteData.milestone.proofDocuments.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {voteData.milestone.proofDocuments.map((doc: string, idx: number) => (
+                        <div key={idx} className="relative aspect-square w-full rounded-xl overflow-hidden border-2 border-dark">
+                          <Image
+                            src={doc}
+                            alt={`Proof ${idx + 1}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )
                 )}
                </div>
               </div>
@@ -374,15 +549,17 @@ export default function VoteDetailPage() {
                     <div className="flex flex-col gap-3">
                       <button
                         onClick={() => handleVote('no')}
+                        disabled={isPending || isConfirming || !address}
                         className="py-3 border bg-[#FEE4E2] border-[#D92D20] rounded-lg font-semibold text-[#D92D20]"
                       >
-                        No
+                        {!address ? "Connect Wallet" : "No"}
                       </button>
                       <button
                         onClick={() => handleVote('yes')}
+                        disabled={isPending || isConfirming || !address}
                         className="py-3 border bg-[#E5FBDD] border-[#3A9E1B] rounded-lg font-semibold text-[#3A9E1B]"
                       >
-                        Yes
+                        {!address ? "Connect Wallet" : "Yes"}
                       </button>
                     </div>
                   )
@@ -419,6 +596,18 @@ export default function VoteDetailPage() {
           </div>
         </div>
       </div>
+      <TransactionModal
+        isOpen={showTxModal}
+        type="voting"
+        status={txStatus}
+        hash={hash}
+        error={resolvedTxError}
+        onClose={() => {
+          setShowTxModal(false)
+          setTxError(undefined)
+        }}
+        chainId={chainId}
+      />
       <Footer />
     </>
   )

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
+import type { Abi } from 'viem'
 import { bscTestnet } from 'viem/chains'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
 
-const stageRaiseABI = StageRaiseABI as any
+const stageRaiseABI = StageRaiseABI as Abi
 
 const client = createPublicClient({
   chain: bscTestnet,
@@ -93,6 +94,13 @@ export async function GET(request: NextRequest) {
             milestoneStage: currentStage,
             milestoneTitle: milestone?.title || `Milestone ${currentStage}`,
             votingEndTime: new Date(endTime * 1000).toISOString(),
+            endDate: new Date(endTime * 1000).toISOString(),
+            status: 'ongoing',
+            result: 'ongoing',
+            isActive: true,
+            yesVotes: Number(yesVotes),
+            noVotes: Number(noVotes),
+            totalVotes: Number(total),
             timeRemaining: {
               days: Math.floor(secondsRemaining / 86400),
               hours: Math.floor((secondsRemaining % 86400) / 3600),
@@ -101,7 +109,7 @@ export async function GET(request: NextRequest) {
             },
             yesPercent,
             noPercent,
-            totalVoters: 0 // Will be populated from DB if needed
+            totalVoters: Number(total)
           }
         } catch (error) {
           console.error(`Error checking project ${project.projectId}:`, error)

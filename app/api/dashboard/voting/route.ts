@@ -81,9 +81,16 @@ export async function GET(request: NextRequest) {
 
             // Calculate time remaining if voting is ongoing
             let timeRemaining = null
-            if (round.isActive && !round.votingEnded) {
-                const endTime = new Date(round.votingStarted)
-                endTime.setDate(endTime.getDate() + 7) // 7 day voting period
+            let votingEndTime: string | null = null
+            if (round.isActive) {
+                const endTime = round.votingEnded
+                    ? new Date(round.votingEnded)
+                    : (() => {
+                        const fallback = new Date(round.votingStarted)
+                        fallback.setDate(fallback.getDate() + 7)
+                        return fallback
+                    })()
+                votingEndTime = endTime.toISOString()
                 const now = new Date()
                 const diff = endTime.getTime() - now.getTime()
                 if (diff > 0) {
@@ -122,6 +129,7 @@ export async function GET(request: NextRequest) {
                 funders: round.project.cachedTotalContributors || 0,
                 result: round.result,
                 isActive: round.isActive,
+                status: round.isActive ? 'ongoing' : 'ended',
                 yesVotes: round.yesVotes,
                 noVotes: round.noVotes,
                 totalVotes,
@@ -129,6 +137,7 @@ export async function GET(request: NextRequest) {
                 noPercent,
                 votingStarted: round.votingStarted,
                 votingEnded: round.votingEnded,
+                votingEndTime,
                 timeRemaining,
                 userHasVoted: !!userVote,
                 userVotedYes: userVote?.voteYes,

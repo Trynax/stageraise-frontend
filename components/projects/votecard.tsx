@@ -5,29 +5,64 @@ import Link from 'next/link';
 import type { Vote } from '@/lib/types';
 
 interface VoteCardProps {
-  vote: Vote | any; // Allow both mock and API formats
+  vote: Vote & Record<string, unknown>; // Allow both mock and API formats
   fromPage?: 'project' | 'explore' | 'dashboard';
 }
 
-export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
+function getTimeLeft(
+  endDate: string | undefined,
+  timeRemaining?: { days?: number; hours?: number; minutes?: number }
+) {
+  if (!endDate && timeRemaining) {
+    return {
+      days: timeRemaining.days || 0,
+      hours: timeRemaining.hours || 0,
+      minutes: timeRemaining.minutes || 0,
+      seconds: 0
+    };
+  }
 
+  if (!endDate) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  }
+
+  const difference = +new Date(endDate) - +new Date();
+
+  if (difference > 0) {
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60)
+    };
+  }
+
+  return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+}
+
+export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) {
   // Handle both mock data format and API format
   const projectId = vote.projectId || vote.projectNumericId;
-  const projectDbId = vote.projectDbId || vote.projectId;
   const milestoneStage = vote.milestone || vote.milestoneStage || vote.stage;
   const title = vote.title || vote.projectName || 'Untitled Project';
   const description = vote.description || vote.milestoneTitle || '';
   const image = vote.image || vote.logoUrl || vote.coverImageUrl || '/placeholder.jpg';
-  const endDate = vote.endDate || vote.votingEndTime || vote.votingStarted;
+  const endDate = vote.endDate || vote.votingEndTime || vote.votingEnded || vote.votingStarted;
   const status = vote.status || (vote.result === 'ongoing' ? 'ongoing' : 'ended');
   const result = vote.result;
   const isActive = vote.isActive;
+  const hasPositiveTimeRemaining = Boolean(vote.timeRemaining && Number(vote.timeRemaining.total) > 0);
+  const isOngoing =
+    status === 'ongoing' ||
+    status === 'active' ||
+    result === 'ongoing' ||
+    Boolean(isActive) ||
+    hasPositiveTimeRemaining;
+  const detailHref = `/votes/${projectId}-${milestoneStage}?from=${fromPage}`;
+  const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(
+    typeof endDate === 'string' ? endDate : undefined,
+    vote.timeRemaining as { days?: number; hours?: number; minutes?: number } | undefined
+  ));
   
   // Handle vote counts
   const yesVotes = vote.yesVotes || 0;
@@ -44,35 +79,13 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
   const outcomeMessage = vote.outcomeMessage;
 
   useEffect(() => {
-    // If API provides pre-calculated timeRemaining, use that
-    if (vote.timeRemaining) {
-      setTimeLeft({
-        days: vote.timeRemaining.days,
-        hours: vote.timeRemaining.hours,
-        minutes: vote.timeRemaining.minutes,
-        seconds: 0
-      });
-      return; // Don't start timer if we have static data
-    }
-
-    const calculateTimeLeft = () => {
-      const difference = +new Date(endDate) - +new Date();
-      
-      if (difference > 0) {
-        return {
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
-        };
-      }
-      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    };
-
-    setTimeLeft(calculateTimeLeft());
-
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
+      setTimeLeft(
+        getTimeLeft(
+          typeof endDate === 'string' ? endDate : undefined,
+          vote.timeRemaining as { days?: number; hours?: number; minutes?: number } | undefined
+        )
+      );
     }, 1000);
 
     return () => clearInterval(timer);
@@ -100,11 +113,11 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
         <div className="flex justify-between items-center mb-3">
           <span className="font-bold text-base">Milestone {milestoneStage} Vote</span>
           <span className={`font-semibold text-sm ${
-            result === 'ongoing' || status === 'ongoing' ? 'text-[#F97316]' :
+            isOngoing ? 'text-[#F97316]' :
             result === 'passed' ? 'text-green-600' :
             result === 'failed' ? 'text-red-600' : 'text-gray-600'
           }`}>
-            {result === 'ongoing' || status === 'ongoing' ? 'Ongoing' : 'Ended'}
+            {isOngoing ? 'Ongoing' : 'Ended'}
           </span>
         </div>
 
@@ -189,7 +202,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
         </div>
 
         {/* Status Messages */}
-        {result === 'passed' && status === 'ended' && (
+        {result === 'passed' && !isOngoing && (
           <div className="bg-white border border-dark rounded-xl p-3 mb-4">
             <p className="text-sm font-semibold mb-1 text-center">Vote Ended</p>
             <p className="text-xs ">
@@ -198,7 +211,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
           </div>
         )}
 
-        {result === 'failed' && status === 'ended' && (
+        {result === 'failed' && !isOngoing && (
           <div className="bg-white border border-dark rounded-xl p-3 mb-4">
             <p className="text-sm font-semibold mb-1 text-center">Vote Ended</p>
             <p className="text-xs   ">
@@ -211,7 +224,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
         )}
 
         {/* Countdown or Vote Button */}
-        {result === 'ongoing' || status === 'ongoing' || isActive ? (
+        {isOngoing ? (
           <>
             <div className="text-center mb-4 mt-auto">
               <p className="text-gray-600 text-xs mb-1">Vote Ends In</p>
@@ -220,7 +233,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
               </p>
             </div>
             <Link 
-              href={fromPage === 'dashboard' ? `/projects/${projectId}?tab=voting` : `/votes/${projectId}-${milestoneStage}?from=${fromPage}`}
+              href={detailHref}
               className="block w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102 text-center"
             >
               {userHasVoted ? 'View Vote' : 'Vote now'}
@@ -228,7 +241,7 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
           </>
         ) : (
           <Link 
-            href={fromPage === 'dashboard' ? `/projects/${projectId}?tab=voting` : `/votes/${projectId}-${milestoneStage}?from=${fromPage}`}
+            href={detailHref}
             className="block w-full bg-white font-semibold text-dark text-base py-3 rounded-2xl transition-all border-2 border-dark hover:bg-gray-50 mt-auto text-center"
           >
             View details

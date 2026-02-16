@@ -7,6 +7,78 @@ function serializeProject(project: any) {
   ))
 }
 
+interface RoundProofFile {
+  url?: unknown
+  filename?: unknown
+  mediaType?: unknown
+}
+
+interface RoundProofPayload {
+  summary?: unknown
+  files?: unknown
+}
+
+function enrichProjectWithVoting(project: any) {
+  const votingRounds = Array.isArray(project.votingRounds) ? project.votingRounds : []
+  const milestones = Array.isArray(project.milestones) ? project.milestones : []
+
+  const sortedRounds = [...votingRounds].sort(
+    (a, b) => new Date(b.votingStarted).getTime() - new Date(a.votingStarted).getTime()
+  )
+
+  const activeRound = sortedRounds.find((round) => round.isActive) || null
+  const activeMilestone = activeRound
+    ? milestones.find((m) => m.stage === activeRound.milestoneStage)
+    : null
+
+  const votingHistory = sortedRounds.map((round) => {
+    const roundProof =
+      round?.proofDocuments && typeof round.proofDocuments === 'object'
+        ? round.proofDocuments as RoundProofPayload
+        : null
+    const proofFiles = Array.isArray(roundProof?.files)
+      ? (roundProof.files as RoundProofFile[])
+          .filter((file) => typeof file?.url === 'string' && file.url.length > 0)
+          .map((file) => ({
+            url: file.url as string,
+            filename: typeof file?.filename === 'string' ? file.filename : 'proof',
+            mediaType: file?.mediaType === 'video' ? 'video' : 'image',
+          }))
+      : []
+
+    return {
+      stage: round.milestoneStage,
+      result: round.result,
+      yesVotes: round.yesVotes,
+      noVotes: round.noVotes,
+      totalVoters: round.totalVoters || round.yesVotes + round.noVotes,
+      votingStarted: round.votingStarted,
+      votingEnded: round.votingEnded,
+      isActive: round.isActive,
+      proofSummary: typeof roundProof?.summary === 'string'
+        ? roundProof.summary
+        : null,
+      proofDocuments: proofFiles,
+    }
+  })
+
+  const activeVoting = activeRound
+    ? {
+        stage: activeRound.milestoneStage,
+        title: activeMilestone?.title || `Milestone ${activeRound.milestoneStage}`,
+        yesVotes: activeRound.yesVotes,
+        noVotes: activeRound.noVotes,
+        votingEndTime: activeRound.votingEnded,
+      }
+    : null
+
+  return {
+    ...project,
+    votingHistory,
+    activeVoting,
+  }
+}
+
 
 export async function GET(
   request: NextRequest,
@@ -34,6 +106,9 @@ export async function GET(
           votes: {
             orderBy: { createdAt: 'desc' },
             take: 10 
+          },
+          votingRounds: {
+            orderBy: { votingStarted: 'desc' }
           },
           updates: {
             orderBy: { createdAt: 'desc' }
@@ -63,6 +138,9 @@ export async function GET(
             orderBy: { createdAt: 'desc' },
             take: 10 
           },
+          votingRounds: {
+            orderBy: { votingStarted: 'desc' }
+          },
           updates: {
             orderBy: { createdAt: 'desc' }
           },
@@ -86,7 +164,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      project: serializeProject(project)
+      project: serializeProject(enrichProjectWithVoting(project))
     })
   } catch (error) {
     console.error('Get project error:', error)

@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
+import type { Abi } from 'viem'
 import { bscTestnet } from 'viem/chains'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
 
-const stageRaiseABI = StageRaiseABI as any
+const stageRaiseABI = StageRaiseABI as Abi
+
+interface VotingStatusResult {
+  isVotingOpen: boolean
+}
 
 const client = createPublicClient({
   chain: bscTestnet,
@@ -36,7 +41,12 @@ export async function GET(
       include: {
         milestones: {
           orderBy: { stage: 'asc' }
-        }
+        },
+        votingRounds: {
+          where: { isActive: true },
+          orderBy: { votingStarted: 'desc' },
+          take: 1
+        },
       }
     })
 
@@ -48,13 +58,40 @@ export async function GET(
     }
 
     // Read voting status from contract
-    const votingStatus: any = await client.readContract({
-      address: CONTRACT_ADDRESS,
-      abi: stageRaiseABI,
-      functionName: 'getVotingStatus',
-      args: [BigInt(projectId)]
-    })
+    const [isVotingOpen, currentStageRaw, votingEndTime, yesVotes, noVotes] = await Promise.all([
+      client.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: stageRaiseABI,
+        functionName: 'getProjectMileStoneVotingStatus',
+        args: [projectId]
+      }) as Promise<boolean>,
+      client.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: stageRaiseABI,
+        functionName: 'getProjectMilestoneStage',
+        args: [projectId]
+      }) as Promise<number>,
+      client.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: stageRaiseABI,
+        functionName: 'getProjectVotingEndTime',
+        args: [projectId]
+      }) as Promise<bigint>,
+      client.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: stageRaiseABI,
+        functionName: 'getProjectYesVotes',
+        args: [projectId]
+      }) as Promise<bigint>,
+      client.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: stageRaiseABI,
+        functionName: 'getProjectNoVotes',
+        args: [projectId]
+      }) as Promise<bigint>
+    ])
 
+    const votingStatus: VotingStatusResult = { isVotingOpen }
     const isOpen = votingStatus.isVotingOpen
 
     if (!isOpen) {
@@ -65,10 +102,7 @@ export async function GET(
       })
     }
 
-    const currentStage = Number(votingStatus.milestoneStage)
-    const votingEndTime = votingStatus.timeForTheVotingProcessToElapsed
-    const yesVotes = votingStatus.votesForYes
-    const noVotes = votingStatus.votesForNo
+    const currentStage = Number(currentStageRaw)
 
     // Get voters from DB
     const voters = await prisma.vote.findMany({
@@ -99,6 +133,20 @@ export async function GET(
 
     // Get milestone details
     const milestone = project.milestones.find(m => m.stage === currentStage)
+    const activeRound = project.votingRounds[0]
+    const roundProof =
+      activeRound?.proofDocuments && typeof activeRound.proofDocuments === 'object'
+        ? activeRound.proofDocuments as { summary?: string; files?: Array<{ url?: string; filename?: string; mediaType?: string }> }
+        : null
+    const proofFiles = Array.isArray(roundProof?.files)
+      ? roundProof.files
+          .filter((file) => typeof file?.url === 'string' && (file.url || '').length > 0)
+          .map((file) => ({
+            url: file.url as string,
+            filename: typeof file?.filename === 'string' ? file.filename : 'proof',
+            mediaType: file?.mediaType === 'video' ? 'video' : 'image'
+          }))
+      : []
 
     return NextResponse.json({
       success: true,
@@ -116,6 +164,8 @@ export async function GET(
         yesPercent,
         noPercent,
         totalVoters: voters.length,
+        proofSummary: typeof roundProof?.summary === 'string' ? roundProof.summary : null,
+        proofDocuments: proofFiles,
         voters: voters.map(v => ({
           address: v.voter,
           voteYes: v.voteYes,
