@@ -31,6 +31,11 @@ export async function GET(request: NextRequest) {
       include: {
         milestones: {
           orderBy: { stage: 'asc' }
+        },
+        _count: {
+          select: {
+            contributions: true
+          }
         }
       },
       take: limit
@@ -93,6 +98,9 @@ export async function GET(request: NextRequest) {
             ownerAddress: project.ownerAddress,
             milestoneStage: currentStage,
             milestoneTitle: milestone?.title || `Milestone ${currentStage}`,
+            totalMilestones: project.milestones.length,
+            milestones: project.milestones.length,
+            funders: project.cachedTotalContributors ?? project._count.contributions ?? 0,
             votingEndTime: new Date(endTime * 1000).toISOString(),
             endDate: new Date(endTime * 1000).toISOString(),
             status: 'ongoing',

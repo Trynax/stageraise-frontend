@@ -29,6 +29,7 @@ interface MilestoneTabProps {
   failedVotingCount?: number
   isFundingPhase?: boolean
   isCreator?: boolean
+  activeVotingStage?: number | null
   onVoteSetupSuccess?: () => void
 }
 
@@ -41,6 +42,7 @@ export function MilestoneTab({
   failedVotingCount = 0,
   isFundingPhase = false,
   isCreator = false,
+  activeVotingStage = null,
   onVoteSetupSuccess,
 }: MilestoneTabProps) {
   const [selectedMilestoneForVote, setSelectedMilestoneForVote] = useState<Milestone | null>(null)
@@ -57,6 +59,10 @@ export function MilestoneTab({
 
     if (isFundingPhase) {
       return { text: "", color: "bg-[#EAECF0] text-dark border border-dark" }
+    }
+
+    if (activeVotingStage !== null && stage === activeVotingStage) {
+      return { text: "In Voting", color: "bg-[#FEF0C7] text-[#B54708] border border-[#F79009]" }
     }
     
 
@@ -80,8 +86,9 @@ export function MilestoneTab({
         const totalMilestones = milestones.length
         const isCompleted = status.text === "Completed"
         const isInProgress = status.text === "In Progress"
+        const isInVoting = status.text === "In Voting"
         const shouldShowSetupButton = isCreator && !isCompleted
-        const canSetupVote = isInProgress
+        const canSetupVote = isInProgress && !isInVoting
 
         return (
           <div key={milestone.id} className="bg-white border-2 border-dark rounded-2xl p-6">

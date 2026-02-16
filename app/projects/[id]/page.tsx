@@ -365,6 +365,7 @@ export default function ProjectDetailPage() {
                                     failedVotingCount={project.failedVotingCount || 0}
                                     isFundingPhase={isFundingPhase}
                                     isCreator={isCreator}
+                                    activeVotingStage={project.activeVoting?.stage ?? null}
                                     onVoteSetupSuccess={fetchProject}
                                 />
                             )}

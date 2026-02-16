@@ -82,6 +82,9 @@ export default function MilestoneDetailPage() {
   const status = useMemo(() => {
     if (!milestone || !project) return { text: "", color: "bg-[#EAECF0] text-dark border border-dark" }
     if (isFundingPhase) return { text: "", color: "bg-[#EAECF0] text-dark border border-dark" }
+    if (project.activeVoting?.stage === milestone.stage) {
+      return { text: "In Voting", color: "bg-[#FEF0C7] text-[#B54708] border border-[#F79009]" }
+    }
     if ((project.failedVotingCount || 0) >= 3 && milestone.stage === (project.currentMilestone || 1)) {
       return { text: "Failed", color: "bg-red-100 text-red-700 border border-red-500" }
     }
@@ -164,8 +167,9 @@ export default function MilestoneDetailPage() {
   )
   const isCompleted = status.text === "Completed"
   const isInProgress = status.text === "In Progress"
+  const isInVoting = status.text === "In Voting"
   const shouldShowSetupButton = isCreator && !isCompleted
-  const canSetupVote = isInProgress
+  const canSetupVote = isInProgress && !isInVoting
 
   return (
     <>
