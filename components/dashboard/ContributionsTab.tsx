@@ -24,7 +24,7 @@ export function ContributionsTab({ address }: ContributionsTabProps) {
         const fetchContributions = async () => {
             setLoading(true)
             try {
-                const response = await fetch(`/api/dashboard/contributions?address=${address}&page=${page}&limit=9`)
+                const response = await fetch(`/api/dashboard/contributions?address=${address}&page=${page}&limit=9`, { cache: 'no-store' })
                 const data = await response.json()
 
                 if (data.success) {

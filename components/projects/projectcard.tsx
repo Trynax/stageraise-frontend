@@ -40,6 +40,8 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
   const displayStatus = project.displayStatus || 'funding';
   const milestoneStatus = project.milestoneStatus;
   const hasActiveVoting = project.hasActiveVoting;
+  const userHasVoted = Boolean(project.userHasVoted);
+  const userVotedYes = typeof project.userVotedYes === 'boolean' ? project.userVotedYes : null;
   const userContribution = project.userContribution;
   const isRefundEligible = project.isRefundEligible;
   const statusMessage = project.statusMessage;
@@ -187,7 +189,7 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
           )}
 
           {/* Dashboard variant: Voting buttons for contribution */}
-          {variant === 'contribution' && hasActiveVoting && (
+          {variant === 'contribution' && hasActiveVoting && !userHasVoted && (
             <div className="mb-4">
               <p className="text-xs text-gray-600 mb-2">
                 Vote on this milestone to help decide if funds should be released for next milestone
@@ -204,6 +206,14 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
                   </button>
                 </Link>
               </div>
+            </div>
+          )}
+
+          {variant === 'contribution' && hasActiveVoting && userHasVoted && (
+            <div className="mb-4 border border-dark rounded-xl p-3">
+              <p className="text-xs">
+                {`You already voted ${userVotedYes ? 'YES' : 'NO'} on this milestone.`}
+              </p>
             </div>
           )}
 

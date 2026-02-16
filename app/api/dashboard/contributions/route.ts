@@ -27,11 +27,11 @@ export async function GET(request: NextRequest) {
             _count: true
         })
 
-       const projectIds = contributionsByProject.map((c: any) => c.projectId)
+       const projectIds = contributionsByProject.map((c) => c.projectId)
 
         // Create a map of project contributions
         const contributionMap = new Map(
-            contributionsByProject.map((c: any) => [c.projectId, c._sum.amount || 0])
+            contributionsByProject.map((c) => [c.projectId, c._sum.amount || 0])
         )
 
         // Get projects with their details
@@ -47,7 +47,14 @@ export async function GET(request: NextRequest) {
                     votingRounds: {
                         where: { isActive: true },
                         orderBy: { createdAt: 'desc' },
-                        take: 1
+                        take: 1,
+                        include: {
+                            votes: {
+                                where: { voter: normalizedAddress },
+                                orderBy: { createdAt: 'desc' },
+                                take: 1
+                            }
+                        }
                     }
                 },
                 orderBy: { createdAt: 'desc' },
@@ -62,11 +69,14 @@ export async function GET(request: NextRequest) {
         ])
 
         // Transform projects with contribution info
-       const transformedContributions = projects.map((project: any) => {
+       const transformedContributions = projects.map((project) => {
             const userContribution = contributionMap.get(project.id) || 0
             const totalMilestones = project.milestones.length
             const currentMilestone = project.currentMilestone
             const activeVoting = project.votingRounds[0]
+            const userVote = activeVoting?.votes?.[0]
+            const userHasVoted = Boolean(userVote)
+            const userVotedYes = typeof userVote?.voteYes === 'boolean' ? userVote.voteYes : null
 
             // Determine project state and user's refund eligibility
             let displayStatus = 'funding' // funding phase
@@ -89,7 +99,9 @@ export async function GET(request: NextRequest) {
             } else if (activeVoting) {
                 displayStatus = 'voting'
                 milestoneStatus = `${currentMilestone}/${totalMilestones} Milestone Voting`
-                statusMessage = 'Vote on this milestone to help decide if funds should be released for next milestone'
+                statusMessage = userHasVoted
+                    ? `You already voted ${userVotedYes ? 'YES' : 'NO'} on this milestone.`
+                    : 'Vote on this milestone to help decide if funds should be released for next milestone'
             } else if (!fundingEnded) {
                 displayStatus = 'funding'
                 milestoneStatus = null
@@ -119,6 +131,8 @@ export async function GET(request: NextRequest) {
                 displayStatus,
                 milestoneStatus,
                 hasActiveVoting: !!activeVoting,
+                userHasVoted,
+                userVotedYes,
                 userContribution,
                 isRefundEligible,
                 statusMessage,
