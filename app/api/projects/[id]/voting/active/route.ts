@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient, http } from 'viem'
+import { createPublicClient, formatUnits, http } from 'viem'
 import type { Abi } from 'viem'
 import { bscTestnet } from 'viem/chains'
 import { prisma } from '@/lib/prisma'
@@ -18,6 +18,12 @@ const client = createPublicClient({
 })
 
 const CONTRACT_ADDRESS = getStageRaiseAddress(97)
+
+function normalizeVotePower(value: bigint): number {
+  const parsed = Number.parseFloat(formatUnits(value, 18))
+  if (!Number.isFinite(parsed)) return 0
+  return parsed
+}
 
 // GET /api/projects/[id]/voting/active - Get currently active voting session
 export async function GET(
@@ -114,9 +120,12 @@ export async function GET(
     })
 
     // Calculate percentages
-    const total = yesVotes + noVotes
-    const yesPercent = total > BigInt(0) ? Number((yesVotes * BigInt(100)) / total) : 0
-    const noPercent = total > BigInt(0) ? Number((noVotes * BigInt(100)) / total) : 0
+    const totalRaw = yesVotes + noVotes
+    const yesPercent = totalRaw > BigInt(0) ? Number((yesVotes * BigInt(100)) / totalRaw) : 0
+    const noPercent = totalRaw > BigInt(0) ? Number((noVotes * BigInt(100)) / totalRaw) : 0
+    const yesVotesDisplay = normalizeVotePower(yesVotes)
+    const noVotesDisplay = normalizeVotePower(noVotes)
+    const totalVotesDisplay = yesVotesDisplay + noVotesDisplay
 
     // Time remaining
     const now = Math.floor(Date.now() / 1000)
@@ -159,11 +168,11 @@ export async function GET(
         milestoneDescription: milestone?.description,
         votingEndTime: new Date(endTime * 1000).toISOString(),
         timeRemaining,
-        votesForYes: yesVotes.toString(),
-        votesForNo: noVotes.toString(),
+        votesForYes: yesVotesDisplay.toString(),
+        votesForNo: noVotesDisplay.toString(),
         yesPercent,
         noPercent,
-        totalVoters: voters.length,
+        totalVoters: totalVotesDisplay,
         proofSummary: typeof roundProof?.summary === 'string' ? roundProof.summary : null,
         proofDocuments: proofFiles,
         voters: voters.map(v => ({

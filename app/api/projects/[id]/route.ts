@@ -1,6 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createPublicClient, formatUnits, http } from 'viem'
+import type { Abi } from 'viem'
+import { bscTestnet } from 'viem/chains'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { getStageRaiseAddress } from '@/lib/contracts/addresses'
+import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
+
+const stageRaiseABI = StageRaiseABI as Abi
+
+function normalizeVotePower(value: bigint): number {
+  const parsed = Number.parseFloat(formatUnits(value, 18))
+  if (!Number.isFinite(parsed)) return 0
+  return parsed
+}
+
+function normalizeStoredVoteValue(value: number): number {
+  if (!Number.isFinite(value)) return 0
+  // Backward compatibility for previously stored raw uint256 values.
+  if (Math.abs(value) >= 1_000_000_000_000) {
+    return value / 1e18
+  }
+  return value
+}
+
+async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
+  try {
+    const contractAddress = getStageRaiseAddress(chainId)
+    const client = createPublicClient({
+      chain: bscTestnet,
+      transport: http(),
+    })
+
+    const [isVotingOpen, milestoneStageRaw, votingEndTimeRaw, yesVotesRaw, noVotesRaw] = await Promise.all([
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectMileStoneVotingStatus',
+        args: [projectId],
+      }) as Promise<boolean>,
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectMilestoneStage',
+        args: [projectId],
+      }) as Promise<number>,
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectVotingEndTime',
+        args: [projectId],
+      }) as Promise<bigint>,
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectYesVotes',
+        args: [projectId],
+      }) as Promise<bigint>,
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectNoVotes',
+        args: [projectId],
+      }) as Promise<bigint>,
+    ])
+
+    return {
+      isVotingOpen,
+      milestoneStage: Number(milestoneStageRaw),
+      votingEnded: new Date(Number(votingEndTimeRaw) * 1000),
+      yesVotes: normalizeVotePower(yesVotesRaw),
+      noVotes: normalizeVotePower(noVotesRaw),
+    }
+  } catch {
+    return null
+  }
+}
 
 function serializeProject<T>(project: T): T {
   return JSON.parse(JSON.stringify(project, (key, value) =>
@@ -20,6 +95,7 @@ interface RoundProofPayload {
 }
 
 interface ProjectVotingRoundShape {
+  id: string
   milestoneStage: number
   result: string
   yesVotes: number
@@ -36,15 +112,41 @@ interface ProjectMilestoneShape {
   title?: string | null
 }
 
+interface ProjectVoteShape {
+  voter: string
+  voteYes: boolean
+  milestoneStage: number
+  votingRoundId?: string | null
+}
+
 interface ProjectWithVotingRelations {
   votingRounds?: ProjectVotingRoundShape[] | null
   milestones?: ProjectMilestoneShape[] | null
+  votes?: ProjectVoteShape[] | null
   [key: string]: unknown
 }
 
-function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(project: T) {
+function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(
+  project: T,
+  voterAddress?: string | null
+) {
   const votingRounds = Array.isArray(project.votingRounds) ? project.votingRounds : []
   const milestones = Array.isArray(project.milestones) ? project.milestones : []
+  const votes = Array.isArray(project.votes) ? project.votes : []
+  const normalizedVoter = typeof voterAddress === 'string' ? voterAddress.toLowerCase() : null
+  const userVotes = normalizedVoter
+    ? votes.filter((vote) => vote.voter.toLowerCase() === normalizedVoter)
+    : []
+  const userVoteByRoundId = new Map<string, boolean>()
+  const userVoteByStage = new Map<number, boolean>()
+  for (const vote of userVotes) {
+    if (typeof vote.votingRoundId === 'string' && !userVoteByRoundId.has(vote.votingRoundId)) {
+      userVoteByRoundId.set(vote.votingRoundId, vote.voteYes)
+    }
+    if (!userVoteByStage.has(vote.milestoneStage)) {
+      userVoteByStage.set(vote.milestoneStage, vote.voteYes)
+    }
+  }
 
   const sortedRounds = [...votingRounds].sort(
     (a, b) => new Date(b.votingStarted).getTime() - new Date(a.votingStarted).getTime()
@@ -56,6 +158,9 @@ function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(project: 
     : null
 
   const votingHistory = sortedRounds.map((round) => {
+    const normalizedYesVotes = normalizeStoredVoteValue(round.yesVotes)
+    const normalizedNoVotes = normalizeStoredVoteValue(round.noVotes)
+    const normalizedTotalVotes = normalizedYesVotes + normalizedNoVotes
     const roundProof =
       round?.proofDocuments && typeof round.proofDocuments === 'object'
         ? round.proofDocuments as RoundProofPayload
@@ -70,12 +175,16 @@ function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(project: 
           }))
       : []
 
+    const roundUserVote = userVoteByRoundId.get(round.id)
+    const stageUserVote = userVoteByStage.get(round.milestoneStage)
+    const resolvedUserVote = roundUserVote ?? stageUserVote
+
     return {
       stage: round.milestoneStage,
       result: round.result,
-      yesVotes: round.yesVotes,
-      noVotes: round.noVotes,
-      totalVoters: round.totalVoters || round.yesVotes + round.noVotes,
+      yesVotes: normalizedYesVotes,
+      noVotes: normalizedNoVotes,
+      totalVoters: normalizedTotalVotes,
       votingStarted: round.votingStarted,
       votingEnded: round.votingEnded,
       isActive: round.isActive,
@@ -83,6 +192,8 @@ function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(project: 
         ? roundProof.summary
         : null,
       proofDocuments: proofFiles,
+      userHasVoted: typeof resolvedUserVote === 'boolean',
+      userVote: resolvedUserVote === true ? 'yes' : resolvedUserVote === false ? 'no' : null,
     }
   })
 
@@ -90,9 +201,14 @@ function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(project: 
     ? {
         stage: activeRound.milestoneStage,
         title: activeMilestone?.title || `Milestone ${activeRound.milestoneStage}`,
-        yesVotes: activeRound.yesVotes,
-        noVotes: activeRound.noVotes,
+        yesVotes: normalizeStoredVoteValue(activeRound.yesVotes),
+        noVotes: normalizeStoredVoteValue(activeRound.noVotes),
         votingEndTime: activeRound.votingEnded,
+        userHasVoted: typeof (userVoteByRoundId.get(activeRound.id) ?? userVoteByStage.get(activeRound.milestoneStage)) === 'boolean',
+        userVote: (() => {
+          const resolved = userVoteByRoundId.get(activeRound.id) ?? userVoteByStage.get(activeRound.milestoneStage)
+          return resolved === true ? 'yes' : resolved === false ? 'no' : null
+        })(),
       }
     : null
 
@@ -110,6 +226,18 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const voterQuery = request.nextUrl.searchParams.get('voter')
+    const normalizedVoter = voterQuery ? voterQuery.toLowerCase() : null
+    const votesInclude = normalizedVoter
+      ? {
+          where: { voter: normalizedVoter },
+          orderBy: { createdAt: 'desc' as const },
+          take: 50,
+        }
+      : {
+          orderBy: { createdAt: 'desc' as const },
+          take: 10,
+        }
     
     // Try to find by database UUID first, then by numeric projectId
     let project
@@ -127,10 +255,7 @@ export async function GET(
             orderBy: { createdAt: 'desc' },
             take: 10 
           },
-          votes: {
-            orderBy: { createdAt: 'desc' },
-            take: 10 
-          },
+          votes: votesInclude,
           votingRounds: {
             orderBy: { votingStarted: 'desc' }
           },
@@ -158,10 +283,7 @@ export async function GET(
             orderBy: { createdAt: 'desc' },
             take: 10 
           },
-          votes: {
-            orderBy: { createdAt: 'desc' },
-            take: 10 
-          },
+          votes: votesInclude,
           votingRounds: {
             orderBy: { votingStarted: 'desc' }
           },
@@ -186,9 +308,50 @@ export async function GET(
       )
     }
 
+    const liveSnapshot = await fetchLiveVotingSnapshot(project.chainId, project.projectId)
+    if (liveSnapshot && liveSnapshot.isVotingOpen) {
+      const activeRound = project.votingRounds.find((round) => round.isActive)
+
+      if (activeRound && activeRound.milestoneStage === liveSnapshot.milestoneStage) {
+        activeRound.yesVotes = liveSnapshot.yesVotes
+        activeRound.noVotes = liveSnapshot.noVotes
+        activeRound.totalVoters = liveSnapshot.yesVotes + liveSnapshot.noVotes
+        activeRound.votingEnded = liveSnapshot.votingEnded
+
+        await prisma.votingRound.update({
+          where: { id: activeRound.id },
+          data: {
+            yesVotes: liveSnapshot.yesVotes,
+            noVotes: liveSnapshot.noVotes,
+            totalVoters: liveSnapshot.yesVotes + liveSnapshot.noVotes,
+            votingEnded: liveSnapshot.votingEnded,
+            isActive: true,
+          },
+        })
+      } else if (!activeRound) {
+        const createdRound = await prisma.votingRound.create({
+          data: {
+            projectId: project.id,
+            milestoneStage: liveSnapshot.milestoneStage,
+            votingStarted: new Date(
+              liveSnapshot.votingEnded.getTime() - Math.max(1, project.votingPeriodDays || 7) * 24 * 60 * 60 * 1000
+            ),
+            votingEnded: liveSnapshot.votingEnded,
+            result: 'ongoing',
+            isActive: true,
+            yesVotes: liveSnapshot.yesVotes,
+            noVotes: liveSnapshot.noVotes,
+            totalVoters: liveSnapshot.yesVotes + liveSnapshot.noVotes,
+          },
+        })
+
+        project.votingRounds = [createdRound, ...project.votingRounds]
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      project: serializeProject(enrichProjectWithVoting(project))
+      project: serializeProject(enrichProjectWithVoting(project, normalizedVoter))
     })
   } catch (error) {
     console.error('Get project error:', error)

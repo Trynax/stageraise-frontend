@@ -5,20 +5,28 @@ import Image from "next/image";
 import VoteCard from "@/components/projects/votecard";
 import VotesFilter, { VotesFilterState } from '../filters/VotesFilter';
 
+interface ActiveVoteItem {
+    projectId: number
+    milestoneStage: number
+    projectName?: string
+    description?: string
+    votingEndTime?: string
+    [key: string]: unknown
+}
+
 export function VotesList() {
-    const [votes, setVotes] = useState<any[]>([]);
+    const [votes, setVotes] = useState<ActiveVoteItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortOrder, setSortOrder] = useState('new');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [activeFilters, setActiveFilters] = useState<VotesFilterState | null>(null);
 
     // Fetch active votes from API
     useEffect(() => {
         const fetchVotes = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/votes/active');
+                const response = await fetch('/api/votes/active', { cache: 'no-store' });
                 const data = await response.json();
                 if (data.success) {
                     setVotes(data.activeVotes || []);
@@ -52,7 +60,7 @@ export function VotesList() {
     }, [votes, searchQuery, sortOrder]);
 
     const handleApplyFilters = (filters: VotesFilterState) => {
-        setActiveFilters(filters);
+        void filters
     };
 
     return (
@@ -114,7 +122,14 @@ export function VotesList() {
                     <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6  mx-auto">
                         {filteredVotes.length > 0 ? (
                             filteredVotes.map((vote) => (
-                                <VoteCard key={`${vote.projectId}-${vote.milestoneStage}`} vote={vote} fromPage="explore" />
+                                <VoteCard
+                                    key={`${vote.projectId}-${vote.milestoneStage}`}
+                                    vote={{
+                                        ...vote,
+                                        id: `${vote.projectId}-${vote.milestoneStage}`,
+                                    }}
+                                    fromPage="explore"
+                                />
                             ))
                         ) : (
                             <div className="col-span-full flex flex-col items-center justify-center py-20">

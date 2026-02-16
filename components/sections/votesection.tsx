@@ -6,15 +6,21 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import VoteCard from "@/components/projects/votecard"
 
+interface ActiveVoteItem {
+    projectId: number
+    milestoneStage: number
+    [key: string]: unknown
+}
+
 export function VoteSection(){
-    const [votes, setVotes] = useState<any[]>([]);
+    const [votes, setVotes] = useState<ActiveVoteItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchActiveVotes = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/votes/active?limit=6');
+                const response = await fetch('/api/votes/active?limit=6', { cache: 'no-store' });
                 const data = await response.json();
                 if (data.success) {
                     setVotes(data.activeVotes || []);
@@ -45,7 +51,14 @@ export function VoteSection(){
                 <>
                     <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-8 lg:px-32">
                         {filteredVotes.slice(0, 6).map((vote) => (
-                            <VoteCard key={`${vote.projectId}-${vote.milestoneStage}`} vote={vote} fromPage="explore" />
+                            <VoteCard
+                                key={`${vote.projectId}-${vote.milestoneStage}`}
+                                vote={{
+                                    ...vote,
+                                    id: `${vote.projectId}-${vote.milestoneStage}`,
+                                }}
+                                fromPage="explore"
+                            />
                         ))}
                     </div>
 

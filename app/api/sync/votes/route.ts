@@ -1,27 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient, http } from 'viem'
+import { createPublicClient, decodeFunctionData, formatUnits, http } from 'viem'
+import type { Abi } from 'viem'
 import { bscTestnet } from 'viem/chains'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
 
-const stageRaiseABI = StageRaiseABI as any
+const stageRaiseABI = StageRaiseABI as Abi
 
 const client = createPublicClient({
   chain: bscTestnet,
   transport: http()
 })
 
+function normalizeVotePower(value: bigint): number {
+  const parsed = Number.parseFloat(formatUnits(value, 18))
+  if (!Number.isFinite(parsed)) return 0
+  return parsed
+}
+
 // POST /api/sync/votes - Sync individual vote from blockchain
 export async function POST(request: NextRequest) {
   try {
-    const { transactionHash, chainId } = await request.json()
+    const { transactionHash, chainId } = (await request.json()) as {
+      transactionHash?: string
+      chainId?: number
+    }
 
     if (!transactionHash) {
       return NextResponse.json(
         { error: 'Transaction hash is required' },
         { status: 400 }
       )
+    }
+
+    const normalizedTxHash = transactionHash.toLowerCase()
+
+    // Idempotency: if this tx is already synced, return success
+    const existingVote = await prisma.vote.findUnique({
+      where: { transactionHash: normalizedTxHash },
+    })
+    if (existingVote) {
+      return NextResponse.json({
+        success: true,
+        vote: existingVote,
+        alreadySynced: true,
+      })
     }
 
     // Get transaction details
@@ -31,14 +55,29 @@ export async function POST(request: NextRequest) {
 
     const voterAddress = tx.from
 
-    // Decode the function call
-    // Parse transaction input to get projectId and vote
-    // takeAVoteForMilestoneStageIncrease(uint32 _projectId, bool _vote)
-    // Function selector: first 4 bytes
-    // _projectId: bytes 4-36 (uint32 padded to 32 bytes)
-    // _vote: bytes 36-68 (bool padded to 32 bytes)
-    const projectId = parseInt('0x' + tx.input.slice(10, 74), 16)
-    const voteYes = parseInt('0x' + tx.input.slice(74, 138), 16) === 1
+    // Decode vote input data: takeAVoteForMilestoneStageIncrease(uint32,bool)
+    const decoded = decodeFunctionData({
+      abi: stageRaiseABI,
+      data: tx.input,
+    })
+
+    if (decoded.functionName !== 'takeAVoteForMilestoneStageIncrease') {
+      return NextResponse.json(
+        { error: 'Transaction is not a vote transaction' },
+        { status: 400 }
+      )
+    }
+
+    if (!decoded.args || decoded.args.length < 2) {
+      return NextResponse.json(
+        { error: 'Unable to decode vote arguments' },
+        { status: 400 }
+      )
+    }
+
+    const decodedProjectId = decoded.args[0] as bigint | number
+    const projectId = Number(decodedProjectId)
+    const voteYes = Boolean(decoded.args[1] as boolean)
 
     // Find project
     const project = await prisma.project.findFirst({
@@ -52,64 +91,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find active voting round for this project
-    const votingRounds = await prisma.votingRound.findMany({
-      where: {
-        projectId: project.id,
-        isActive: true
-      },
-      orderBy: { votingStarted: 'desc' },
-      take: 1
-    })
-
-    if (votingRounds.length === 0) {
-      return NextResponse.json(
-        { error: 'No active voting round found' },
-        { status: 404 }
-      )
-    }
-
-    const votingRound = votingRounds[0]
-
-    // Get voting power from contract
-    const contractAddress = getStageRaiseAddress(chainId || 97)
-    const votingPower = await client.readContract({
-      address: contractAddress,
-      abi: stageRaiseABI,
-      functionName: 'calculateFunderVotingPower',
-      args: [voterAddress, BigInt(projectId)]
-    }) as bigint
-
-    // Create vote record
-    const vote = await prisma.vote.create({
-      data: {
-        projectId: project.id,
-        votingRoundId: votingRound.id,
-        voter: voterAddress.toLowerCase(),
-        milestoneStage: votingRound.milestoneStage,
-        voteYes: voteYes,
-        transactionHash,
-        blockNumber: BigInt(tx.blockNumber || 0),
-        timestamp: new Date()
-      }
-    })
-
-    await prisma.activity.create({
-      data: {
-        userAddress: voterAddress.toLowerCase(),
-        projectId: project.id,
-        type: 'voted',
-        title: `You voted ${voteYes ? 'YES' : 'NO'} on Milestone ${votingRound.milestoneStage} (${project.name})`,
-        txHash: transactionHash,
-        metadata: {
-          milestoneStage: votingRound.milestoneStage,
-          voteYes: voteYes
-        }
-      }
-    })
-
-    // Update voting round totals
-    const [yesVotes, noVotes] = await Promise.all([
+    const contractAddress = getStageRaiseAddress(chainId || project.chainId || 97)
+    const [isVotingOpen, milestoneStageRaw, votingEndTime, yesVotesRaw, noVotesRaw] = await Promise.all([
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectMileStoneVotingStatus',
+        args: [projectId]
+      }) as Promise<boolean>,
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectMilestoneStage',
+        args: [projectId]
+      }) as Promise<number>,
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectVotingEndTime',
+        args: [projectId]
+      }) as Promise<bigint>,
       client.readContract({
         address: contractAddress,
         abi: stageRaiseABI,
@@ -124,12 +125,102 @@ export async function POST(request: NextRequest) {
       }) as Promise<bigint>
     ])
 
+    const milestoneStage = Number(milestoneStageRaw)
+    const yesVotesDisplay = normalizeVotePower(yesVotesRaw)
+    const noVotesDisplay = normalizeVotePower(noVotesRaw)
+    const totalVotesDisplay = yesVotesDisplay + noVotesDisplay
+
+    // Find active voting round for this stage. If missing (sync gap), create it.
+    let votingRound = await prisma.votingRound.findFirst({
+      where: {
+        projectId: project.id,
+        milestoneStage,
+        isActive: true,
+      },
+      orderBy: { votingStarted: 'desc' },
+    })
+
+    if (!votingRound && isVotingOpen) {
+      const endMs = Number(votingEndTime) * 1000
+      const startMs = endMs - Math.max(1, project.votingPeriodDays || 7) * 24 * 60 * 60 * 1000
+      votingRound = await prisma.votingRound.create({
+        data: {
+          projectId: project.id,
+          milestoneStage,
+          votingStarted: new Date(startMs),
+          votingEnded: new Date(endMs),
+          result: 'ongoing',
+          isActive: true,
+          yesVotes: yesVotesDisplay,
+          noVotes: noVotesDisplay,
+          totalVoters: totalVotesDisplay,
+        },
+      })
+    }
+
+    if (!votingRound) {
+      return NextResponse.json(
+        { error: 'No active voting round found' },
+        { status: 404 }
+      )
+    }
+
+    const txBlockNumber = tx.blockNumber ? BigInt(tx.blockNumber) : BigInt(0)
+    let txTimestamp = new Date()
+    if (tx.blockNumber) {
+      try {
+        const block = await client.getBlock({ blockNumber: tx.blockNumber })
+        txTimestamp = new Date(Number(block.timestamp) * 1000)
+      } catch {
+        // Fall back to now if block lookup fails.
+      }
+    }
+
+    // Create vote record
+    const vote = await prisma.vote.create({
+      data: {
+        projectId: project.id,
+        votingRoundId: votingRound.id,
+        voter: voterAddress.toLowerCase(),
+        milestoneStage,
+        voteYes,
+        transactionHash: normalizedTxHash,
+        blockNumber: txBlockNumber,
+        timestamp: txTimestamp,
+      }
+    })
+
+    const existingActivity = await prisma.activity.findFirst({
+      where: {
+        txHash: normalizedTxHash,
+        type: 'voted',
+      },
+    })
+
+    if (!existingActivity) {
+      await prisma.activity.create({
+        data: {
+          userAddress: voterAddress.toLowerCase(),
+          projectId: project.id,
+          type: 'voted',
+          title: `You voted ${voteYes ? 'YES' : 'NO'} on Milestone ${milestoneStage} (${project.name})`,
+          txHash: normalizedTxHash,
+          metadata: {
+            milestoneStage,
+            voteYes,
+          }
+        }
+      })
+    }
+
     await prisma.votingRound.update({
       where: { id: votingRound.id },
       data: {
-        yesVotes: Number(yesVotes),
-        noVotes: Number(noVotes),
-        totalVoters: { increment: 1 }
+        yesVotes: yesVotesDisplay,
+        noVotes: noVotesDisplay,
+        totalVoters: totalVotesDisplay,
+        votingEnded: new Date(Number(votingEndTime) * 1000),
+        isActive: isVotingOpen,
       }
     })
 

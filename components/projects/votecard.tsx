@@ -88,6 +88,15 @@ function toNumber(value: number | undefined, fallback = 0) {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback
 }
 
+function formatVoteStat(value: number) {
+  if (!Number.isFinite(value) || value === 0) return '0'
+  if (Math.abs(value) < 0.000001) return '<0.000001'
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 6,
+  }).format(value)
+}
+
 export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) {
   // Handle both mock data format and API format
   const projectId = vote.projectId ?? vote.projectNumericId ?? 0;
@@ -200,15 +209,15 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
         <div className="space-y-1 mb-4 text-sm">
           <div className="flex justify-between">
             <span className="text-green-600 font-semibold">YES Vote</span>
-            <span className="font-bold">{yesVotes}</span>
+            <span className="font-bold">{formatVoteStat(yesVotes)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-red-600 font-semibold">NO Vote</span>
-            <span className="font-bold">{noVotes}</span>
+            <span className="font-bold">{formatVoteStat(noVotes)}</span>
           </div>
           <div className="flex justify-between border-t pt-1">
             <span className="font-semibold">Total Vote</span>
-            <span className="font-bold">{totalVotes}</span>
+            <span className="font-bold">{formatVoteStat(totalVotes)}</span>
           </div>
         </div>
 

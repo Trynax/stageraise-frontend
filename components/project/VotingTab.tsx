@@ -12,6 +12,8 @@ interface VotingHistory {
   votingStarted?: string | null
   votingEnded?: string | null
   isActive?: boolean
+  userHasVoted?: boolean
+  userVote?: 'yes' | 'no' | null
 }
 
 interface VotingTabProps {
@@ -57,7 +59,7 @@ export function VotingTab({
     milestone: vote.stage,
     yesVotes: vote.yesVotes,
     noVotes: vote.noVotes,
-    totalVotes: vote.totalVoters,
+    totalVotes: (vote.yesVotes || 0) + (vote.noVotes || 0),
     milestones: totalMilestones,
     funders: totalFunders,
     communityVote: true,
@@ -67,6 +69,8 @@ export function VotingTab({
     status: (vote.result === 'ongoing' || vote.isActive) ? 'ongoing' : 'ended',
     result: vote.result,
     isActive: vote.result === 'ongoing' || vote.isActive,
+    userHasVoted: vote.userHasVoted,
+    userVote: vote.userVote,
   }))
 
   return (

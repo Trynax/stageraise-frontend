@@ -102,17 +102,18 @@ export function useWithdrawableAmount(projectId: number, chainId: number, enable
 
 export function useContributorAmount(
   projectId: number,
-  address: `0x${string}`,
-  chainId: number
+  address: `0x${string}` | undefined,
+  chainId: number,
+  enabled = true
 ) {
   const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data, isLoading, error, refetch } = useReadContract({
     address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectContributorAmount',
-    args: [projectId, address],
+    args: address ? [projectId, address] : undefined,
     query: {
-      enabled: Boolean(stageRaiseAddress),
+      enabled: Boolean(stageRaiseAddress) && Boolean(address) && enabled && projectId > 0,
     },
   })
 

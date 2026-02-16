@@ -1,5 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createPublicClient, formatUnits, http } from 'viem'
+import type { Abi } from 'viem'
+import { bscTestnet } from 'viem/chains'
 import { prisma } from '@/lib/prisma'
+import { getStageRaiseAddress } from '@/lib/contracts/addresses'
+import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
+
+const stageRaiseABI = StageRaiseABI as Abi
+const client = createPublicClient({
+    chain: bscTestnet,
+    transport: http(),
+})
+
+function normalizeVotePower(value: bigint): number {
+    const parsed = Number.parseFloat(formatUnits(value, 18))
+    if (!Number.isFinite(parsed)) return 0
+    return parsed
+}
+
+function normalizeStoredVoteValue(value: number): number {
+    if (!Number.isFinite(value)) return 0
+    if (Math.abs(value) >= 1_000_000_000_000) {
+        return value / 1e18
+    }
+    return value
+}
 
 // GET /api/dashboard/voting - Fetch voting rounds that concern the user
 export async function GET(request: NextRequest) {
@@ -39,6 +64,7 @@ export async function GET(request: NextRequest) {
                         select: {
                             id: true,
                             projectId: true,
+                            chainId: true,
                             name: true,
                             description: true,
                             coverImageUrl: true,
@@ -46,6 +72,7 @@ export async function GET(request: NextRequest) {
                             milestones: true,
                             cachedTotalContributors: true,
                             currentMilestone: true,
+                            votingPeriodDays: true,
                             status: true,
                             failedVotingCount: true
                         }
@@ -70,24 +97,60 @@ export async function GET(request: NextRequest) {
         ])
 
         // Transform voting rounds for the frontend
-        const transformedVotes = votingRounds.map(round => {
+        const transformedVotes = await Promise.all(votingRounds.map(async (round) => {
             const milestone = round.project.milestones.find(
                 m => m.stage === round.milestoneStage
             )
             const userVote = round.votes[0]
-            const totalVotes = round.yesVotes + round.noVotes
-            const yesPercent = totalVotes > 0 ? Math.round((round.yesVotes / totalVotes) * 100) : 0
-            const noPercent = totalVotes > 0 ? Math.round((round.noVotes / totalVotes) * 100) : 0
+            let resolvedYesVotes = normalizeStoredVoteValue(round.yesVotes)
+            let resolvedNoVotes = normalizeStoredVoteValue(round.noVotes)
+            let resolvedVotingEnd = round.votingEnded ? new Date(round.votingEnded) : null
+
+            if (round.isActive) {
+                try {
+                    const contractAddress = getStageRaiseAddress(round.project.chainId)
+                    const [yesVotesRaw, noVotesRaw, votingEndTimeRaw] = await Promise.all([
+                        client.readContract({
+                            address: contractAddress,
+                            abi: stageRaiseABI,
+                            functionName: 'getProjectYesVotes',
+                            args: [round.project.projectId]
+                        }) as Promise<bigint>,
+                        client.readContract({
+                            address: contractAddress,
+                            abi: stageRaiseABI,
+                            functionName: 'getProjectNoVotes',
+                            args: [round.project.projectId]
+                        }) as Promise<bigint>,
+                        client.readContract({
+                            address: contractAddress,
+                            abi: stageRaiseABI,
+                            functionName: 'getProjectVotingEndTime',
+                            args: [round.project.projectId]
+                        }) as Promise<bigint>
+                    ])
+
+                    resolvedYesVotes = normalizeVotePower(yesVotesRaw)
+                    resolvedNoVotes = normalizeVotePower(noVotesRaw)
+                    resolvedVotingEnd = new Date(Number(votingEndTimeRaw) * 1000)
+                } catch {
+                    // Fall back to database values if contract read fails.
+                }
+            }
+
+            const totalVotes = resolvedYesVotes + resolvedNoVotes
+            const yesPercent = totalVotes > 0 ? Math.round((resolvedYesVotes / totalVotes) * 100) : 0
+            const noPercent = totalVotes > 0 ? Math.round((resolvedNoVotes / totalVotes) * 100) : 0
 
             // Calculate time remaining if voting is ongoing
             let timeRemaining = null
             let votingEndTime: string | null = null
             if (round.isActive) {
-                const endTime = round.votingEnded
-                    ? new Date(round.votingEnded)
+                const endTime = resolvedVotingEnd
+                    ? new Date(resolvedVotingEnd)
                     : (() => {
                         const fallback = new Date(round.votingStarted)
-                        fallback.setDate(fallback.getDate() + 7)
+                        fallback.setDate(fallback.getDate() + (round.project.votingPeriodDays || 7))
                         return fallback
                     })()
                 votingEndTime = endTime.toISOString()
@@ -130,8 +193,8 @@ export async function GET(request: NextRequest) {
                 result: round.result,
                 isActive: round.isActive,
                 status: round.isActive ? 'ongoing' : 'ended',
-                yesVotes: round.yesVotes,
-                noVotes: round.noVotes,
+                yesVotes: resolvedYesVotes,
+                noVotes: resolvedNoVotes,
                 totalVotes,
                 yesPercent,
                 noPercent,
@@ -145,7 +208,7 @@ export async function GET(request: NextRequest) {
                 communityVote: true,
                 refundable: true
             }
-        })
+        }))
 
         return NextResponse.json({
             success: true,

@@ -26,7 +26,7 @@ export function VotingTab({ address }: VotingTabProps) {
         const fetchVotes = async () => {
             setLoading(true)
             try {
-                const response = await fetch(`/api/dashboard/voting?address=${address}&page=${page}&limit=9`)
+                const response = await fetch(`/api/dashboard/voting?address=${address}&page=${page}&limit=9`, { cache: 'no-store' })
                 const data = await response.json()
 
                 if (data.success) {

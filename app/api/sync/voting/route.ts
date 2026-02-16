@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient, http } from 'viem'
+import { createPublicClient, formatUnits, http } from 'viem'
+import type { Abi } from 'viem'
 import { bscTestnet } from 'viem/chains'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
 
-const stageRaiseABI = StageRaiseABI as any
+const stageRaiseABI = StageRaiseABI as Abi
 
 const client = createPublicClient({
   chain: bscTestnet,
   transport: http()
 })
+
+function normalizeVotePower(value: bigint): number {
+  const parsed = Number.parseFloat(formatUnits(value, 18))
+  if (!Number.isFinite(parsed)) return 0
+  return parsed
+}
 
 // POST /api/sync/voting/open - Sync voting session opening
 export async function POST(request: NextRequest) {
@@ -162,8 +169,9 @@ export async function POST(request: NextRequest) {
           where: { id: votingRound.id },
           data: {
             result: passed ? 'passed' : 'failed',
-            yesVotes: Number(yesVotes),
-            noVotes: Number(noVotes),
+            yesVotes: normalizeVotePower(yesVotes),
+            noVotes: normalizeVotePower(noVotes),
+            totalVoters: normalizeVotePower(yesVotes) + normalizeVotePower(noVotes),
             votingEnded: new Date(),
             isActive: false
           }

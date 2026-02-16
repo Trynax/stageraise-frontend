@@ -37,7 +37,8 @@ export default function ProjectDetailPage() {
 
     const fetchProject = useCallback(async () => {
         try {
-            const response = await fetch(`/api/projects/${projectId}`)
+            const voterQuery = address ? `?voter=${address}` : ""
+            const response = await fetch(`/api/projects/${projectId}${voterQuery}`, { cache: 'no-store' })
             const data = await response.json()
             if (data.success) {
                 setProject(data.project)
@@ -47,7 +48,7 @@ export default function ProjectDetailPage() {
         } finally {
             setLoading(false)
         }
-    }, [projectId])
+    }, [projectId, address])
 
     useEffect(() => {
         if (projectId) {
@@ -261,7 +262,7 @@ export default function ProjectDetailPage() {
                             <div className="flex  md:gap-10 md:justify-between overflow-x-auto md:overflow-visible pb-1">
 
                             <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
-                                <span className="text-sm text-gray-500">Amount Raised</span>
+                                <span className="text-sm text-gray-500 whitespace-nowrap">Amount Raised</span>
                                 <span className="whitespace-nowrap font-semibold">
                                     {project.cachedRaisedAmount?.toLocaleString() || 0} {token?.symbol || 'BUSD'}
                                     {isFundingPhase && ` (${amountRaisedPercent}%)`}
@@ -269,22 +270,26 @@ export default function ProjectDetailPage() {
                             </div>
                             {isFundingPhase ? (
                                 <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
-                                    <span className="text-sm text-gray-500">Time Left</span>
+                                    <span className="text-sm text-gray-500 whitespace-nowrap">Time Left</span>
                                     <span className="font-mono whitespace-nowrap font-semibold">{formatTimeLeft()}</span>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
-                                    <span className="text-sm text-gray-500">Project Balance</span>
+                                    <span className="text-sm text-gray-500 whitespace-nowrap">Project Balance</span>
                                     <span className="whitespace-nowrap font-semibold">{displayProjectBalance.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
                                 </div>
                             )}
                             <div className="flex flex-col items-center gap-4 shrink-0 min-w-[120px] md:min-w-0 md:flex-1">
-                                <span className="text-sm text-gray-500">Funders</span>
+                                <span className="text-sm text-gray-500 whitespace-nowrap">Funders</span>
                                 <span className="whitespace-nowrap font-semibold">{project.cachedTotalContributors || 0}</span>
                             </div>
                             <div className="flex flex-col items-center gap-4 shrink-0 min-w-[170px] md:min-w-0 md:flex-1">
-                                <span className="text-sm text-gray-500">Fundraising Target</span>
+                                <span className="text-sm text-gray-500 whitespace-nowrap">Fundraising Target</span>
                                 <span className="whitespace-nowrap font-semibold">{project.fundingTarget?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-4 shrink-0 min-w-[120px] md:min-w-0 md:flex-1">
+                                <span className="text-sm text-gray-500 whitespace-nowrap">Failed Votes</span>
+                                <span className="whitespace-nowrap font-semibold">{project.failedVotingCount || 0}/3</span>
                             </div>
 
 

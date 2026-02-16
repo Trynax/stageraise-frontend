@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useVoteWithSync } from "@/lib/contracts/hooks"
+import { useVoteWithSync, useContributorAmount, useHasVoted } from "@/lib/contracts/hooks"
 import { useAccount, useChainId } from "wagmi"
 import TransactionModal, { TransactionStatus } from "@/components/ui/TransactionModal"
 
@@ -28,7 +28,14 @@ export function LiveVotingCard({
 }: LiveVotingCardProps) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const { address } = useAccount()
+  const connectedAddress = address as `0x${string}` | undefined
   const chainId = useChainId()
+  const { contributorAmount } = useContributorAmount(
+    projectId,
+    connectedAddress,
+    chainId
+  )
+  const { hasVoted } = useHasVoted(projectId, connectedAddress, chainId)
   
   // Transaction modal state
   const [showTxModal, setShowTxModal] = useState(false)
@@ -45,18 +52,34 @@ export function LiveVotingCard({
     syncVote
   } = useVoteWithSync()
 
+  const hasContributorAmount = typeof contributorAmount === 'bigint'
+  const isNonFunder = Boolean(address) && hasContributorAmount && contributorAmount <= BigInt(0)
+  const hasVotedOnChain = Boolean(hasVoted)
+  const voteDisabledReason = !address
+    ? 'Connect wallet to vote.'
+    : isNonFunder
+      ? 'You are not a funder of this project and cannot vote.'
+      : hasVotedOnChain
+        ? 'You already voted in this round.'
+      : undefined
+  const isVoteInteractionDisabled = isPending || isConfirming || !!userVote || hasVotedOnChain || Boolean(voteDisabledReason)
+
   const handleVote = async (voteYes: boolean) => {
-    if (!address) return
+    if (!address || isNonFunder || hasVotedOnChain) return
     
     try {
       setShowTxModal(true)
       setTxStatus('pending')
       setTxError(undefined)
       await vote(projectId, voteYes, chainId)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Vote error:', error)
+      const message =
+        error && typeof error === 'object' && ('shortMessage' in error || 'message' in error)
+          ? String((error as { shortMessage?: string; message?: string }).shortMessage || (error as { shortMessage?: string; message?: string }).message)
+          : 'Failed to submit vote'
       setTxStatus('error')
-      setTxError(error?.message || error?.shortMessage || 'Failed to submit vote')
+      setTxError(message)
     }
   }
 
@@ -79,13 +102,17 @@ export function LiveVotingCard({
         setShowTxModal(false)
       }, 3000)
     }
-  }, [isSuccess, hash])
+  }, [isSuccess, hash, chainId, syncVote])
 
   // Handle errors
   useEffect(() => {
     if (error) {
       setTxStatus('error')
-      setTxError((error as any)?.shortMessage || error.message)
+      const message =
+        error && typeof error === 'object' && ('shortMessage' in error || 'message' in error)
+          ? String((error as { shortMessage?: string; message?: string }).shortMessage || (error as { shortMessage?: string; message?: string }).message)
+          : 'Failed to submit vote'
+      setTxError(message)
     }
   }, [error])
 
@@ -145,28 +172,32 @@ export function LiveVotingCard({
         Do you agree with the completion of {milestoneTitle} for Millstone {milestoneStage} of the project
       </p>
       <div className="space-y-3 mb-6">
-        <button
-          onClick={() => handleVote(false)}
-          disabled={isPending || isConfirming || !address || !!userVote}
-          className={`w-full py-4 rounded-xl font-semibold transition-all border ${
-            userVote === 'no' 
-              ? 'bg-[#F04438] border-[#F04438] text-white' 
-              : 'bg-[#FEE4E2] border-[#F04438] text-red-600 hover:bg-[#FEE4E2]/10'
-          } ${(isPending || isConfirming || !address || !!userVote) ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          {userVote === 'no' ? '✓ Voted No' : 'No'}
-        </button>
-        <button
-          onClick={() => handleVote(true)}
-          disabled={isPending || isConfirming || !address || !!userVote}
-          className={`w-full py-4 rounded-xl font-semibold transition-all border ${
-            userVote === 'yes'
-              ? 'bg-[#3A9E1B] border-[#3A9E1B] text-white'
-              : 'bg-[#E5FBDD] border-[#3A9E1B] text-green-600 hover:bg-[#E5FBDD]/10'
-          } ${(isPending || isConfirming || !address || !!userVote) ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          {userVote === 'yes' ? '✓ Voted Yes' : 'Yes'}
-        </button>
+        <div title={voteDisabledReason}>
+          <button
+            onClick={() => handleVote(false)}
+            disabled={isVoteInteractionDisabled}
+            className={`w-full py-4 rounded-xl font-semibold transition-all border ${
+              userVote === 'no' 
+                ? 'bg-[#F04438] border-[#F04438] text-white' 
+                : 'bg-[#FEE4E2] border-[#F04438] text-red-600 hover:bg-[#FEE4E2]/10'
+            } ${isVoteInteractionDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {userVote === 'no' ? '✓ Voted No' : 'No'}
+          </button>
+        </div>
+        <div title={voteDisabledReason}>
+          <button
+            onClick={() => handleVote(true)}
+            disabled={isVoteInteractionDisabled}
+            className={`w-full py-4 rounded-xl font-semibold transition-all border ${
+              userVote === 'yes'
+                ? 'bg-[#3A9E1B] border-[#3A9E1B] text-white'
+                : 'bg-[#E5FBDD] border-[#3A9E1B] text-green-600 hover:bg-[#E5FBDD]/10'
+            } ${isVoteInteractionDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {userVote === 'yes' ? '✓ Voted Yes' : 'Yes'}
+          </button>
+        </div>
       </div>
 
       <div className="text-center">

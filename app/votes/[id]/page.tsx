@@ -7,7 +7,7 @@ import Link from "next/link"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
 import { useAccount, useChainId } from "wagmi"
-import { useVoteWithSync } from "@/lib/contracts/hooks"
+import { useVoteWithSync, useContributorAmount, useHasVoted } from "@/lib/contracts/hooks"
 import TransactionModal, { TransactionStatus } from "@/components/ui/TransactionModal"
 
 type VoteResult = "ongoing" | "passed" | "failed"
@@ -29,6 +29,8 @@ interface ApiVotingHistoryItem {
   isActive?: boolean
   proofSummary?: string | null
   proofDocuments?: ProofMediaItem[]
+  userHasVoted?: boolean
+  userVote?: "yes" | "no" | null
 }
 
 interface ApiMilestone {
@@ -61,6 +63,10 @@ interface ApiActiveVotingResponse {
     totalVoters: number
     proofSummary?: string | null
     proofDocuments?: ProofMediaItem[]
+    voters?: Array<{
+      address: string
+      voteYes: boolean
+    }>
   }
 }
 
@@ -129,6 +135,7 @@ export default function VoteDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const { address } = useAccount()
+  const connectedAddress = address as `0x${string}` | undefined
   const chainId = useChainId()
   const voteId = params.id as string // Format: "projectId-milestoneStage" e.g., "3-2"
   const [voteData, setVoteData] = useState<VoteDetail | null>(null)
@@ -139,6 +146,23 @@ export default function VoteDetailPage() {
   const [pendingVoteChoice, setPendingVoteChoice] = useState<'yes' | 'no' | null>(null)
   const processedHashRef = useRef<string | null>(null)
   const { vote: submitVote, isPending, isConfirming, isSuccess, hash, error, syncVote } = useVoteWithSync()
+  const { hasVoted } = useHasVoted(voteData?.projectId ?? 0, connectedAddress, chainId)
+  const { contributorAmount } = useContributorAmount(
+    voteData?.projectId ?? 0,
+    connectedAddress,
+    chainId
+  )
+  const hasContributorAmount = typeof contributorAmount === "bigint"
+  const isNonFunder = Boolean(address) && hasContributorAmount && contributorAmount <= BigInt(0)
+  const hasVotedOnChain = Boolean(hasVoted)
+  const voteDisabledReason = !address
+    ? "Connect wallet to vote."
+    : isNonFunder
+      ? "You are not a funder of this project and cannot vote."
+      : hasVotedOnChain
+        ? "You already voted in this round."
+      : undefined
+  const isVoteInteractionDisabled = isPending || isConfirming || hasVotedOnChain || Boolean(voteDisabledReason)
   const hookErrorMessage =
     typeof (error as { shortMessage?: string } | undefined)?.shortMessage === "string"
       ? (error as { shortMessage: string }).shortMessage
@@ -158,12 +182,14 @@ export default function VoteDetailPage() {
   useEffect(() => {
     const fetchVoteData = async () => {
       try {
+        setUserVote(null)
      
         const [projectId, milestoneStage] = voteId.split('-')
         
         if (projectId && milestoneStage) {
           // Fetch project from API
-          const response = await fetch(`/api/projects/${projectId}`)
+          const voterQuery = address ? `?voter=${address}` : ""
+          const response = await fetch(`/api/projects/${projectId}${voterQuery}`, { cache: 'no-store' })
           const data = (await response.json()) as { success?: boolean; project?: ApiProject }
           
           if (data.success && data.project) {
@@ -182,6 +208,9 @@ export default function VoteDetailPage() {
             )
             
             if (vote && milestone) {
+              if (vote.userVote === "yes" || vote.userVote === "no") {
+                setUserVote(vote.userVote)
+              }
               setVoteData({
                 ...vote,
                 votingEnded: vote.votingEnded || vote.votingStarted || new Date().toISOString(),
@@ -205,7 +234,7 @@ export default function VoteDetailPage() {
             }
 
             // Fallback for currently active votes that may not yet exist in votingHistory.
-            const activeVotingResponse = await fetch(`/api/projects/${projectId}/voting/active`)
+            const activeVotingResponse = await fetch(`/api/projects/${projectId}/voting/active`, { cache: 'no-store' })
             const activeVotingData = (await activeVotingResponse.json()) as ApiActiveVotingResponse
 
             if (
@@ -215,6 +244,13 @@ export default function VoteDetailPage() {
               activeVotingData.voting.milestoneStage === parsedStage &&
               milestone
             ) {
+              const normalizedAddress = address?.toLowerCase()
+              const persistedVote = normalizedAddress
+                ? activeVotingData.voting.voters?.find((entry) => entry.address.toLowerCase() === normalizedAddress)
+                : undefined
+              if (persistedVote) {
+                setUserVote(persistedVote.voteYes ? "yes" : "no")
+              }
               const yesVotes = Number(activeVotingData.voting.votesForYes || 0)
               const noVotes = Number(activeVotingData.voting.votesForNo || 0)
 
@@ -223,7 +259,7 @@ export default function VoteDetailPage() {
                 result: "ongoing",
                 yesVotes,
                 noVotes,
-                totalVoters: activeVotingData.voting.totalVoters || yesVotes + noVotes,
+                totalVoters: yesVotes + noVotes,
                 votingEnded: activeVotingData.voting.votingEndTime,
                 proofSummary: activeVotingData.voting.proofSummary || null,
                 proofDocuments: normalizeVoteProofDocuments(activeVotingData.voting.proofDocuments),
@@ -254,10 +290,10 @@ export default function VoteDetailPage() {
     }
 
     fetchVoteData()
-  }, [voteId])
+  }, [voteId, address])
 
   const handleVote = (voteChoice: 'yes' | 'no') => {
-    if (!voteData || !address) return
+    if (!voteData || !address || isNonFunder || hasVotedOnChain) return
 
     try {
       setPendingVoteChoice(voteChoice)
@@ -537,30 +573,36 @@ export default function VoteDetailPage() {
 
 
                 {isVotingLive ? (
-                  userVote ? (
+                  userVote || hasVotedOnChain ? (
                     <div className={`w-full py-4 rounded-xl font-semibold text-center mb-4 ${
                       userVote === 'yes' 
                         ? 'bg-green-500 text-white' 
-                        : 'bg-red-500 text-white'
+                        : userVote === 'no'
+                          ? 'bg-red-500 text-white'
+                          : 'bg-[#EAECF0] text-dark border border-dark'
                     }`}>
-                      You vote {userVote === 'yes' ? 'YES' : 'NO'}
+                      {userVote ? `You voted ${userVote === 'yes' ? 'YES' : 'NO'}` : 'You have already voted'}
                     </div>
                   ) : (
                     <div className="flex flex-col gap-3">
-                      <button
-                        onClick={() => handleVote('no')}
-                        disabled={isPending || isConfirming || !address}
-                        className="py-3 border bg-[#FEE4E2] border-[#D92D20] rounded-lg font-semibold text-[#D92D20]"
-                      >
-                        {!address ? "Connect Wallet" : "No"}
-                      </button>
-                      <button
-                        onClick={() => handleVote('yes')}
-                        disabled={isPending || isConfirming || !address}
-                        className="py-3 border bg-[#E5FBDD] border-[#3A9E1B] rounded-lg font-semibold text-[#3A9E1B]"
-                      >
-                        {!address ? "Connect Wallet" : "Yes"}
-                      </button>
+                      <div title={voteDisabledReason}>
+                        <button
+                          onClick={() => handleVote('no')}
+                          disabled={isVoteInteractionDisabled}
+                          className="py-3 border bg-[#FEE4E2] border-[#D92D20] rounded-lg font-semibold text-[#D92D20] w-full"
+                        >
+                          {!address ? "Connect Wallet" : "No"}
+                        </button>
+                      </div>
+                      <div title={voteDisabledReason}>
+                        <button
+                          onClick={() => handleVote('yes')}
+                          disabled={isVoteInteractionDisabled}
+                          className="py-3 border bg-[#E5FBDD] border-[#3A9E1B] rounded-lg font-semibold text-[#3A9E1B] w-full"
+                        >
+                          {!address ? "Connect Wallet" : "Yes"}
+                        </button>
+                      </div>
                     </div>
                   )
                 ) : (

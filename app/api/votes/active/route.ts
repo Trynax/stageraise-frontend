@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient, http } from 'viem'
+import { createPublicClient, formatUnits, http } from 'viem'
 import type { Abi } from 'viem'
 import { bscTestnet } from 'viem/chains'
 import { prisma } from '@/lib/prisma'
@@ -14,6 +14,12 @@ const client = createPublicClient({
 })
 
 const CONTRACT_ADDRESS = getStageRaiseAddress(97)
+
+function normalizeVotePower(value: bigint): number {
+  const parsed = Number.parseFloat(formatUnits(value, 18))
+  if (!Number.isFinite(parsed)) return 0
+  return parsed
+}
 
 // GET /api/votes/active - Get all currently active voting sessions across platform
 export async function GET(request: NextRequest) {
@@ -82,9 +88,12 @@ export async function GET(request: NextRequest) {
           if (!isVotingOpen) return null
 
           const endTime = Number(votingEndTime)
-          const total = yesVotes + noVotes
-          const yesPercent = total > BigInt(0) ? Number((yesVotes * BigInt(100)) / total) : 0
-          const noPercent = total > BigInt(0) ? Number((noVotes * BigInt(100)) / total) : 0
+          const totalRaw = yesVotes + noVotes
+          const yesPercent = totalRaw > BigInt(0) ? Number((yesVotes * BigInt(100)) / totalRaw) : 0
+          const noPercent = totalRaw > BigInt(0) ? Number((noVotes * BigInt(100)) / totalRaw) : 0
+          const yesVotesDisplay = normalizeVotePower(yesVotes)
+          const noVotesDisplay = normalizeVotePower(noVotes)
+          const totalVotesDisplay = yesVotesDisplay + noVotesDisplay
 
           const now = Math.floor(Date.now() / 1000)
           const secondsRemaining = Math.max(0, endTime - now)
@@ -106,9 +115,9 @@ export async function GET(request: NextRequest) {
             status: 'ongoing',
             result: 'ongoing',
             isActive: true,
-            yesVotes: Number(yesVotes),
-            noVotes: Number(noVotes),
-            totalVotes: Number(total),
+            yesVotes: yesVotesDisplay,
+            noVotes: noVotesDisplay,
+            totalVotes: totalVotesDisplay,
             timeRemaining: {
               days: Math.floor(secondsRemaining / 86400),
               hours: Math.floor((secondsRemaining % 86400) / 3600),
@@ -117,7 +126,7 @@ export async function GET(request: NextRequest) {
             },
             yesPercent,
             noPercent,
-            totalVoters: Number(total)
+            totalVoters: totalVotesDisplay
           }
         } catch (error) {
           console.error(`Error checking project ${project.projectId}:`, error)
