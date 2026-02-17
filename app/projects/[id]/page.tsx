@@ -132,6 +132,8 @@ export default function ProjectDetailPage() {
     const isFundingPhase = new Date(project.fundingDeadline) > new Date()
     // Determine if milestone phase has started (funding ended and milestone-based)
     const isMilestonePhase = !isFundingPhase && project.milestones?.length > 0
+    const isMilestoneBasedProject =
+        project?.milestoneBased === true || (project?.milestones?.length || 0) > 0
 
     const userContributionPercent = project.cachedRaisedAmount > 0 
         ? Math.round((userContribution / project.cachedRaisedAmount) * 100) 
@@ -287,10 +289,12 @@ export default function ProjectDetailPage() {
                                 <span className="text-sm text-gray-500 whitespace-nowrap">Fundraising Target</span>
                                 <span className="whitespace-nowrap font-semibold">{project.fundingTarget?.toLocaleString() || 0} {token?.symbol || 'BUSD'}</span>
                             </div>
-                            <div className="flex flex-col items-center gap-4 shrink-0 min-w-[120px] md:min-w-0 md:flex-1">
-                                <span className="text-sm text-gray-500 whitespace-nowrap">Failed Votes</span>
-                                <span className="whitespace-nowrap font-semibold">{project.failedVotingCount || 0}/3</span>
-                            </div>
+                            {isMilestoneBasedProject && (
+                                <div className="flex flex-col items-center gap-4 shrink-0 min-w-[120px] md:min-w-0 md:flex-1">
+                                    <span className="text-sm text-gray-500 whitespace-nowrap">Failed Votes</span>
+                                    <span className="whitespace-nowrap font-semibold">{project.failedVotingCount || 0}/3</span>
+                                </div>
+                            )}
 
 
 
