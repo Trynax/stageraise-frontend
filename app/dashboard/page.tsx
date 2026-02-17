@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAccount, useDisconnect } from "wagmi"
+import { useAccount, useDisconnect, useReconnect } from "wagmi"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -16,8 +16,10 @@ type TabType = 'activity' | 'projects' | 'voting' | 'contributions'
 
 export default function DashboardPage() {
     const { address, isConnected, isConnecting, isReconnecting } = useAccount()
+    const { reconnectAsync, isPending: isReconnectPending } = useReconnect()
     const { disconnect } = useDisconnect()
     const router = useRouter()
+    const [authChecked, setAuthChecked] = useState(false)
     const [activeTab, setActiveTab] = useState<TabType>('activity')
     const [stats, setStats] = useState({
         fundingReceived: 0,
@@ -27,12 +29,32 @@ export default function DashboardPage() {
     })
     const [copied, setCopied] = useState(false)
 
- 
     useEffect(() => {
-        if (!isConnecting && !isReconnecting && !isConnected) {
-            router.push('/')
+        let cancelled = false
+
+        const runReconnectCheck = async () => {
+            try {
+                await reconnectAsync()
+            } catch {
+                // Ignore reconnect errors and fall back to redirect logic.
+            } finally {
+                if (!cancelled) setAuthChecked(true)
+            }
         }
-    }, [isConnected, isConnecting, isReconnecting, router])
+
+        runReconnectCheck()
+
+        return () => {
+            cancelled = true
+        }
+    }, [reconnectAsync])
+
+    useEffect(() => {
+        if (!authChecked) return
+        if (!isConnecting && !isReconnecting && !isReconnectPending && !isConnected) {
+            router.replace('/')
+        }
+    }, [authChecked, isConnected, isConnecting, isReconnecting, isReconnectPending, router])
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -73,7 +95,7 @@ export default function DashboardPage() {
         }).format(amount)
     }
 
-    if (isConnecting || isReconnecting) {
+    if (!authChecked || isConnecting || isReconnecting || isReconnectPending) {
         return (
             <>
                 <Header />
