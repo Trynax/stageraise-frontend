@@ -1,5 +1,5 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { http } from 'wagmi';
+import { fallback, http } from 'wagmi';
 import {
   mainnet,
   sepolia,
@@ -15,7 +15,12 @@ export const config = getDefaultConfig({
     bscTestnet,
   ],
   transports: {
-    [bscTestnet.id]: http(process.env.NEXT_PUBLIC_BSC_TESTNET_RPC || 'https://bsc-testnet.publicnode.com'),
+    [bscTestnet.id]: fallback([
+      http(process.env.NEXT_PUBLIC_BSC_TESTNET_RPC || 'https://bsc-testnet.publicnode.com'),
+      http('https://bsc-testnet.publicnode.com'),
+      http('https://data-seed-prebsc-1-s1.binance.org:8545'),
+      http('https://data-seed-prebsc-2-s1.binance.org:8545'),
+    ]),
     [bsc.id]: http('https://bsc-dataseed.binance.org'),
   },
   ssr: true, 

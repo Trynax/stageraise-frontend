@@ -13,9 +13,17 @@ interface ReviewStepProps {
     nextStep: () => void
     prevStep: () => void
     currentStep: number
+    totalSteps: number
 }
 
-export default function ReviewStep({ formData, updateFormData, nextStep, prevStep, currentStep }: ReviewStepProps) {
+export default function ReviewStep({
+    formData,
+    updateFormData,
+    nextStep,
+    prevStep,
+    currentStep,
+    totalSteps
+}: ReviewStepProps) {
     const { address } = useAccount()
     const chainId = useChainId()
     const { createProject, isPending, isConfirming, isSuccess, error, hash } = useCreateProject()
@@ -31,6 +39,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
     // Transaction modal state
     const [showTxModal, setShowTxModal] = useState(false)
     const [txStatus, setTxStatus] = useState<TransactionStatus>('pending')
+    const isMilestoneProject = formData.projectType === 'milestone'
 
     const openEditModal = (field: string, value: any) => {
         setEditModal({ isOpen: true, field, value })
@@ -107,7 +116,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                 ? formData.tagline.split(',').map((t: string) => t.trim()).filter(Boolean)
                 : []
 
-            const milestones = Array.isArray(formData?.milestones)
+            const milestones = isMilestoneProject && Array.isArray(formData?.milestones)
                 ? formData.milestones.map((m: any, idx: number) => ({
                     stage: idx + 1,
                     title: m?.title,
@@ -151,7 +160,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                 }, 2000)
             })
         }
-    }, [isSuccess, hash, chainId, formData, nextStep])
+    }, [isSuccess, hash, chainId, formData, nextStep, isMilestoneProject])
 
     // Handle transaction errors
     useEffect(() => {
@@ -180,7 +189,7 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                                 <p className="text-gray-600">Review your project details carefully. Funders will rely on this information to make decisions.</p>
                             </div>
                             <div className="flex flex-col items-center gap-2">
-                                <span className="text-lg font-semibold self-end">{currentStep}/5</span>
+                                <span className="text-lg font-semibold self-end">{currentStep}/{totalSteps}</span>
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
@@ -203,9 +212,9 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                 </div>
           
                     <div className="flex flex-col md:hidden sticky top-16 z-30 bg-primary py-4 -mx-4 px-4 justify-between items-start gap-4 mb-10">
-                        <div className="flex justify-between items-center w-full">
+                    <div className="flex justify-between items-center w-full">
                             <h2 className="text-3xl font-bold">Review</h2>
-                            <span className="text-lg">{currentStep}/5</span>
+                            <span className="text-lg">{currentStep}/{totalSteps}</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                             <p className="text-gray-600">Review your project details carefully. Funders will rely on this information to make decisions.</p>    
@@ -346,33 +355,37 @@ export default function ReviewStep({ formData, updateFormData, nextStep, prevSte
                     <p className="text-sm">${formData.maxContribution || 'Not set'}</p>
                 </div>
 
-                <div className="border-t pt-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <p className="font-semibold">Number of Milestones</p>
-                        <button 
-                            onClick={() => openEditModal('numberOfMilestones', formData.numberOfMilestones)}
-                            className="text-sm border border-dark px-3 py-1 rounded-lg hover:bg-gray-100 flex gap-1 items-center"
-                        >
-                            <span>Edit</span>
-                            <Image src={"/icons/edit.svg"} alt="Edit" width={24} height={24} />
-                        </button>
+                {isMilestoneProject && (
+                    <div className="border-t pt-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <p className="font-semibold">Number of Milestones</p>
+                            <button 
+                                onClick={() => openEditModal('numberOfMilestones', formData.numberOfMilestones)}
+                                className="text-sm border border-dark px-3 py-1 rounded-lg hover:bg-gray-100 flex gap-1 items-center"
+                            >
+                                <span>Edit</span>
+                                <Image src={"/icons/edit.svg"} alt="Edit" width={24} height={24} />
+                            </button>
+                        </div>
+                        <p className="text-sm">{formData.numberOfMilestones || 'Not set'} Milestones</p>
                     </div>
-                    <p className="text-sm">{formData.numberOfMilestones || 'Not set'} Milestones</p>
-                </div>
+                )}
 
-                <div className="border-t pt-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <p className="font-semibold">Voting Period</p>
-                        <button 
-                            onClick={() => openEditModal('votingPeriod', formData.votingPeriod)}
-                            className="text-sm border border-dark px-3 py-1 rounded-lg hover:bg-gray-100 flex gap-1 items-center"
-                        >
-                            <span>Edit</span>
-                            <Image src={"/icons/edit.svg"} alt="Edit" width={24} height={24} />
-                        </button>
+                {isMilestoneProject && (
+                    <div className="border-t pt-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <p className="font-semibold">Voting Period</p>
+                            <button 
+                                onClick={() => openEditModal('votingPeriod', formData.votingPeriod)}
+                                className="text-sm border border-dark px-3 py-1 rounded-lg hover:bg-gray-100 flex gap-1 items-center"
+                            >
+                                <span>Edit</span>
+                                <Image src={"/icons/edit.svg"} alt="Edit" width={24} height={24} />
+                            </button>
+                        </div>
+                        <p className="text-sm">{formData.votingPeriod || 'Not set'} days</p>
                     </div>
-                    <p className="text-sm">{formData.votingPeriod || 'Not set'} days</p>
-                </div>
+                )}
 
                 <div className="border-t pt-4">
                     <div className="flex justify-between items-center mb-2">

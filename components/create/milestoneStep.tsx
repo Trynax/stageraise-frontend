@@ -9,6 +9,7 @@ interface MilestoneStepProps {
     nextStep: () => void
     prevStep: () => void
     currentStep: number
+    totalSteps: number
 }
 
 interface Milestone {
@@ -20,7 +21,14 @@ interface Milestone {
 
 const MAX_IMAGES_PER_MILESTONE = 3
 
-export default function MilestoneStep({ formData, updateFormData, nextStep, prevStep, currentStep }: MilestoneStepProps) {
+export default function MilestoneStep({
+    formData,
+    updateFormData,
+    nextStep,
+    prevStep,
+    currentStep,
+    totalSteps
+}: MilestoneStepProps) {
     const [milestones, setMilestones] = useState<Milestone[]>([])
     const [imagePreviews, setImagePreviews] = useState<string[][]>([])
     const [errors, setErrors] = useState<{ [key: number]: { title?: boolean; description?: boolean } }>({})
@@ -184,7 +192,7 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
                                 <p className="text-gray-600">Explain what you're building, how much you need, and how you'll deliver.</p>
                             </div>
                             <div className="flex flex-col items-center gap-2">
-                                <span className="text-lg font-semibold self-end">{currentStep}/5</span>
+                                <span className="text-lg font-semibold self-end">{currentStep}/{totalSteps}</span>
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
@@ -206,9 +214,9 @@ export default function MilestoneStep({ formData, updateFormData, nextStep, prev
                 </div>
 
                     <div className="flex flex-col md:hidden sticky top-16 z-30 bg-primary py-4 -mx-4 px-4 justify-between items-start gap-4 mb-10">
-                        <div className="flex justify-between items-center w-full">
+                    <div className="flex justify-between items-center w-full">
                             <h2 className="text-3xl font-bold">Milestone Details</h2>
-                            <span className="text-lg">{currentStep}/5</span>
+                            <span className="text-lg">{currentStep}/{totalSteps}</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                             <p className="text-gray-600">Explain what you're building, how much you need, and how you'll deliver.</p>    

@@ -8,9 +8,19 @@ interface ProjectDetailsStepProps {
     nextStep: () => void
     prevStep: () => void
     currentStep: number
+    totalSteps: number
 }
 
-export default function ProjectDetailsStep({ formData, updateFormData, nextStep, prevStep, currentStep }: ProjectDetailsStepProps) {
+export default function ProjectDetailsStep({
+    formData,
+    updateFormData,
+    nextStep,
+    prevStep,
+    currentStep,
+    totalSteps
+}: ProjectDetailsStepProps) {
+    const isMilestoneProject = formData.projectType === 'milestone'
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         
@@ -18,6 +28,14 @@ export default function ProjectDetailsStep({ formData, updateFormData, nextStep,
         if (!formData.paymentToken) {
             alert('Please select a payment token')
             return
+        }
+
+        if (!isMilestoneProject) {
+            updateFormData({
+                numberOfMilestones: '0',
+                votingPeriod: '7',
+                milestones: []
+            })
         }
         
         nextStep()
@@ -40,7 +58,7 @@ export default function ProjectDetailsStep({ formData, updateFormData, nextStep,
                                 <p className="text-gray-600">Explain what you're building, how much you need, and how you'll deliver.</p>
                             </div>
                             <div className="flex flex-col items-center gap-2">
-                                <span className="text-lg font-semibold self-end">{currentStep}/5</span>
+                                <span className="text-lg font-semibold self-end">{currentStep}/{totalSteps}</span>
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
@@ -62,9 +80,9 @@ export default function ProjectDetailsStep({ formData, updateFormData, nextStep,
                 </div>
             
                     <div className="flex flex-col md:hidden sticky top-16 z-30 bg-primary py-4 -mx-4 px-4 justify-between items-start gap-4 mb-10">
-                        <div className="flex justify-between items-center w-full">
+                    <div className="flex justify-between items-center w-full">
                             <h2 className="text-3xl font-bold">Project Details</h2>
-                            <span className="text-lg">{currentStep}/5</span>
+                            <span className="text-lg">{currentStep}/{totalSteps}</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                             <p className="text-gray-600">Explain what you're building, how much you need, and how you'll deliver.</p>    
@@ -172,33 +190,35 @@ export default function ProjectDetailsStep({ formData, updateFormData, nextStep,
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block font-semibold mb-2">Number of milestone</label>
-                        <select
-                            required
-                            value={formData.numberOfMilestones}
-                            onChange={(e) => updateFormData({ numberOfMilestones: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-secondary focus:outline-none"
-                        >
-                            <option value="">Select a value</option>
-                            {[...Array(10)].map((_, i) => (
-                                <option key={i + 1} value={i + 1}>{i + 1}</option>
-                            ))}
-                        </select>
+                {isMilestoneProject && (
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block font-semibold mb-2">Number of milestone</label>
+                            <select
+                                required
+                                value={formData.numberOfMilestones}
+                                onChange={(e) => updateFormData({ numberOfMilestones: e.target.value })}
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-secondary focus:outline-none"
+                            >
+                                <option value="">Select a value</option>
+                                {[...Array(10)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block font-semibold mb-2">Voting period Duration (Per ~ Day)</label>
+                            <input
+                                type="number"
+                                required
+                                value={formData.votingPeriod}
+                                onChange={(e) => updateFormData({ votingPeriod: e.target.value })}
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-secondary focus:outline-none"
+                                placeholder="Enter voting period"
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="block font-semibold mb-2">Voting period Duration (Per ~ Day)</label>
-                        <input
-                            type="number"
-                            required
-                            value={formData.votingPeriod}
-                            onChange={(e) => updateFormData({ votingPeriod: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-secondary focus:outline-none"
-                            placeholder="Enter voting period"
-                        />
-                    </div>
-                </div>
+                )}
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>

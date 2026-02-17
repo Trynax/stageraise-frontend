@@ -8,14 +8,30 @@ interface ProjectTypeStepProps {
     updateFormData: (data: any) => void
     nextStep: () => void
     currentStep: number
+    totalSteps: number
 }
 
-export default function ProjectTypeStep({ formData, updateFormData, nextStep, currentStep }: ProjectTypeStepProps) {
+export default function ProjectTypeStep({
+    formData,
+    updateFormData,
+    nextStep,
+    currentStep,
+    totalSteps
+}: ProjectTypeStepProps) {
     const [selectedType, setSelectedType] = useState(formData.projectType || '')
 
     const handleContinue = () => {
         if (selectedType) {
-            updateFormData({ projectType: selectedType })
+            if (selectedType === 'traditional') {
+                updateFormData({
+                    projectType: selectedType,
+                    numberOfMilestones: '0',
+                    votingPeriod: '7',
+                    milestones: []
+                })
+            } else {
+                updateFormData({ projectType: selectedType })
+            }
             nextStep()
         }
     }
@@ -36,7 +52,7 @@ export default function ProjectTypeStep({ formData, updateFormData, nextStep, cu
                             <p className="text-gray-600">Select the type of project you want to create</p>
                         </div>
                         <div className="flex flex-col items-center gap-2">
-                            <span className="text-lg font-semibold self-end">{currentStep}/5</span>
+                            <span className="text-lg font-semibold self-end">{currentStep}/{totalSteps}</span>
                             <button
                                 onClick={handleContinue}
                                 disabled={!selectedType}
@@ -56,7 +72,7 @@ export default function ProjectTypeStep({ formData, updateFormData, nextStep, cu
                 <div className="flex flex-col md:hidden sticky top-16 z-30 bg-primary py-4 -mx-4 px-4 justify-between items-start gap-4 mb-10">
                     <div className="flex justify-between items-center w-full">
                         <h2 className="text-3xl font-bold">Project Type</h2>
-                        <span className="text-lg">{currentStep}/5</span>
+                        <span className="text-lg">{currentStep}/{totalSteps}</span>
                     </div>
                     <div className="flex flex-col items-center gap-2">
                         <p className="text-gray-600">Select the type of project you want to create</p>    

@@ -34,12 +34,17 @@ export default function CreateProjectPage() {
         coverImage: null as File | null,
         additionalImages: [] as File[]
     })
+    const isMilestoneProject = formData.projectType === 'milestone'
+    const totalSteps = isMilestoneProject ? 5 : 4
+    const mediaStep = isMilestoneProject ? 4 : 3
+    const reviewStep = isMilestoneProject ? 5 : 4
+    const successStep = isMilestoneProject ? 6 : 5
 
     const updateFormData = (data: Partial<typeof formData>) => {
         setFormData(prev => ({ ...prev, ...data }))
     }
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 6))
+    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, successStep))
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1))
 
     return (
@@ -52,6 +57,7 @@ export default function CreateProjectPage() {
                         updateFormData={updateFormData} 
                         nextStep={nextStep}
                         currentStep={currentStep}
+                        totalSteps={totalSteps}
                     />
                 )}
                 {currentStep === 2 && (
@@ -61,36 +67,40 @@ export default function CreateProjectPage() {
                         nextStep={nextStep}
                         prevStep={prevStep}
                         currentStep={currentStep}
+                        totalSteps={totalSteps}
                     />
                 )}
-                {currentStep === 3 && (
+                {isMilestoneProject && currentStep === 3 && (
                     <MilestoneStep 
                         formData={formData} 
                         updateFormData={updateFormData} 
                         nextStep={nextStep}
                         prevStep={prevStep}
                         currentStep={currentStep}
+                        totalSteps={totalSteps}
                     />
                 )}
-                {currentStep === 4 && (
+                {currentStep === mediaStep && (
                     <MediaStep 
                         formData={formData} 
                         updateFormData={updateFormData} 
                         nextStep={nextStep}
                         prevStep={prevStep}
                         currentStep={currentStep}
+                        totalSteps={totalSteps}
                     />
                 )}
-                {currentStep === 5 && (
+                {currentStep === reviewStep && (
                     <ReviewStep 
                         formData={formData}
                         updateFormData={updateFormData}
                         nextStep={nextStep}
                         prevStep={prevStep}
                         currentStep={currentStep}
+                        totalSteps={totalSteps}
                     />
                 )}
-                {currentStep === 6 && <SuccessStep />}
+                {currentStep === successStep && <SuccessStep />}
             </div>
             <Footer />
         </>

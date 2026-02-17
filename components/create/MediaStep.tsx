@@ -9,11 +9,19 @@ interface MediaStepProps {
     nextStep: () => void
     prevStep: () => void
     currentStep: number
+    totalSteps: number
 }
 
 const MAX_ADDITIONAL_IMAGES = 3
 
-export default function MediaStep({ formData, updateFormData, nextStep, prevStep, currentStep }: MediaStepProps) {
+export default function MediaStep({
+    formData,
+    updateFormData,
+    nextStep,
+    prevStep,
+    currentStep,
+    totalSteps
+}: MediaStepProps) {
     const [logoPreview, setLogoPreview] = useState<string | null>(formData.logoPreview || null)
     const [coverPreview, setCoverPreview] = useState<string | null>(formData.coverPreview || null)
     const [additionalPreviews, setAdditionalPreviews] = useState<string[]>(formData.additionalPreviews || [])
@@ -80,7 +88,7 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
                                 <p className="text-gray-600">Using a bright and clear photo helps people connect to your fundraiser right away.</p>
                             </div>
                             <div className="flex flex-col items-center gap-2">
-                                <span className="text-lg font-semibold self-end">{currentStep}/5</span>
+                                <span className="text-lg font-semibold self-end">{currentStep}/{totalSteps}</span>
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
@@ -102,9 +110,9 @@ export default function MediaStep({ formData, updateFormData, nextStep, prevStep
                 </div>
 
                     <div className="flex flex-col md:hidden sticky top-16 z-30 bg-primary py-4 -mx-4 px-4 justify-between items-start gap-4 mb-10">
-                        <div className="flex justify-between items-center w-full">
+                    <div className="flex justify-between items-center w-full">
                             <h2 className="text-3xl font-bold">Media</h2>
-                            <span className="text-lg">{currentStep}/5</span>
+                            <span className="text-lg">{currentStep}/{totalSteps}</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                             <p className="text-gray-600">Using a bright and clear photo helps people connect to your fundraiser right away.</p>    
