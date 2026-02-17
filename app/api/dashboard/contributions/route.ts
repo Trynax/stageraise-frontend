@@ -131,6 +131,7 @@ export async function GET(request: NextRequest) {
                 displayStatus,
                 milestoneStatus,
                 hasActiveVoting: !!activeVoting,
+                activeVotingStage: activeVoting?.milestoneStage ?? null,
                 userHasVoted,
                 userVotedYes,
                 userContribution,

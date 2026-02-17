@@ -40,11 +40,18 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
   const displayStatus = project.displayStatus || 'funding';
   const milestoneStatus = project.milestoneStatus;
   const hasActiveVoting = project.hasActiveVoting;
+  const activeVotingStage =
+    typeof project.activeVotingStage === 'number' && Number.isFinite(project.activeVotingStage)
+      ? project.activeVotingStage
+      : (typeof currentMilestone === 'number' && currentMilestone > 0 ? currentMilestone : null);
   const userHasVoted = Boolean(project.userHasVoted);
   const userVotedYes = typeof project.userVotedYes === 'boolean' ? project.userVotedYes : null;
   const userContribution = project.userContribution;
   const isRefundEligible = project.isRefundEligible;
   const statusMessage = project.statusMessage;
+  const votingDetailHref = activeVotingStage
+    ? `/votes/${projectId}-${activeVotingStage}?from=dashboard`
+    : `/projects/${projectId}?tab=voting`;
 
   useEffect(() => {
     // Don't run timer if no valid endDate
@@ -305,9 +312,9 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
           {/* Action buttons based on variant */}
           {variant === 'contribution' && hasActiveVoting ? (
             <div className="flex gap-2 mt-auto">
-              <Link href={`/projects/${projectId}?tab=voting`} className="flex-1">
+              <Link href={votingDetailHref} className="flex-1">
                 <button className="w-full bg-white font-semibold text-dark text-sm py-3 rounded-2xl transition-all duration-300 border-2 border-dark hover:bg-gray-50">
-                  View milestone
+                  View vote
                 </button>
               </Link>
               <Link href={`/projects/${projectId}`} className="flex-1">
