@@ -4,7 +4,7 @@ export const supportedChains = [bscTestnet] as const
 
 
 export const STAGERAISE_ADDRESSES = {
-  [bscTestnet.id]: '0xe416F78434D3B068E18bEd48D4a61EeA3526AF68',
+  [bscTestnet.id]: '0x5e624d31bC13b3cE5405e6406DC77Ec0D0743e1a',
 } as const
 
 // Stablecoin addresses per chain

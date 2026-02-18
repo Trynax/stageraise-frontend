@@ -1,16 +1,19 @@
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import type { Abi } from 'viem'
 import { parseUnits } from 'viem'
-import { getStageRaiseAddress, TOKEN_DECIMALS } from '../addresses'
+import { getStageRaiseAddress } from '../addresses'
 import StageRaiseABI from '../StageRaise.abi.json'
 import type { CreateProjectParams } from '../types'
 
-const stageRaiseABI = StageRaiseABI as any
+const stageRaiseABI = StageRaiseABI as Abi
 
 interface CreateProjectFormData {
   projectName: string
   description: string
   fundraisingTarget: string
-  fundingDeadline: string
+  fundingStart: string
+  fundingEnd: string
+  fundingDeadline?: string
   minContribution: string
   maxContribution: string
   numberOfMilestones: string
@@ -49,9 +52,25 @@ export function useCreateProject() {
     const maxFunding = parseUnits(formData.maxContribution, 18)
 
 
-    const deadline = BigInt(
-      Math.floor(new Date(formData.fundingDeadline).getTime() / 1000)
-    )
+    const fundingStartDate = formData.fundingStart
+      ? new Date(formData.fundingStart)
+      : new Date()
+    const fundingEndDate = formData.fundingEnd
+      ? new Date(formData.fundingEnd)
+      : formData.fundingDeadline
+        ? new Date(formData.fundingDeadline)
+        : null
+
+    if (!fundingEndDate || Number.isNaN(fundingStartDate.getTime()) || Number.isNaN(fundingEndDate.getTime())) {
+      throw new Error('Invalid funding start or end date')
+    }
+
+    if (fundingEndDate.getTime() <= fundingStartDate.getTime()) {
+      throw new Error('Funding end time must be after funding start time')
+    }
+
+    const fundingStart = BigInt(Math.floor(fundingStartDate.getTime() / 1000))
+    const fundingEnd = BigInt(Math.floor(fundingEndDate.getTime() / 1000))
 
  
     const votingPeriodSeconds = BigInt(
@@ -63,7 +82,8 @@ export function useCreateProject() {
       targetAmount,
       minFunding,
       maxFunding,
-      deadline,
+      fundingStart,
+      fundingEnd,
       timeForMileStoneVotingProcess: votingPeriodSeconds,
       milestoneCount: Number(formData.numberOfMilestones) || 0,
       milestoneBased: formData.projectType === 'milestone',

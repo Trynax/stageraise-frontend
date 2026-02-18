@@ -30,6 +30,19 @@ export default function ProjectDetailsStep({
             return
         }
 
+        const fundingStartTimestamp = new Date(formData.fundingStart).getTime()
+        const fundingEndTimestamp = new Date(formData.fundingEnd).getTime()
+
+        if (!Number.isFinite(fundingStartTimestamp) || !Number.isFinite(fundingEndTimestamp)) {
+            alert('Please provide valid funding start and end date/time')
+            return
+        }
+
+        if (fundingEndTimestamp <= fundingStartTimestamp) {
+            alert('Funding end time must be after funding start time')
+            return
+        }
+
         if (!isMilestoneProject) {
             updateFormData({
                 numberOfMilestones: '0',
@@ -156,12 +169,25 @@ export default function ProjectDetailsStep({
                         />
                     </div>
                     <div>
-                        <label className="block font-semibold mb-2">Funding Deadline</label>
+                        <label className="block font-semibold mb-2">Funding Start</label>
                         <input
-                            type="date"
+                            type="datetime-local"
                             required
-                            value={formData.fundingDeadline}
-                            onChange={(e) => updateFormData({ fundingDeadline: e.target.value })}
+                            value={formData.fundingStart}
+                            onChange={(e) => updateFormData({ fundingStart: e.target.value })}
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-secondary focus:outline-none"
+                        />
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                        <label className="block font-semibold mb-2">Funding End</label>
+                        <input
+                            type="datetime-local"
+                            required
+                            value={formData.fundingEnd}
+                            onChange={(e) => updateFormData({ fundingEnd: e.target.value })}
                             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-secondary focus:outline-none"
                         />
                     </div>

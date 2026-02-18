@@ -2,41 +2,91 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import type { Project } from '@/lib/types';
 
 interface ProjectCardProps {
-  project: Project | any; // Allow both mock and real project types
+  project: ProjectCardData; // Allow both mock and real project types
   variant?: 'default' | 'created' | 'contribution'; // Dashboard variants
 }
 
+interface ProjectCardData {
+  id?: string | number;
+  projectId?: string | number;
+  title?: string;
+  name?: string;
+  description?: string;
+  detailedDescription?: string;
+  image?: string;
+  coverImageUrl?: string | null;
+  logoUrl?: string | null;
+  raised?: number | string;
+  cachedRaisedAmount?: number | string | null;
+  goal?: number | string;
+  fundingTarget?: number | string;
+  targetAmount?: number | string;
+  funders?: number | string;
+  cachedTotalContributors?: number | string | null;
+  endDate?: string;
+  fundingEnd?: string;
+  fundingDeadline?: string;
+  deadline?: string;
+  startDate?: string;
+  fundingStart?: string;
+  fundingStartDate?: string;
+  createdAt?: string;
+  status?: string;
+  cachedIsActive?: boolean;
+  milestones?: unknown[] | number;
+  totalMilestones?: number;
+  type?: string;
+  currentMilestone?: number;
+  displayStatus?: string;
+  milestoneStatus?: string;
+  hasActiveVoting?: boolean;
+  activeVotingStage?: number;
+  userHasVoted?: boolean;
+  userVotedYes?: boolean;
+  userContribution?: number;
+  isRefundEligible?: boolean;
+  statusMessage?: string;
+  communityVote?: boolean;
+  refundable?: boolean;
+}
+
 export default function ProjectCard({ project, variant = 'default' }: ProjectCardProps) {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
+  const [now, setNow] = useState(() => Date.now());
+
+  const toNumber = (value: string | number | null | undefined, fallback = 0) => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return fallback;
+  };
 
   // Handle both mock data format and database format
   // Use projectId (numeric, for contract) for URL routing, not database UUID
-  const projectId = project.projectId || project.id;
+  const projectId = project.projectId ?? project.id ?? '';
   const title = project.title || project.name || 'Untitled Project';
   const description = project.description || project.detailedDescription || '';
   const image = project.image || project.coverImageUrl || project.logoUrl || '/placeholder.jpg';
-  const raised = project.raised || parseFloat(project.cachedRaisedAmount || '0');
-  const goal = project.goal || project.fundingTarget || parseFloat(project.targetAmount || '0');
-  const funders = project.funders || project.cachedTotalContributors || 0;
+  const raised = toNumber(project.raised, toNumber(project.cachedRaisedAmount));
+  const goal = toNumber(project.goal, toNumber(project.fundingTarget, toNumber(project.targetAmount)));
+  const funders = toNumber(project.funders, toNumber(project.cachedTotalContributors));
+  const startDate = useMemo(() => {
+    return project.startDate || project.fundingStart || project.fundingStartDate || project.createdAt || null;
+  }, [project.startDate, project.fundingStart, project.fundingStartDate, project.createdAt]);
   // Memoize endDate to prevent infinite loop - use fundingDeadline from database
   const endDate = useMemo(() => {
-    return project.endDate || project.fundingDeadline || project.deadline || null;
-  }, [project.endDate, project.fundingDeadline, project.deadline]);
-  const status = project.status || (project.cachedIsActive ? 'ongoing' : 'ended');
-  const milestoneCount = project.milestones?.length || project.totalMilestones || project.milestones || 0;
+    return project.endDate || project.fundingEnd || project.fundingDeadline || project.deadline || null;
+  }, [project.endDate, project.fundingEnd, project.fundingDeadline, project.deadline]);
+  const milestoneCount = Array.isArray(project.milestones)
+    ? project.milestones.length
+    : toNumber(project.totalMilestones, toNumber(project.milestones as number | undefined));
   const type = project.type || (milestoneCount > 0 ? 'Milestone Based' : 'Regular');
 
   // Dashboard-specific fields
   const currentMilestone = project.currentMilestone || 0;
-  const totalMilestones = project.totalMilestones || milestoneCount;
   const displayStatus = project.displayStatus || 'funding';
   const milestoneStatus = project.milestoneStatus;
   const hasActiveVoting = project.hasActiveVoting;
@@ -54,35 +104,34 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
     : `/projects/${projectId}?tab=voting`;
 
   useEffect(() => {
-    // Don't run timer if no valid endDate
-    if (!endDate) {
-      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      return;
-    }
-
-    const calculateTimeLeft = () => {
-      const difference = +new Date(endDate) - +new Date();
-      
-      if (difference > 0) {
-        return {
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
-        };
-      }
-      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    };
-
-    // Set initial value
-    setTimeLeft(calculateTimeLeft());
-
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
+      setNow(Date.now());
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [endDate]);
+  }, []);
+
+  const fundingStartTimestamp = startDate ? +new Date(startDate) : Number.NaN;
+  const fundingEndTimestamp = endDate ? +new Date(endDate) : Number.NaN;
+  const hasFundingStart = Number.isFinite(fundingStartTimestamp);
+  const hasFundingEnd = Number.isFinite(fundingEndTimestamp);
+  const isFundingNotStarted = hasFundingStart && now < fundingStartTimestamp;
+  const countdownTarget = isFundingNotStarted
+    ? fundingStartTimestamp
+    : hasFundingEnd
+      ? fundingEndTimestamp
+      : Number.NaN;
+  const countdownDifference = Number.isFinite(countdownTarget)
+    ? Math.max(0, countdownTarget - now)
+    : 0;
+  const timeLeft = {
+    days: Math.floor(countdownDifference / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((countdownDifference / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((countdownDifference / 1000 / 60) % 60),
+    seconds: Math.floor((countdownDifference / 1000) % 60)
+  };
+  const hasCountdown = timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0;
+  const displayDate = isFundingNotStarted ? startDate : endDate;
 
   const percentage = goal > 0 ? (raised / goal) * 100 : 0;
 
@@ -281,18 +330,18 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
 
           {variant === 'default' && (
             <div className="text-center mb-4 mt-auto">
-              {timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0 ? (
+              {hasCountdown ? (
                 <>
-                  <p className="text-gray-600 text-xs mb-1">Funding ends in</p>
+                  <p className="text-gray-600 text-xs mb-1">{isFundingNotStarted ? 'Funding starts in' : 'Funding ends in'}</p>
                   <p className="text-base font-semibold">
                     {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-dark text-xs mb-1 font-semibold">Funding Ended</p>
+                  <p className="text-dark text-xs mb-1 font-semibold">{isFundingNotStarted ? 'Funding Not Started' : 'Funding Ended'}</p>
                   <p className="text-base font-semibold text-dark">
-                    {endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}
+                    {displayDate ? new Date(displayDate).toLocaleDateString() : 'N/A'}
                   </p>
                 </>
               )}
@@ -300,9 +349,9 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
           )}
 
      
-          {variant === 'created' && displayStatus === 'funding' && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
+          {variant === 'created' && displayStatus === 'funding' && hasCountdown && (
             <div className="text-center mb-4">
-              <p className="text-gray-600 text-xs mb-1">Funding ends in</p>
+              <p className="text-gray-600 text-xs mb-1">{isFundingNotStarted ? 'Funding starts in' : 'Funding ends in'}</p>
               <p className="text-base font-semibold">
                 {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}sec
               </p>
@@ -325,8 +374,8 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
             </div>
           ) : (
             <button className="w-full bg-secondary font-semibold text-dark text-base py-3 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl border border-dark hover:scale-102 mt-auto">
-              {variant === 'default' && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) 
-                ? 'Fund project' 
+              {variant === 'default' && hasCountdown
+                ? (isFundingNotStarted ? 'Funding opens soon' : 'Fund project')
                 : 'View project'}
             </button>
           )}

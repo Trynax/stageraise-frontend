@@ -94,7 +94,8 @@ export async function POST(request: NextRequest) {
         raisedAmount: bigint | number
         minFunding: bigint | number
         maxFunding: bigint | number
-        deadline: bigint | number
+        fundingStart: bigint | number
+        fundingEnd: bigint | number
         totalContributors: bigint | number
         milestoneBased: boolean
         milestoneCount: bigint | number
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
         category: typeof metadata?.category === 'string' ? metadata.category : 'Other',
         tags,
         fundingTarget: Number(projectInfo.targetAmount) / 1e18,
-        fundingDeadline: new Date(Number(projectInfo.deadline) * 1000),
+        fundingDeadline: new Date(Number(projectInfo.fundingEnd) * 1000),
         minContribution: Number(projectInfo.minFunding) / 1e18,
         maxContribution: Number(projectInfo.maxFunding) / 1e18,
         votingPeriodDays,

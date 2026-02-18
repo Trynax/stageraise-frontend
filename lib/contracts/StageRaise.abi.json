@@ -92,7 +92,12 @@
             "internalType": "uint96"
           },
           {
-            "name": "deadline",
+            "name": "fundingStart",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "fundingEnd",
             "type": "uint64",
             "internalType": "uint64"
           },
@@ -281,7 +286,12 @@
             "internalType": "uint96"
           },
           {
-            "name": "deadline",
+            "name": "fundingStart",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "fundingEnd",
             "type": "uint64",
             "internalType": "uint64"
           },
@@ -578,6 +588,44 @@
   },
   {
     "type": "function",
+    "name": "isProjectFundingLive",
+    "inputs": [
+      {
+        "name": "_projectId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isProjectVotingLive",
+    "inputs": [
+      {
+        "name": "_projectId",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "isTokenSupported",
     "inputs": [
       {
@@ -643,7 +691,7 @@
             "internalType": "address"
           },
           {
-            "name": "deadline",
+            "name": "fundingStart",
             "type": "uint64",
             "internalType": "uint64"
           },
@@ -666,6 +714,11 @@
             "name": "maxFunding",
             "type": "uint96",
             "internalType": "uint96"
+          },
+          {
+            "name": "fundingEnd",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
             "name": "totalContributors",
@@ -930,9 +983,15 @@
         "internalType": "uint256"
       },
       {
-        "name": "deadline",
+        "name": "fundingStart",
         "type": "uint64",
         "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "fundingEnd",
+        "type": "uint64",
+        "indexed": false,
         "internalType": "uint64"
       }
     ],
@@ -1154,6 +1213,16 @@
   },
   {
     "type": "error",
+    "name": "StageRaise__FundingHasNotStarted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StageRaise__FundingStartMustBeBeforeFundingEnd",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "StageRaise__InvalidTokenAddress",
     "inputs": []
   },
@@ -1170,6 +1239,11 @@
   {
     "type": "error",
     "name": "StageRaise__ProjectHasReachedTheFinalMileStoneStage",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StageRaise__ProjectIsAlreadyOpenForMilestoneVotingProcess",
     "inputs": []
   },
   {

@@ -40,6 +40,12 @@ export default function ReviewStep({
     const [showTxModal, setShowTxModal] = useState(false)
     const [txStatus, setTxStatus] = useState<TransactionStatus>('pending')
     const isMilestoneProject = formData.projectType === 'milestone'
+    const formatDateTime = (value?: string) => {
+        if (!value) return 'Not set'
+        const parsed = new Date(value)
+        if (Number.isNaN(parsed.getTime())) return 'Not set'
+        return parsed.toLocaleString()
+    }
 
     const openEditModal = (field: string, value: any) => {
         setEditModal({ isOpen: true, field, value })
@@ -53,6 +59,18 @@ export default function ReviewStep({
         if (editModal.field === 'coverImage' && coverPreview) {
             closeEditModal()
             return
+        }
+
+        if (editModal.field === 'fundingStart' || editModal.field === 'fundingEnd') {
+            const nextFundingStart = editModal.field === 'fundingStart' ? editModal.value : formData.fundingStart
+            const nextFundingEnd = editModal.field === 'fundingEnd' ? editModal.value : formData.fundingEnd
+            const start = new Date(nextFundingStart).getTime()
+            const end = new Date(nextFundingEnd).getTime()
+
+            if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+                alert('Funding end time must be after funding start time')
+                return
+            }
         }
 
         updateFormData({ [editModal.field]: editModal.value })
@@ -315,6 +333,34 @@ export default function ReviewStep({
 
                 <div className="border-t pt-4">
                     <div className="flex justify-between items-center mb-2">
+                        <p className="font-semibold">Funding Start</p>
+                        <button
+                            onClick={() => openEditModal('fundingStart', formData.fundingStart)}
+                            className="text-sm border border-dark px-3 py-1 rounded-lg hover:bg-gray-100 flex gap-1 items-center"
+                        >
+                            <span>Edit</span>
+                            <Image src={"/icons/edit.svg"} alt="Edit" width={24} height={24} />
+                        </button>
+                    </div>
+                    <p className="text-sm">{formatDateTime(formData.fundingStart)}</p>
+                </div>
+
+                <div className="border-t pt-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <p className="font-semibold">Funding End</p>
+                        <button
+                            onClick={() => openEditModal('fundingEnd', formData.fundingEnd)}
+                            className="text-sm border border-dark px-3 py-1 rounded-lg hover:bg-gray-100 flex gap-1 items-center"
+                        >
+                            <span>Edit</span>
+                            <Image src={"/icons/edit.svg"} alt="Edit" width={24} height={24} />
+                        </button>
+                    </div>
+                    <p className="text-sm">{formatDateTime(formData.fundingEnd)}</p>
+                </div>
+
+                <div className="border-t pt-4">
+                    <div className="flex justify-between items-center mb-2">
                         <p className="font-semibold">Payment Token</p>
                         <button 
                             onClick={() => openEditModal('paymentToken', formData.paymentToken)}
@@ -478,6 +524,8 @@ export default function ReviewStep({
                                 {editModal.field === 'tagline' && 'Edit tags'}
                                 {editModal.field === 'description' && 'Edit project description'}
                                 {editModal.field === 'fundraisingTarget' && 'Edit Fundraising Target'}
+                                {editModal.field === 'fundingStart' && 'Edit Funding Start'}
+                                {editModal.field === 'fundingEnd' && 'Edit Funding End'}
                                 {editModal.field === 'paymentToken' && 'Select Token Type'}
                                 {editModal.field === 'minContribution' && 'Minimum contribution'}
                                 {editModal.field === 'maxContribution' && 'Maximum contribution'}
@@ -571,6 +619,18 @@ export default function ReviewStep({
                                         onChange={(e) => setEditModal({ ...editModal, value: e.target.value })}
                                         rows={8}
                                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-secondary focus:outline-none resize-none"
+                                    />
+                                </div>
+                            ) : editModal.field === 'fundingStart' || editModal.field === 'fundingEnd' ? (
+                                <div>
+                                    <label className="block font-semibold mb-2">
+                                        {editModal.field === 'fundingStart' ? 'Funding Start' : 'Funding End'}
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={editModal.value || ''}
+                                        onChange={(e) => setEditModal({ ...editModal, value: e.target.value })}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-secondary focus:outline-none"
                                     />
                                 </div>
                             ) : editModal.field === 'fundraisingTarget' || editModal.field === 'minContribution' || editModal.field === 'maxContribution' ? (

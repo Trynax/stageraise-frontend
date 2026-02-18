@@ -5,7 +5,8 @@ export interface ProjectBasics {
   raisedAmount: bigint
   minFunding: bigint
   maxFunding: bigint
-  deadline: bigint
+  fundingStart: bigint
+  fundingEnd: bigint
   projectId: number
   totalContributors: number
   isActive: boolean
@@ -31,7 +32,8 @@ export interface ProjectInfo {
   raisedAmount: bigint
   minFunding: bigint
   maxFunding: bigint
-  deadline: bigint
+  fundingStart: bigint
+  fundingEnd: bigint
   projectId: number
   totalContributors: number
   milestoneCount: number
@@ -46,7 +48,8 @@ export interface CreateProjectParams {
   targetAmount: bigint
   minFunding: bigint
   maxFunding: bigint
-  deadline: bigint
+  fundingStart: bigint
+  fundingEnd: bigint
   timeForMileStoneVotingProcess: bigint
   milestoneCount: number
   milestoneBased: boolean
