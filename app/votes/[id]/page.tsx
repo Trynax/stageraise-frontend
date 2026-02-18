@@ -8,6 +8,7 @@ import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/sections/footer"
 import { useAccount, useChainId } from "wagmi"
 import { useVoteWithSync, useContributorAmount, useHasVoted } from "@/lib/contracts/hooks"
+import { STAGERAISE_ADDRESSES } from "@/lib/contracts/addresses"
 import TransactionModal, { TransactionStatus } from "@/components/ui/TransactionModal"
 
 type VoteResult = "ongoing" | "passed" | "failed"
@@ -154,9 +155,12 @@ export default function VoteDetailPage() {
   )
   const hasContributorAmount = typeof contributorAmount === "bigint"
   const isNonFunder = Boolean(address) && hasContributorAmount && contributorAmount <= BigInt(0)
+  const isUnsupportedChain = !STAGERAISE_ADDRESSES[chainId as keyof typeof STAGERAISE_ADDRESSES]
   const hasVotedOnChain = Boolean(hasVoted)
   const voteDisabledReason = !address
     ? "Connect wallet to vote."
+    : isUnsupportedChain
+      ? "Switch to supported network to vote."
     : isNonFunder
       ? "You are not a funder of this project and cannot vote."
       : hasVotedOnChain
@@ -293,7 +297,7 @@ export default function VoteDetailPage() {
   }, [voteId, address])
 
   const handleVote = (voteChoice: 'yes' | 'no') => {
-    if (!voteData || !address || isNonFunder || hasVotedOnChain) return
+    if (!voteData || !address || isUnsupportedChain || isNonFunder || hasVotedOnChain) return
 
     try {
       setPendingVoteChoice(voteChoice)

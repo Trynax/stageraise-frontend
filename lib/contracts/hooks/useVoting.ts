@@ -1,8 +1,14 @@
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { getStageRaiseAddress } from '../addresses'
+import { getStageRaiseAddress, STAGERAISE_ADDRESSES } from '../addresses'
 import StageRaiseABI from '../StageRaise.abi.json'
 
 const stageRaiseABI = StageRaiseABI as any
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
+
+function getStageRaiseAddressIfSupported(chainId: number): `0x${string}` | undefined {
+  const address = STAGERAISE_ADDRESSES[chainId as keyof typeof STAGERAISE_ADDRESSES]
+  return address as `0x${string}` | undefined
+}
 
 export function useOpenVoting() {
   const {
@@ -216,46 +222,65 @@ export function useFinalizeVotingWithSync() {
 }
 
 export function useVotingStatus(projectId: number, chainId: number) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data: isOpen, refetch: refetchOpen } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectMileStoneVotingStatus',
     args: [projectId],
+    query: {
+      enabled: Boolean(stageRaiseAddress) && projectId > 0,
+    },
   })
 
   const { data: yesVotes, refetch: refetchYes } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectYesVotes',
     args: [projectId],
+    query: {
+      enabled: Boolean(stageRaiseAddress) && projectId > 0,
+    },
   })
 
   const { data: noVotes, refetch: refetchNo } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectNoVotes',
     args: [projectId],
+    query: {
+      enabled: Boolean(stageRaiseAddress) && projectId > 0,
+    },
   })
 
   const { data: endTime, refetch: refetchEndTime } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectVotingEndTime',
     args: [projectId],
+    query: {
+      enabled: Boolean(stageRaiseAddress) && projectId > 0,
+    },
   })
 
   const { data: milestoneStage, refetch: refetchStage } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectMilestoneStage',
     args: [projectId],
+    query: {
+      enabled: Boolean(stageRaiseAddress) && projectId > 0,
+    },
   })
 
   const { data: failedStage, refetch: refetchFailed } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'getProjectFailedMilestoneStage',
     args: [projectId],
+    query: {
+      enabled: Boolean(stageRaiseAddress) && projectId > 0,
+    },
   })
 
   const refetchAll = () => {
@@ -284,13 +309,14 @@ export function useHasVoted(
   userAddress: `0x${string}` | undefined,
   chainId: number
 ) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data, refetch } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'hasFunderVotedInCurrentRound',
     args: userAddress ? [projectId, userAddress] : undefined,
     query: {
-      enabled: !!userAddress,
+      enabled: Boolean(stageRaiseAddress) && !!userAddress && projectId > 0,
     },
   })
 
@@ -306,13 +332,14 @@ export function useVotingPower(
   userAddress: `0x${string}` | undefined,
   chainId: number
 ) {
+  const stageRaiseAddress = getStageRaiseAddressIfSupported(chainId)
   const { data, isLoading, error } = useReadContract({
-    address: getStageRaiseAddress(chainId),
+    address: stageRaiseAddress ?? ZERO_ADDRESS,
     abi: stageRaiseABI,
     functionName: 'calculateFunderVotingPower',
     args: userAddress ? [userAddress, projectId] : undefined,
     query: {
-      enabled: !!userAddress,
+      enabled: Boolean(stageRaiseAddress) && !!userAddress && projectId > 0,
     },
   })
 

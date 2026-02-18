@@ -32,7 +32,7 @@ async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
       transport: http(),
     })
 
-    const [isVotingOpen, milestoneStageRaw, votingEndTimeRaw, yesVotesRaw, noVotesRaw] = await Promise.all([
+    const [isVotingOpen, milestoneStageRaw, failedMilestoneStageRaw, votingEndTimeRaw, yesVotesRaw, noVotesRaw] = await Promise.all([
       client.readContract({
         address: contractAddress,
         abi: stageRaiseABI,
@@ -43,6 +43,12 @@ async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
         address: contractAddress,
         abi: stageRaiseABI,
         functionName: 'getProjectMilestoneStage',
+        args: [projectId],
+      }) as Promise<number>,
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'getProjectFailedMilestoneStage',
         args: [projectId],
       }) as Promise<number>,
       client.readContract({
@@ -68,6 +74,7 @@ async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
     return {
       isVotingOpen,
       milestoneStage: Number(milestoneStageRaw),
+      failedMilestoneStage: Number(failedMilestoneStageRaw),
       votingEnded: new Date(Number(votingEndTimeRaw) * 1000),
       yesVotes: normalizeVotePower(yesVotesRaw),
       noVotes: normalizeVotePower(noVotesRaw),
@@ -139,9 +146,15 @@ function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(
     : []
   const userVoteByRoundId = new Map<string, boolean>()
   const userVoteByStage = new Map<number, boolean>()
+  const roundsPerStage = new Map<number, number>()
+  const hasAnyRoundLinkedVoteForStage = new Set<number>()
+  for (const round of votingRounds) {
+    roundsPerStage.set(round.milestoneStage, (roundsPerStage.get(round.milestoneStage) || 0) + 1)
+  }
   for (const vote of userVotes) {
     if (typeof vote.votingRoundId === 'string' && !userVoteByRoundId.has(vote.votingRoundId)) {
       userVoteByRoundId.set(vote.votingRoundId, vote.voteYes)
+      hasAnyRoundLinkedVoteForStage.add(vote.milestoneStage)
     }
     if (!userVoteByStage.has(vote.milestoneStage)) {
       userVoteByStage.set(vote.milestoneStage, vote.voteYes)
@@ -176,7 +189,12 @@ function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(
       : []
 
     const roundUserVote = userVoteByRoundId.get(round.id)
-    const stageUserVote = userVoteByStage.get(round.milestoneStage)
+    const canUseLegacyStageFallback =
+      !hasAnyRoundLinkedVoteForStage.has(round.milestoneStage) &&
+      (roundsPerStage.get(round.milestoneStage) || 0) === 1
+    const stageUserVote = canUseLegacyStageFallback
+      ? userVoteByStage.get(round.milestoneStage)
+      : undefined
     const resolvedUserVote = roundUserVote ?? stageUserVote
 
     return {
@@ -204,9 +222,9 @@ function enrichProjectWithVoting<T extends ProjectWithVotingRelations>(
         yesVotes: normalizeStoredVoteValue(activeRound.yesVotes),
         noVotes: normalizeStoredVoteValue(activeRound.noVotes),
         votingEndTime: activeRound.votingEnded,
-        userHasVoted: typeof (userVoteByRoundId.get(activeRound.id) ?? userVoteByStage.get(activeRound.milestoneStage)) === 'boolean',
+        userHasVoted: typeof userVoteByRoundId.get(activeRound.id) === 'boolean',
         userVote: (() => {
-          const resolved = userVoteByRoundId.get(activeRound.id) ?? userVoteByStage.get(activeRound.milestoneStage)
+          const resolved = userVoteByRoundId.get(activeRound.id)
           return resolved === true ? 'yes' : resolved === false ? 'no' : null
         })(),
       }
@@ -309,43 +327,134 @@ export async function GET(
     }
 
     const liveSnapshot = await fetchLiveVotingSnapshot(project.chainId, project.projectId)
-    if (liveSnapshot && liveSnapshot.isVotingOpen) {
+    if (liveSnapshot) {
+      const now = new Date()
+      const previousFailedCount = project.failedVotingCount || 0
       const activeRound = project.votingRounds.find((round) => round.isActive)
+      const isWindowOpen = liveSnapshot.votingEnded.getTime() > now.getTime()
+      const shouldBeActive = liveSnapshot.isVotingOpen && isWindowOpen
 
-      if (activeRound && activeRound.milestoneStage === liveSnapshot.milestoneStage) {
-        activeRound.yesVotes = liveSnapshot.yesVotes
-        activeRound.noVotes = liveSnapshot.noVotes
-        activeRound.totalVoters = liveSnapshot.yesVotes + liveSnapshot.noVotes
-        activeRound.votingEnded = liveSnapshot.votingEnded
+      const projectUpdateData: Prisma.ProjectUpdateInput = {}
+      if (project.currentMilestone !== liveSnapshot.milestoneStage) {
+        project.currentMilestone = liveSnapshot.milestoneStage
+        projectUpdateData.currentMilestone = liveSnapshot.milestoneStage
+      }
+      if (previousFailedCount !== liveSnapshot.failedMilestoneStage) {
+        project.failedVotingCount = liveSnapshot.failedMilestoneStage
+        projectUpdateData.failedVotingCount = liveSnapshot.failedMilestoneStage
+      }
+      if (liveSnapshot.failedMilestoneStage >= 3 && project.status !== 'refundable') {
+        project.status = 'refundable'
+        projectUpdateData.status = 'refundable'
+      }
+      if (Object.keys(projectUpdateData).length > 0) {
+        await prisma.project.update({
+          where: { id: project.id },
+          data: projectUpdateData,
+        })
+      }
+
+      if (shouldBeActive) {
+        if (activeRound && activeRound.milestoneStage === liveSnapshot.milestoneStage) {
+          activeRound.yesVotes = liveSnapshot.yesVotes
+          activeRound.noVotes = liveSnapshot.noVotes
+          activeRound.totalVoters = liveSnapshot.yesVotes + liveSnapshot.noVotes
+          activeRound.votingEnded = liveSnapshot.votingEnded
+          activeRound.isActive = true
+          activeRound.result = 'ongoing'
+
+          await prisma.votingRound.update({
+            where: { id: activeRound.id },
+            data: {
+              yesVotes: liveSnapshot.yesVotes,
+              noVotes: liveSnapshot.noVotes,
+              totalVoters: liveSnapshot.yesVotes + liveSnapshot.noVotes,
+              votingEnded: liveSnapshot.votingEnded,
+              isActive: true,
+              result: 'ongoing',
+            },
+          })
+        } else if (!activeRound) {
+          const createdRound = await prisma.votingRound.create({
+            data: {
+              projectId: project.id,
+              milestoneStage: liveSnapshot.milestoneStage,
+              votingStarted: new Date(
+                liveSnapshot.votingEnded.getTime() - Math.max(1, project.votingPeriodDays || 7) * 24 * 60 * 60 * 1000
+              ),
+              votingEnded: liveSnapshot.votingEnded,
+              result: 'ongoing',
+              isActive: true,
+              yesVotes: liveSnapshot.yesVotes,
+              noVotes: liveSnapshot.noVotes,
+              totalVoters: liveSnapshot.yesVotes + liveSnapshot.noVotes,
+            },
+          })
+
+          project.votingRounds = [createdRound, ...project.votingRounds]
+        }
+      } else if (activeRound) {
+        const inferredResult =
+          liveSnapshot.milestoneStage > activeRound.milestoneStage
+            ? 'passed'
+            : liveSnapshot.failedMilestoneStage > previousFailedCount
+              ? 'failed'
+              : (activeRound.yesVotes > activeRound.noVotes ? 'passed' : 'failed')
+
+        activeRound.isActive = false
+        activeRound.result = inferredResult
+        activeRound.votingEnded = activeRound.votingEnded || liveSnapshot.votingEnded
 
         await prisma.votingRound.update({
           where: { id: activeRound.id },
           data: {
-            yesVotes: liveSnapshot.yesVotes,
-            noVotes: liveSnapshot.noVotes,
-            totalVoters: liveSnapshot.yesVotes + liveSnapshot.noVotes,
-            votingEnded: liveSnapshot.votingEnded,
-            isActive: true,
+            isActive: false,
+            result: inferredResult,
+            votingEnded: activeRound.votingEnded || liveSnapshot.votingEnded,
           },
         })
-      } else if (!activeRound) {
-        const createdRound = await prisma.votingRound.create({
-          data: {
-            projectId: project.id,
-            milestoneStage: liveSnapshot.milestoneStage,
-            votingStarted: new Date(
-              liveSnapshot.votingEnded.getTime() - Math.max(1, project.votingPeriodDays || 7) * 24 * 60 * 60 * 1000
-            ),
-            votingEnded: liveSnapshot.votingEnded,
-            result: 'ongoing',
-            isActive: true,
-            yesVotes: liveSnapshot.yesVotes,
-            noVotes: liveSnapshot.noVotes,
-            totalVoters: liveSnapshot.yesVotes + liveSnapshot.noVotes,
-          },
-        })
+      }
+    }
+    if (!liveSnapshot) {
+      const fallbackActiveRound = project.votingRounds.find((round) => round.isActive)
+      if (
+        fallbackActiveRound &&
+        fallbackActiveRound.votingEnded &&
+        new Date(fallbackActiveRound.votingEnded).getTime() <= Date.now()
+      ) {
+        fallbackActiveRound.isActive = false
+        fallbackActiveRound.result = fallbackActiveRound.yesVotes > fallbackActiveRound.noVotes ? 'passed' : 'failed'
 
-        project.votingRounds = [createdRound, ...project.votingRounds]
+        await prisma.votingRound.update({
+          where: { id: fallbackActiveRound.id },
+          data: {
+            isActive: false,
+            result: fallbackActiveRound.result,
+          },
+        })
+      }
+    }
+
+    if (liveSnapshot) {
+      const currentFailedCount = project.failedVotingCount || 0
+      const inferredFailedCount = project.votingRounds.filter(
+        (round) => round.milestoneStage === liveSnapshot.milestoneStage && round.result === 'failed'
+      ).length
+      const normalizedInferredFailed = Math.min(3, inferredFailedCount)
+
+      if (normalizedInferredFailed > currentFailedCount) {
+        project.failedVotingCount = normalizedInferredFailed
+        if (normalizedInferredFailed >= 3) {
+          project.status = 'refundable'
+        }
+
+        await prisma.project.update({
+          where: { id: project.id },
+          data: {
+            failedVotingCount: normalizedInferredFailed,
+            ...(normalizedInferredFailed >= 3 && { status: 'refundable' }),
+          },
+        })
       }
     }
 

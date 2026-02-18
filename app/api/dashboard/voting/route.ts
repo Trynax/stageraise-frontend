@@ -102,6 +102,9 @@ export async function GET(request: NextRequest) {
                 m => m.stage === round.milestoneStage
             )
             const userVote = round.votes[0]
+            const previousFailedCount = round.project.failedVotingCount || 0
+            let roundIsActive = round.isActive
+            let roundResult = round.result
             let resolvedYesVotes = normalizeStoredVoteValue(round.yesVotes)
             let resolvedNoVotes = normalizeStoredVoteValue(round.noVotes)
             let resolvedVotingEnd = round.votingEnded ? new Date(round.votingEnded) : null
@@ -109,7 +112,25 @@ export async function GET(request: NextRequest) {
             if (round.isActive) {
                 try {
                     const contractAddress = getStageRaiseAddress(round.project.chainId)
-                    const [yesVotesRaw, noVotesRaw, votingEndTimeRaw] = await Promise.all([
+                    const [isVotingOpen, milestoneStageRaw, failedMilestoneStageRaw, yesVotesRaw, noVotesRaw, votingEndTimeRaw] = await Promise.all([
+                        client.readContract({
+                            address: contractAddress,
+                            abi: stageRaiseABI,
+                            functionName: 'getProjectMileStoneVotingStatus',
+                            args: [round.project.projectId]
+                        }) as Promise<boolean>,
+                        client.readContract({
+                            address: contractAddress,
+                            abi: stageRaiseABI,
+                            functionName: 'getProjectMilestoneStage',
+                            args: [round.project.projectId]
+                        }) as Promise<number>,
+                        client.readContract({
+                            address: contractAddress,
+                            abi: stageRaiseABI,
+                            functionName: 'getProjectFailedMilestoneStage',
+                            args: [round.project.projectId]
+                        }) as Promise<number>,
                         client.readContract({
                             address: contractAddress,
                             abi: stageRaiseABI,
@@ -133,9 +154,95 @@ export async function GET(request: NextRequest) {
                     resolvedYesVotes = normalizeVotePower(yesVotesRaw)
                     resolvedNoVotes = normalizeVotePower(noVotesRaw)
                     resolvedVotingEnd = new Date(Number(votingEndTimeRaw) * 1000)
+
+                    const storedYesVotes = normalizeStoredVoteValue(round.yesVotes)
+                    const storedNoVotes = normalizeStoredVoteValue(round.noVotes)
+                    if (
+                        (resolvedYesVotes + resolvedNoVotes) === 0 &&
+                        (storedYesVotes + storedNoVotes) > 0
+                    ) {
+                        // After on-chain finalize, vote counters reset to zero.
+                        // Keep historical round totals from DB for ended-round UI.
+                        resolvedYesVotes = storedYesVotes
+                        resolvedNoVotes = storedNoVotes
+                    }
+
+                    const liveMilestoneStage = Number(milestoneStageRaw)
+                    const liveFailedStage = Number(failedMilestoneStageRaw)
+                    const votingWindowOpen = resolvedVotingEnd.getTime() > Date.now()
+                    roundIsActive = Boolean(isVotingOpen) && votingWindowOpen
+
+                    const projectUpdateData: Record<string, number | string> = {}
+                    if (round.project.currentMilestone !== liveMilestoneStage) {
+                        round.project.currentMilestone = liveMilestoneStage
+                        projectUpdateData.currentMilestone = liveMilestoneStage
+                    }
+                    if (previousFailedCount !== liveFailedStage) {
+                        round.project.failedVotingCount = liveFailedStage
+                        projectUpdateData.failedVotingCount = liveFailedStage
+                    }
+                    if (liveFailedStage >= 3 && round.project.status !== 'refundable') {
+                        round.project.status = 'refundable'
+                        projectUpdateData.status = 'refundable'
+                    }
+                    if (Object.keys(projectUpdateData).length > 0) {
+                        await prisma.project.update({
+                            where: { id: round.project.id },
+                            data: projectUpdateData
+                        })
+                    }
+
+                    if (!roundIsActive) {
+                        roundResult =
+                            liveMilestoneStage > round.milestoneStage
+                                ? 'passed'
+                                : liveFailedStage > previousFailedCount
+                                    ? 'failed'
+                                    : (resolvedYesVotes > resolvedNoVotes ? 'passed' : 'failed')
+
+                        await prisma.votingRound.update({
+                            where: { id: round.id },
+                            data: {
+                                isActive: false,
+                                result: roundResult,
+                                votingEnded: resolvedVotingEnd,
+                                yesVotes: resolvedYesVotes,
+                                noVotes: resolvedNoVotes,
+                                totalVoters: resolvedYesVotes + resolvedNoVotes,
+                            }
+                        })
+                    } else {
+                        await prisma.votingRound.update({
+                            where: { id: round.id },
+                            data: {
+                                isActive: true,
+                                result: 'ongoing',
+                                votingEnded: resolvedVotingEnd,
+                                yesVotes: resolvedYesVotes,
+                                noVotes: resolvedNoVotes,
+                                totalVoters: resolvedYesVotes + resolvedNoVotes,
+                            }
+                        })
+                    }
                 } catch {
                     // Fall back to database values if contract read fails.
                 }
+            }
+
+            if (roundIsActive && resolvedVotingEnd && resolvedVotingEnd.getTime() <= Date.now()) {
+                roundIsActive = false
+                roundResult = roundResult === 'ongoing'
+                    ? (resolvedYesVotes > resolvedNoVotes ? 'passed' : 'failed')
+                    : roundResult
+
+                await prisma.votingRound.update({
+                    where: { id: round.id },
+                    data: {
+                        isActive: false,
+                        result: roundResult,
+                        votingEnded: resolvedVotingEnd
+                    }
+                })
             }
 
             const totalVotes = resolvedYesVotes + resolvedNoVotes
@@ -145,7 +252,7 @@ export async function GET(request: NextRequest) {
             // Calculate time remaining if voting is ongoing
             let timeRemaining = null
             let votingEndTime: string | null = null
-            if (round.isActive) {
+            if (roundIsActive) {
                 const endTime = resolvedVotingEnd
                     ? new Date(resolvedVotingEnd)
                     : (() => {
@@ -190,9 +297,9 @@ export async function GET(request: NextRequest) {
                 milestoneTitle: milestone?.title || `Milestone ${round.milestoneStage}`,
                 totalMilestones: round.project.milestones.length,
                 funders: round.project.cachedTotalContributors || 0,
-                result: round.result,
-                isActive: round.isActive,
-                status: round.isActive ? 'ongoing' : 'ended',
+                result: roundResult,
+                isActive: roundIsActive,
+                status: roundIsActive ? 'ongoing' : 'ended',
                 yesVotes: resolvedYesVotes,
                 noVotes: resolvedNoVotes,
                 totalVotes,

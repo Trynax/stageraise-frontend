@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
 
         const skip = (page - 1) * limit
         const normalizedAddress = address.toLowerCase()
+        const now = new Date()
 
         // Get all contributions by the user with aggregated amounts per project
         const contributionsByProject = await prisma.contribution.groupBy({
@@ -45,7 +46,13 @@ export async function GET(request: NextRequest) {
                         orderBy: { stage: 'asc' }
                     },
                     votingRounds: {
-                        where: { isActive: true },
+                        where: {
+                            isActive: true,
+                            OR: [
+                                { votingEnded: null },
+                                { votingEnded: { gt: now } }
+                            ]
+                        },
                         orderBy: { createdAt: 'desc' },
                         take: 1,
                         include: {

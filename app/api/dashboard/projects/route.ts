@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
         }
 
         const skip = (page - 1) * limit
+        const now = new Date()
 
         const [projects, total] = await Promise.all([
             prisma.project.findMany({
@@ -28,7 +29,13 @@ export async function GET(request: NextRequest) {
                         orderBy: { stage: 'asc' }
                     },
                     votingRounds: {
-                        where: { isActive: true },
+                        where: {
+                            isActive: true,
+                            OR: [
+                                { votingEnded: null },
+                                { votingEnded: { gt: now } }
+                            ]
+                        },
                         orderBy: { createdAt: 'desc' },
                         take: 1
                     },

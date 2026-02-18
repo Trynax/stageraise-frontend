@@ -177,25 +177,36 @@ export async function POST(request: NextRequest) {
           }
         })
 
-        // Update project milestone stage
-        const newMilestoneStage = await client.readContract({
-          address: contractAddress,
-          abi: stageRaiseABI,
-          functionName: 'getProjectMilestoneStage',
-          args: [projectId]
-        }) as Promise<number>
+        // Update project milestone and failed voting counters from chain
+        const [newMilestoneStage, failedMilestoneStage] = await Promise.all([
+          client.readContract({
+            address: contractAddress,
+            abi: stageRaiseABI,
+            functionName: 'getProjectMilestoneStage',
+            args: [projectId]
+          }) as Promise<number>,
+          client.readContract({
+            address: contractAddress,
+            abi: stageRaiseABI,
+            functionName: 'getProjectFailedMilestoneStage',
+            args: [projectId]
+          }) as Promise<number>
+        ])
 
         await prisma.project.update({
           where: { id: project.id },
           data: {
-            currentMilestone: Number(newMilestoneStage)
+            currentMilestone: Number(newMilestoneStage),
+            failedVotingCount: Number(failedMilestoneStage),
+            ...(Number(failedMilestoneStage) >= 3 && { status: 'refundable' })
           }
         })
 
         return NextResponse.json({
           success: true,
           passed,
-          newMilestoneStage: Number(newMilestoneStage)
+          newMilestoneStage: Number(newMilestoneStage),
+          failedMilestoneStage: Number(failedMilestoneStage)
         })
       }
     }

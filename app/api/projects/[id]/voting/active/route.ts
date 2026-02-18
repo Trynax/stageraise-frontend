@@ -17,8 +17,6 @@ const client = createPublicClient({
   transport: http()
 })
 
-const CONTRACT_ADDRESS = getStageRaiseAddress(97)
-
 function normalizeVotePower(value: bigint): number {
   const parsed = Number.parseFloat(formatUnits(value, 18))
   if (!Number.isFinite(parsed)) return 0
@@ -64,33 +62,34 @@ export async function GET(
     }
 
     // Read voting status from contract
+    const contractAddress = getStageRaiseAddress(project.chainId || 97)
     const [isVotingOpen, currentStageRaw, votingEndTime, yesVotes, noVotes] = await Promise.all([
       client.readContract({
-        address: CONTRACT_ADDRESS,
+        address: contractAddress,
         abi: stageRaiseABI,
         functionName: 'getProjectMileStoneVotingStatus',
         args: [projectId]
       }) as Promise<boolean>,
       client.readContract({
-        address: CONTRACT_ADDRESS,
+        address: contractAddress,
         abi: stageRaiseABI,
         functionName: 'getProjectMilestoneStage',
         args: [projectId]
       }) as Promise<number>,
       client.readContract({
-        address: CONTRACT_ADDRESS,
+        address: contractAddress,
         abi: stageRaiseABI,
         functionName: 'getProjectVotingEndTime',
         args: [projectId]
       }) as Promise<bigint>,
       client.readContract({
-        address: CONTRACT_ADDRESS,
+        address: contractAddress,
         abi: stageRaiseABI,
         functionName: 'getProjectYesVotes',
         args: [projectId]
       }) as Promise<bigint>,
       client.readContract({
-        address: CONTRACT_ADDRESS,
+        address: contractAddress,
         abi: stageRaiseABI,
         functionName: 'getProjectNoVotes',
         args: [projectId]
@@ -98,9 +97,25 @@ export async function GET(
     ])
 
     const votingStatus: VotingStatusResult = { isVotingOpen }
-    const isOpen = votingStatus.isVotingOpen
+    const endTime = Number(votingEndTime)
+    const now = Math.floor(Date.now() / 1000)
+    const votingWindowOpen = endTime > now
+    const isOpen = votingStatus.isVotingOpen && votingWindowOpen
 
     if (!isOpen) {
+      if (project.votingRounds[0]) {
+        const endedRound = project.votingRounds[0]
+        await prisma.votingRound.update({
+          where: { id: endedRound.id },
+          data: {
+            isActive: false,
+            result: endedRound.result === 'ongoing'
+              ? (endedRound.yesVotes > endedRound.noVotes ? 'passed' : 'failed')
+              : endedRound.result,
+            votingEnded: endedRound.votingEnded || new Date(endTime * 1000),
+          },
+        })
+      }
       return NextResponse.json({
         success: true,
         isOpen: false,
@@ -128,8 +143,6 @@ export async function GET(
     const totalVotesDisplay = yesVotesDisplay + noVotesDisplay
 
     // Time remaining
-    const now = Math.floor(Date.now() / 1000)
-    const endTime = Number(votingEndTime)
     const secondsRemaining = Math.max(0, endTime - now)
     
     const timeRemaining = {
