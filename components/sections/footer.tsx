@@ -52,24 +52,24 @@ export function Footer() {
             <h3 className="font-bold text-lg mb-4">Quick link</h3>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">
-                  How it's works
-                </a>
+                <Link href="/how-it-works" className="text-gray-700 hover:text-gray-900 transition-colors">
+                  How it works
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">
+                <Link href="/about" className="text-gray-700 hover:text-gray-900 transition-colors">
                   About Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">
-                  Fund Project
-                </a>
+                <Link href="/projects" className="text-gray-700 hover:text-gray-900 transition-colors">
+                  Projects
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors">
-                  Funds project
-                </a>
+                <Link href="/votes" className="text-gray-700 hover:text-gray-900 transition-colors">
+                  Votes
+                </Link>
               </li>
             </ul>
           </div>
