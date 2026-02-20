@@ -32,7 +32,10 @@ export default function CreateProjectPage() {
         twitter: '',
         discord: '',
         telegram: '',
+        logoImage: null as File | null,
+        logoPreview: null as string | null,
         coverImage: null as File | null,
+        coverPreview: null as string | null,
         additionalImages: [] as File[]
     })
     const isMilestoneProject = formData.projectType === 'milestone'

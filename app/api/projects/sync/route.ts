@@ -34,6 +34,9 @@ interface SyncProjectMetadata {
   milestones?: unknown
   votingPeriodDays?: unknown
   category?: unknown
+  coverImageUrl?: unknown
+  logoUrl?: unknown
+  galleryImageUrls?: unknown
   websiteUrl?: unknown
   twitterUrl?: unknown
   discordUrl?: unknown
@@ -143,11 +146,16 @@ export async function POST(request: NextRequest) {
       currentMilestone: projectInfo.milestoneBased ? 1 : 0,
       failedVotingCount: 0,
       status: 'active',
-      cachedRaisedAmount: Number(projectInfo.raisedAmount) / 1e18,
-      cachedTotalContributors: Number(projectInfo.totalContributors),
-      ...(typeof metadata?.websiteUrl === 'string' && { websiteUrl: metadata.websiteUrl }),
-      ...(typeof metadata?.twitterUrl === 'string' && { twitterUrl: metadata.twitterUrl }),
-      ...(typeof metadata?.discordUrl === 'string' && { discordUrl: metadata.discordUrl }),
+        cachedRaisedAmount: Number(projectInfo.raisedAmount) / 1e18,
+        cachedTotalContributors: Number(projectInfo.totalContributors),
+        ...(typeof metadata?.coverImageUrl === 'string' && { coverImageUrl: metadata.coverImageUrl }),
+        ...(typeof metadata?.logoUrl === 'string' && { logoUrl: metadata.logoUrl }),
+        ...(Array.isArray(metadata?.galleryImageUrls) && {
+          galleryImageUrls: metadata.galleryImageUrls.filter((url): url is string => typeof url === 'string'),
+        }),
+        ...(typeof metadata?.websiteUrl === 'string' && { websiteUrl: metadata.websiteUrl }),
+        ...(typeof metadata?.twitterUrl === 'string' && { twitterUrl: metadata.twitterUrl }),
+        ...(typeof metadata?.discordUrl === 'string' && { discordUrl: metadata.discordUrl }),
       ...(typeof metadata?.telegramUrl === 'string' && { telegramUrl: metadata.telegramUrl }),
       ...(projectInfo.milestoneBased && projectInfo.milestoneCount > 0 && {
         milestones: {

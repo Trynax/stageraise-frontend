@@ -94,6 +94,25 @@ export default function ReviewStep({
         }
     }
 
+    const uploadMediaFiles = async (files: File[]) => {
+        if (!files.length) return []
+
+        const payload = new FormData()
+        files.forEach((file) => payload.append('files', file))
+
+        const response = await fetch('/api/upload/batch', {
+            method: 'POST',
+            body: payload
+        })
+
+        const data = await response.json()
+        if (!response.ok || !data?.success) {
+            throw new Error(data?.error || 'Failed to upload media files')
+        }
+
+        return Array.isArray(data.uploads) ? data.uploads : []
+    }
+
     const handleSubmit = async () => {
         if (!address) {
             alert('Please connect your wallet first')
@@ -144,39 +163,67 @@ export default function ReviewStep({
                 : []
 
             setTxStatus('success')
-            // Sync project to database
-            fetch('/api/projects/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    transactionHash: hash,
-                    chainId,
-                    metadata: {
-                        ...(tags.length > 0 && { tags }),
-                        websiteUrl: formData?.website,
-                        twitterUrl: formData?.twitter,
-                        discordUrl: formData?.discord,
-                        telegramUrl: formData?.telegram,
-                        ...(milestones.length > 0 && { milestones })
+
+            void (async () => {
+                try {
+                    let coverImageUrl: string | undefined
+                    let logoUrl: string | undefined
+                    let galleryImageUrls: string[] | undefined
+
+                    try {
+                        const [logoUploads, coverUploads, galleryUploads] = await Promise.all([
+                            formData?.logoImage ? uploadMediaFiles([formData.logoImage]) : Promise.resolve([]),
+                            formData?.coverImage ? uploadMediaFiles([formData.coverImage]) : Promise.resolve([]),
+                            Array.isArray(formData?.additionalImages) && formData.additionalImages.length > 0
+                                ? uploadMediaFiles(formData.additionalImages)
+                                : Promise.resolve([])
+                        ])
+
+                        logoUrl = typeof logoUploads?.[0]?.url === 'string' ? logoUploads[0].url : undefined
+                        coverImageUrl = typeof coverUploads?.[0]?.url === 'string' ? coverUploads[0].url : undefined
+                        galleryImageUrls = Array.isArray(galleryUploads)
+                            ? galleryUploads
+                                .map((upload: any) => upload?.url)
+                                .filter((url: unknown): url is string => typeof url === 'string')
+                            : undefined
+                    } catch (uploadError) {
+                        console.error('Failed to upload project media:', uploadError)
                     }
-                })
-            })
-            .then(res => res.json())
-            .then(() => {
-                // Close modal and move to success step after a delay
-                setTimeout(() => {
-                    setShowTxModal(false)
-                    nextStep()
-                }, 2000)
-            })
-            .catch(error => {
-                console.error('Failed to sync project:', error)
-                // Still move to success step even if sync fails
-                setTimeout(() => {
-                    setShowTxModal(false)
-                    nextStep()
-                }, 2000)
-            })
+
+                    const syncResponse = await fetch('/api/projects/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            transactionHash: hash,
+                            chainId,
+                            metadata: {
+                                ...(tags.length > 0 && { tags }),
+                                websiteUrl: formData?.website,
+                                twitterUrl: formData?.twitter,
+                                discordUrl: formData?.discord,
+                                telegramUrl: formData?.telegram,
+                                ...(typeof logoUrl === 'string' && { logoUrl }),
+                                ...(typeof coverImageUrl === 'string' && { coverImageUrl }),
+                                ...(Array.isArray(galleryImageUrls) && galleryImageUrls.length > 0 && { galleryImageUrls }),
+                                ...(milestones.length > 0 && { milestones })
+                            }
+                        })
+                    })
+
+                    if (!syncResponse.ok) {
+                        const syncBody = await syncResponse.json().catch(() => ({}))
+                        throw new Error(syncBody?.error || 'Failed to sync project')
+                    }
+                } catch (syncError) {
+                    console.error('Failed to sync project:', syncError)
+                } finally {
+                    // Close modal and move to success step after a delay
+                    setTimeout(() => {
+                        setShowTxModal(false)
+                        nextStep()
+                    }, 2000)
+                }
+            })()
         }
     }, [isSuccess, hash, chainId, formData, nextStep, isMilestoneProject])
 

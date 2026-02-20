@@ -56,14 +56,16 @@ export default function ProjectDetailPage() {
         }
     }, [projectId, fetchProject])
 
-    // Dynamic countdown timer
+    // Dynamic countdown timer (to funding start for upcoming projects, to funding end for live funding)
     useEffect(() => {
         if (!project?.fundingDeadline) return
 
         const calculateTimeLeft = () => {
             const now = new Date().getTime()
-            const deadline = new Date(project.fundingDeadline).getTime()
-            const difference = deadline - now
+            const start = project?.fundingStart ? new Date(project.fundingStart).getTime() : null
+            const end = new Date(project.fundingDeadline).getTime()
+            const target = start && now < start ? start : end
+            const difference = target - now
 
             if (difference > 0) {
                 setTimeLeft({
@@ -81,7 +83,7 @@ export default function ProjectDetailPage() {
         const timer = setInterval(calculateTimeLeft, 1000)
 
         return () => clearInterval(timer)
-    }, [project?.fundingDeadline])
+    }, [project?.fundingDeadline, project?.fundingStart])
 
 
     const userContribution = useMemo(() => {
@@ -128,10 +130,17 @@ export default function ProjectDetailPage() {
         ? Math.round((project.cachedRaisedAmount / project.fundingTarget) * 100) 
         : 0
 
-    // Determine if we're still in funding phase (deadline not passed)
-    const isFundingPhase = new Date(project.fundingDeadline) > new Date()
+    const nowDate = new Date()
+    const fundingStartDate = project?.fundingStart ? new Date(project.fundingStart) : null
+    const fundingEndDate = project?.fundingDeadline ? new Date(project.fundingDeadline) : null
+    const isUpcoming = Boolean(fundingStartDate && fundingStartDate > nowDate)
+    const isFundingPhase = Boolean(
+        fundingEndDate &&
+        fundingEndDate > nowDate &&
+        (!fundingStartDate || fundingStartDate <= nowDate)
+    )
     // Determine if milestone phase has started (funding ended and milestone-based)
-    const isMilestonePhase = !isFundingPhase && project.milestones?.length > 0
+    const isMilestonePhase = Boolean(fundingEndDate && fundingEndDate <= nowDate && project.milestones?.length > 0)
     const isMilestoneBasedProject =
         project?.milestoneBased === true || (project?.milestones?.length || 0) > 0
 
@@ -270,9 +279,14 @@ export default function ProjectDetailPage() {
                                     {isFundingPhase && ` (${amountRaisedPercent}%)`}
                                 </span>
                             </div>
-                            {isFundingPhase ? (
+                            {isUpcoming ? (
                                 <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
-                                    <span className="text-sm text-gray-500 whitespace-nowrap">Time Left</span>
+                                    <span className="text-sm text-gray-500 whitespace-nowrap">Funding Starts In</span>
+                                    <span className="font-mono whitespace-nowrap font-semibold">{formatTimeLeft()}</span>
+                                </div>
+                            ) : isFundingPhase ? (
+                                <div className="flex flex-col items-center gap-4 shrink-0 min-w-[140px] md:min-w-0 md:flex-1">
+                                    <span className="text-sm text-gray-500 whitespace-nowrap">Funding Ends In</span>
                                     <span className="font-mono whitespace-nowrap font-semibold">{formatTimeLeft()}</span>
                                 </div>
                             ) : (
