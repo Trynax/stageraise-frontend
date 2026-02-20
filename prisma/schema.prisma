@@ -45,6 +45,7 @@ model Project {
   
   // Funding parameters (cached from contract)
   fundingTarget      Float
+  fundingStart       DateTime
   fundingDeadline    DateTime
   minContribution    Float
   maxContribution    Float

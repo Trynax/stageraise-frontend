@@ -1,8 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
+interface MilestoneInput {
+  title?: string
+  description?: string
+  deliverables?: Prisma.InputJsonValue
+}
 
-function serializeData(data: any) {
+interface CreateProjectBody {
+  projectId?: number
+  contractAddress?: string
+  chainId?: number
+  ownerAddress?: string
+  name?: string
+  category?: string
+  tags?: string[]
+  description?: string
+  coverImageUrl?: string
+  logoUrl?: string
+  galleryImageUrls?: string[]
+  websiteUrl?: string
+  twitterUrl?: string
+  discordUrl?: string
+  telegramUrl?: string
+  fundingTarget?: number
+  fundingStart?: string
+  fundingEnd?: string
+  fundingDeadline?: string
+  minContribution?: number
+  maxContribution?: number
+  votingPeriodDays?: number
+  paymentToken?: string
+  milestones?: MilestoneInput[]
+}
+
+function serializeData<T>(data: T): T {
   return JSON.parse(JSON.stringify(data, (key, value) =>
     typeof value === 'bigint' ? Number(value) : value
   ))
@@ -84,7 +117,29 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json() as CreateProjectBody
+    const defaultFundingStart = new Date()
+    const defaultFundingEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    const resolvedFundingStart = body.fundingStart
+      ? new Date(body.fundingStart)
+      : defaultFundingStart
+    const resolvedFundingEnd = body.fundingEnd
+      ? new Date(body.fundingEnd)
+      : body.fundingDeadline
+        ? new Date(body.fundingDeadline)
+        : defaultFundingEnd
+    if (Number.isNaN(resolvedFundingStart.getTime()) || Number.isNaN(resolvedFundingEnd.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid fundingStart or fundingEnd date' },
+        { status: 400 }
+      )
+    }
+    if (resolvedFundingEnd.getTime() <= resolvedFundingStart.getTime()) {
+      return NextResponse.json(
+        { error: 'fundingEnd must be later than fundingStart' },
+        { status: 400 }
+      )
+    }
 
     if (!body.projectId || !body.contractAddress || !body.chainId || !body.ownerAddress) {
       return NextResponse.json(
@@ -128,7 +183,8 @@ export async function POST(request: NextRequest) {
         telegramUrl: body.telegramUrl,
         
         fundingTarget: body.fundingTarget || 0,
-        fundingDeadline: body.fundingDeadline ? new Date(body.fundingDeadline) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        fundingStart: resolvedFundingStart,
+        fundingDeadline: resolvedFundingEnd,
         minContribution: body.minContribution || 0,
         maxContribution: body.maxContribution || 0,
         votingPeriodDays: body.votingPeriodDays || 7,
@@ -138,13 +194,13 @@ export async function POST(request: NextRequest) {
         cachedTotalContributors: 0,
         status: 'active',
 
-        ...(body.milestones && body.milestones.length > 0 && {
+        ...(Array.isArray(body.milestones) && body.milestones.length > 0 && {
           milestones: {
-            create: body.milestones.map((m: any, idx: number) => ({
+            create: body.milestones.map((m: MilestoneInput, idx: number) => ({
               stage: idx + 1,
-              title: m.title,
-              description: m.description,
-              deliverables: m.deliverables || []
+              title: m.title || `Milestone ${idx + 1}`,
+              description: m.description || '',
+              deliverables: m.deliverables ?? []
             }))
           }
         })

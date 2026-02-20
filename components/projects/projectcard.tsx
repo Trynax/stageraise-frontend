@@ -144,6 +144,11 @@ export default function ProjectCard({ project, variant = 'default' }: ProjectCar
             alt={title} 
             className="w-full h-48 object-cover rounded-2xl"
           />
+          {isFundingNotStarted && (
+            <div className="absolute top-3 right-3 bg-[#DC6803] text-white px-3 py-1 rounded-full text-xs font-semibold border border-dark">
+              Upcoming
+            </div>
+          )}
           {type === 'Milestone Based' && (
             <div className="absolute top-18 left-0 bg-linear-to-br from-deepGreen to-deepGreen text-secondary px-18 py-1 transform -rotate-35 origin-top-left -translate-x-10 translate-y-10 shadow-lg">
               <span className="text-sm font-semibold">{type}</span>

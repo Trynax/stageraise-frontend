@@ -89,6 +89,7 @@ export async function GET(request: NextRequest) {
                 coverImageUrl: project.coverImageUrl,
                 logoUrl: project.logoUrl,
                 fundingTarget: project.fundingTarget,
+                fundingStart: project.fundingStart,
                 fundingDeadline: project.fundingDeadline,
                 cachedRaisedAmount: project.cachedRaisedAmount || 0,
                 cachedTotalContributors: project.cachedTotalContributors || 0,

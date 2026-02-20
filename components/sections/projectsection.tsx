@@ -2,12 +2,19 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import ProjectCard from "@/components/projects/projectcard"
 
+interface HomepageProject {
+    projectId: number
+    fundingStart?: string
+    fundingDeadline?: string
+    createdAt?: string
+    status?: string | null
+}
+
 export function ProjectSection () {
-    const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
-    const [projects, setProjects] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'completed'>('active');
+    const [projects, setProjects] = useState<HomepageProject[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -30,12 +37,17 @@ export function ProjectSection () {
 
     const filteredProjects = projects
         .filter(project => {
-            const fundingDeadline = new Date(project.fundingDeadline);
+            const fundingStart = new Date(project.fundingStart || project.createdAt || 0);
+            const fundingDeadline = new Date(project.fundingDeadline || 0);
             const now = new Date();
+            const isUpcoming = fundingStart > now;
             const isFundingActive = fundingDeadline > now;
+
+            if (activeTab === 'upcoming') {
+                return isUpcoming && (project.status === 'active' || !project.status);
+            }
             if (activeTab === 'active') {
-        
-                return isFundingActive && (project.status === 'active' || !project.status);
+                return !isUpcoming && isFundingActive && (project.status === 'active' || !project.status);
             }
             return !isFundingActive || project.status === 'completed' || project.status === 'failed';
         })
@@ -62,6 +74,16 @@ export function ProjectSection () {
                 Active
             </button>
             <button
+                onClick={() => setActiveTab('upcoming')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'upcoming'
+                    ? 'bg-secondary text-dark'
+                    : 'text-[#9CA3AF] hover:text-gray-800'
+                }`}>
+            
+                Upcoming
+            </button>
+            <button
                 onClick={() => setActiveTab('completed')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'completed'
@@ -81,7 +103,10 @@ export function ProjectSection () {
                 <>
                     <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-8 lg:px-32 mx-auto">
                         {filteredProjects.map((project) => (
-                            <ProjectCard key={project.projectId} project={project} />
+                            <ProjectCard
+                                key={project.projectId}
+                                project={{ ...project, status: project.status ?? undefined }}
+                            />
                         ))}
                     </div>
 
@@ -103,15 +128,21 @@ export function ProjectSection () {
                             </svg>
                         </div>
                         <h3 className="text-2xl font-bold mb-3">
-                            {activeTab === 'active' ? 'No Active Projects Yet' : 'No Completed Projects Yet'}
+                            {activeTab === 'active'
+                                ? 'No Active Projects Yet'
+                                : activeTab === 'upcoming'
+                                    ? 'No Upcoming Projects Yet'
+                                    : 'No Completed Projects Yet'}
                         </h3>
                         <p className="text-gray-600 mb-6">
                             {activeTab === 'active' 
                                 ? "Be the first to launch on StageRaise — create milestone-based funding with community verification."
-                                : "No projects have completed their funding yet. Check back later!"
+                                : activeTab === 'upcoming'
+                                    ? "No projects are scheduled for future funding windows yet."
+                                    : "No projects have completed their funding yet. Check back later!"
                             }
                         </p>
-                        {activeTab === 'active' && (
+                        {(activeTab === 'active' || activeTab === 'upcoming') && (
                             <Link 
                                 href="/create" 
                                 className="inline-block bg-secondary text-dark font-semibold px-8 py-3 rounded-2xl  hover:scale-105 transition-transform"
