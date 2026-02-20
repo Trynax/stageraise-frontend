@@ -386,7 +386,7 @@ export default function ProjectDetailPage() {
                                     contractProjectId={project.projectId}
                                     projectTitle={project.name}
                                     failedVotingCount={project.failedVotingCount || 0}
-                                    isFundingPhase={isFundingPhase}
+                                    isFundingPhase={isFundingPhase || isUpcoming}
                                     isCreator={isCreator}
                                     activeVotingStage={project.activeVoting?.stage ?? null}
                                     onVoteSetupSuccess={fetchProject}

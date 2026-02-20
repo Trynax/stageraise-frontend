@@ -62,6 +62,10 @@ export async function GET(request: NextRequest) {
             const totalMilestones = project.milestones.length
             const currentMilestone = project.currentMilestone
             const activeVoting = project.votingRounds[0]
+            const fundingStart = project.fundingStart ? new Date(project.fundingStart) : null
+            const fundingEnd = new Date(project.fundingDeadline)
+            const isUpcoming = Boolean(fundingStart && fundingStart > now)
+            const isFundingLive = fundingEnd > now && !isUpcoming
 
             // Determine project state
             let displayStatus = 'funding' // default
@@ -76,6 +80,9 @@ export async function GET(request: NextRequest) {
             } else if (activeVoting) {
                 displayStatus = 'voting'
                 milestoneStatus = `${currentMilestone}/${totalMilestones} Milestone Voting`
+            } else if (isUpcoming || isFundingLive) {
+                displayStatus = 'funding'
+                milestoneStatus = null
             } else if (currentMilestone > 0) {
                 displayStatus = 'in_progress'
                 milestoneStatus = `${currentMilestone}/${totalMilestones} Milestone In Progress`
