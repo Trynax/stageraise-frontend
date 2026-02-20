@@ -19,6 +19,12 @@ export default function ProjectTypeStep({
     totalSteps
 }: ProjectTypeStepProps) {
     const [selectedType, setSelectedType] = useState(formData.projectType || '')
+    const stepCountDisplay =
+        selectedType === 'milestone'
+            ? 5
+            : selectedType === 'traditional'
+                ? 4
+                : '?'
 
     const handleContinue = () => {
         if (selectedType) {
@@ -52,7 +58,7 @@ export default function ProjectTypeStep({
                             <p className="text-gray-600">Select the type of project you want to create</p>
                         </div>
                         <div className="flex flex-col items-center gap-2">
-                            <span className="text-lg font-semibold self-end">{currentStep}/{totalSteps}</span>
+                            <span className="text-lg font-semibold self-end">{currentStep}/{stepCountDisplay}</span>
                             <button
                                 onClick={handleContinue}
                                 disabled={!selectedType}
@@ -72,7 +78,7 @@ export default function ProjectTypeStep({
                 <div className="flex flex-col md:hidden sticky top-16 z-30 bg-primary py-4 -mx-4 px-4 justify-between items-start gap-4 mb-10">
                     <div className="flex justify-between items-center w-full">
                         <h2 className="text-3xl font-bold">Project Type</h2>
-                        <span className="text-lg">{currentStep}/{totalSteps}</span>
+                        <span className="text-lg">{currentStep}/{stepCountDisplay}</span>
                     </div>
                     <div className="flex flex-col items-center gap-2">
                         <p className="text-gray-600">Select the type of project you want to create</p>    
