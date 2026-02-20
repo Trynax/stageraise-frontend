@@ -17,7 +17,7 @@ export default function CreateProjectPage() {
     const [formData, setFormData] = useState({
         projectType: '',
         projectName: '',
-        tagline: '',
+        tags: '',
         description: '',
         fundraisingTarget: '',
         fundingStart: '',

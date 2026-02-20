@@ -132,14 +132,14 @@ export default function ProjectDetailsStep({
                         />
                     </div>
                     <div>
-                        <label className="block font-semibold mb-2">Tagline</label>
+                        <label className="block font-semibold mb-2">Tags</label>
                         <input
                             type="text"
                             required
-                            value={formData.tagline}
-                            onChange={(e) => updateFormData({ tagline: e.target.value })}
+                            value={formData.tags}
+                            onChange={(e) => updateFormData({ tags: e.target.value })}
                             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-secondary focus:outline-none"
-                            placeholder="A brief one-sentence summary of your project"
+                            placeholder="DeFi, Infrastructure, AI"
                         />
                     </div>
                 </div>

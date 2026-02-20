@@ -46,6 +46,11 @@ export default function ReviewStep({
         if (Number.isNaN(parsed.getTime())) return 'Not set'
         return parsed.toLocaleString()
     }
+    const parseTags = (value: string) =>
+        value
+            .split(',')
+            .map((tag) => tag.trim())
+            .filter((tag, index, arr) => tag.length > 0 && arr.indexOf(tag) === index)
 
     const openEditModal = (field: string, value: any) => {
         setEditModal({ isOpen: true, field, value })
@@ -149,8 +154,8 @@ export default function ReviewStep({
             if (handledSuccessHashRef.current === hash) return
             handledSuccessHashRef.current = hash
 
-            const tags = typeof formData?.tagline === 'string'
-                ? formData.tagline.split(',').map((t: string) => t.trim()).filter(Boolean)
+            const tags = typeof formData?.tags === 'string'
+                ? parseTags(formData.tags)
                 : []
 
             const milestones = isMilestoneProject && Array.isArray(formData?.milestones)
@@ -340,14 +345,24 @@ export default function ReviewStep({
                     <div className="flex justify-between items-center mb-2">
                         <p className="font-semibold">Tags</p>
                         <button 
-                            onClick={() => openEditModal('tagline', formData.tagline)}
+                            onClick={() => openEditModal('tags', formData.tags)}
                             className="text-sm border border-dark px-3 py-1 rounded-lg hover:bg-gray-100 flex gap-1 items-center"
                         >
                             <span>Edit</span>
                             <Image src={"/icons/edit.svg"} alt="Edit" width={24} height={24} />
                         </button>
                     </div>
-                    <p className="text-sm">{formData.tagline || 'Not set'}</p>
+                    {typeof formData.tags === 'string' && parseTags(formData.tags).length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                            {parseTags(formData.tags).map((tag) => (
+                                <span key={tag} className="text-xs px-2 py-1 border border-dark rounded-full">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm">Not set</p>
+                    )}
                 </div>
 
                 <div className="border-t pt-4">
@@ -568,7 +583,7 @@ export default function ReviewStep({
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">
                                 {editModal.field === 'projectName' && 'Edit title'}
-                                {editModal.field === 'tagline' && 'Edit tags'}
+                                {editModal.field === 'tags' && 'Edit tags'}
                                 {editModal.field === 'description' && 'Edit project description'}
                                 {editModal.field === 'fundraisingTarget' && 'Edit Fundraising Target'}
                                 {editModal.field === 'fundingStart' && 'Edit Funding Start'}
@@ -701,7 +716,7 @@ export default function ReviewStep({
                                 <div>
                                     <label className="block font-semibold mb-2">
                                         {editModal.field === 'projectName' && 'Title'}
-                                        {editModal.field === 'tagline' && 'Tags'}
+                                        {editModal.field === 'tags' && 'Tags (comma-separated)'}
                                         {editModal.field === 'numberOfMilestones' && 'Number of Milestones'}
                                         {editModal.field === 'votingPeriod' && 'Voting Period (days)'}
                                         {editModal.field === 'walletAddress' && 'Wallet Address'}

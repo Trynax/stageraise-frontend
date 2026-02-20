@@ -396,7 +396,7 @@ export default function ProjectDetailPage() {
                             {activeTab === 'voting' && (
                                 <VotingTab 
                                     votingHistory={project.votingHistory || []}
-                                    projectTitle={project.tagline}
+                                    projectTitle={project.name}
                                     projectImage={project.logoUrl}
                                     projectDescription={project.description}
                                     totalMilestones={project.milestones?.length || 0}
