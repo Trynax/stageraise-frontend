@@ -203,6 +203,9 @@ export default function ReviewStep({
                             chainId,
                             metadata: {
                                 ...(tags.length > 0 && { tags }),
+                                ...(isMilestoneProject && Number(formData?.votingPeriod) > 0 && {
+                                    votingPeriodDays: Number(formData.votingPeriod)
+                                }),
                                 websiteUrl: formData?.website,
                                 twitterUrl: formData?.twitter,
                                 discordUrl: formData?.discord,

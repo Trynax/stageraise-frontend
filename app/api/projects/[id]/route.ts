@@ -24,6 +24,51 @@ function normalizeStoredVoteValue(value: number): number {
   return value
 }
 
+interface ProjectByIdMilestoneShape {
+  timeForMilestoneVotingProcess?: unknown
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'bigint') {
+    const converted = Number(value)
+    return Number.isFinite(converted) ? converted : null
+  }
+  return null
+}
+
+function extractVotingPeriodSeconds(projectByIdData: unknown): number | null {
+  if (Array.isArray(projectByIdData)) {
+    const milestoneTuple = projectByIdData[1]
+    if (Array.isArray(milestoneTuple)) {
+      const fromTuple = toNumber(milestoneTuple[0])
+      if (fromTuple && fromTuple > 0) return fromTuple
+    }
+    if (milestoneTuple && typeof milestoneTuple === 'object') {
+      const fromTupleNamed = toNumber(
+        (milestoneTuple as ProjectByIdMilestoneShape).timeForMilestoneVotingProcess
+      )
+      if (fromTupleNamed && fromTupleNamed > 0) return fromTupleNamed
+    }
+  }
+
+  if (projectByIdData && typeof projectByIdData === 'object') {
+    const milestone = (projectByIdData as { milestone?: unknown }).milestone
+    if (Array.isArray(milestone)) {
+      const fromNamedTuple = toNumber(milestone[0])
+      if (fromNamedTuple && fromNamedTuple > 0) return fromNamedTuple
+    }
+    if (milestone && typeof milestone === 'object') {
+      const fromNamedObject = toNumber(
+        (milestone as ProjectByIdMilestoneShape).timeForMilestoneVotingProcess
+      )
+      if (fromNamedObject && fromNamedObject > 0) return fromNamedObject
+    }
+  }
+
+  return null
+}
+
 async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
   try {
     const contractAddress = getStageRaiseAddress(chainId)
@@ -32,7 +77,7 @@ async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
       transport: http(),
     })
 
-    const [isVotingOpen, milestoneStageRaw, failedMilestoneStageRaw, votingEndTimeRaw, yesVotesRaw, noVotesRaw] = await Promise.all([
+    const [isVotingOpen, milestoneStageRaw, failedMilestoneStageRaw, votingEndTimeRaw, yesVotesRaw, noVotesRaw, projectByIdData] = await Promise.all([
       client.readContract({
         address: contractAddress,
         abi: stageRaiseABI,
@@ -69,7 +114,18 @@ async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
         functionName: 'getProjectNoVotes',
         args: [projectId],
       }) as Promise<bigint>,
+      client.readContract({
+        address: contractAddress,
+        abi: stageRaiseABI,
+        functionName: 'projectById',
+        args: [projectId],
+      }) as Promise<unknown>,
     ])
+
+    const votingPeriodSeconds = extractVotingPeriodSeconds(projectByIdData)
+    const votingPeriodDays = Number.isFinite(votingPeriodSeconds) && votingPeriodSeconds > 0
+      ? Math.max(1, Math.ceil(votingPeriodSeconds / (24 * 60 * 60)))
+      : null
 
     return {
       isVotingOpen,
@@ -78,6 +134,7 @@ async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
       votingEnded: new Date(Number(votingEndTimeRaw) * 1000),
       yesVotes: normalizeVotePower(yesVotesRaw),
       noVotes: normalizeVotePower(noVotesRaw),
+      votingPeriodDays,
     }
   } catch {
     return null
@@ -338,6 +395,14 @@ export async function GET(
       if (project.currentMilestone !== liveSnapshot.milestoneStage) {
         project.currentMilestone = liveSnapshot.milestoneStage
         projectUpdateData.currentMilestone = liveSnapshot.milestoneStage
+      }
+      if (
+        typeof liveSnapshot.votingPeriodDays === 'number' &&
+        liveSnapshot.votingPeriodDays > 0 &&
+        project.votingPeriodDays !== liveSnapshot.votingPeriodDays
+      ) {
+        project.votingPeriodDays = liveSnapshot.votingPeriodDays
+        projectUpdateData.votingPeriodDays = liveSnapshot.votingPeriodDays
       }
       if (previousFailedCount !== liveSnapshot.failedMilestoneStage) {
         project.failedVotingCount = liveSnapshot.failedMilestoneStage

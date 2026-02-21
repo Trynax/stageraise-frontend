@@ -15,11 +15,56 @@ const client = createPublicClient({
 })
 
 interface ProjectByIdMilestoneShape {
-  timeForMilestoneVotingProcess?: bigint | number
+  timeForMilestoneVotingProcess?: unknown
 }
 
 interface ProjectByIdContractResult {
-  milestone?: ProjectByIdMilestoneShape
+  milestone?: unknown
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'bigint') {
+    const converted = Number(value)
+    return Number.isFinite(converted) ? converted : null
+  }
+  return null
+}
+
+function extractVotingPeriodSeconds(projectByIdData: ProjectByIdContractResult | readonly unknown[]): number | null {
+  const fromNamedMilestone = (() => {
+    if (!projectByIdData || typeof projectByIdData !== 'object' || Array.isArray(projectByIdData)) return null
+    const milestone = (projectByIdData as ProjectByIdContractResult).milestone
+    if (!milestone) return null
+
+    if (Array.isArray(milestone)) {
+      return toNumber(milestone[0])
+    }
+
+    if (typeof milestone === 'object') {
+      return toNumber((milestone as ProjectByIdMilestoneShape).timeForMilestoneVotingProcess)
+    }
+
+    return null
+  })()
+
+  if (fromNamedMilestone && fromNamedMilestone > 0) return fromNamedMilestone
+
+  if (Array.isArray(projectByIdData)) {
+    const milestoneTuple = projectByIdData[1]
+    if (Array.isArray(milestoneTuple)) {
+      const fromTuple = toNumber(milestoneTuple[0])
+      if (fromTuple && fromTuple > 0) return fromTuple
+    }
+    if (milestoneTuple && typeof milestoneTuple === 'object') {
+      const fromTupleNamed = toNumber(
+        (milestoneTuple as ProjectByIdMilestoneShape).timeForMilestoneVotingProcess
+      )
+      if (fromTupleNamed && fromTupleNamed > 0) return fromTupleNamed
+    }
+  }
+
+  return null
 }
 
 interface MilestoneMetadataInput {
@@ -109,15 +154,10 @@ export async function POST(request: NextRequest) {
         abi: stageRaiseABI,
         functionName: 'projectById',
         args: [projectId]
-      }) as Promise<ProjectByIdContractResult>
+      }) as Promise<ProjectByIdContractResult | readonly unknown[]>
     ])
 
-    const votingPeriodSecondsRaw = projectByIdData?.milestone?.timeForMilestoneVotingProcess
-    const votingPeriodSeconds = typeof votingPeriodSecondsRaw === 'bigint'
-      ? Number(votingPeriodSecondsRaw)
-      : typeof votingPeriodSecondsRaw === 'number'
-        ? votingPeriodSecondsRaw
-        : Number.NaN
+    const votingPeriodSeconds = extractVotingPeriodSeconds(projectByIdData)
     const votingPeriodFromChainDays = Number.isFinite(votingPeriodSeconds) && votingPeriodSeconds > 0
       ? Math.max(1, Math.ceil(votingPeriodSeconds / (24 * 60 * 60)))
       : null
