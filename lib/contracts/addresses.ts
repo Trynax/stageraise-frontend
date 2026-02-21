@@ -2,9 +2,12 @@ import { bscTestnet } from 'wagmi/chains'
 
 export const supportedChains = [bscTestnet] as const
 
+const STAGERAISE_BSC_TESTNET_ADDRESS =
+  (process.env.NEXT_PUBLIC_STAGERAISE_CONTRACT_BSC_TESTNET as `0x${string}` | undefined) ??
+  '0x5e624d31bC13b3cE5405e6406DC77Ec0D0743e1a'
 
 export const STAGERAISE_ADDRESSES = {
-  [bscTestnet.id]: '0x5e624d31bC13b3cE5405e6406DC77Ec0D0743e1a',
+  [bscTestnet.id]: STAGERAISE_BSC_TESTNET_ADDRESS,
 } as const
 
 // Stablecoin addresses per chain
