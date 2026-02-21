@@ -123,7 +123,11 @@ async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
     ])
 
     const votingPeriodSeconds = extractVotingPeriodSeconds(projectByIdData)
-    const votingPeriodDays = Number.isFinite(votingPeriodSeconds) && votingPeriodSeconds > 0
+    const hasValidVotingPeriod =
+      typeof votingPeriodSeconds === 'number' &&
+      Number.isFinite(votingPeriodSeconds) &&
+      votingPeriodSeconds > 0
+    const votingPeriodDays = hasValidVotingPeriod
       ? Math.max(1, Math.ceil(votingPeriodSeconds / (24 * 60 * 60)))
       : null
 

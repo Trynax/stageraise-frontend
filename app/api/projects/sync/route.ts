@@ -158,7 +158,11 @@ export async function POST(request: NextRequest) {
     ])
 
     const votingPeriodSeconds = extractVotingPeriodSeconds(projectByIdData)
-    const votingPeriodFromChainDays = Number.isFinite(votingPeriodSeconds) && votingPeriodSeconds > 0
+    const hasValidVotingPeriod =
+      typeof votingPeriodSeconds === 'number' &&
+      Number.isFinite(votingPeriodSeconds) &&
+      votingPeriodSeconds > 0
+    const votingPeriodFromChainDays = hasValidVotingPeriod
       ? Math.max(1, Math.ceil(votingPeriodSeconds / (24 * 60 * 60)))
       : null
     const metadataVotingPeriodDays = Number(metadata?.votingPeriodDays)
