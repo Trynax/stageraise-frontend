@@ -62,10 +62,10 @@ export function ProjectSection () {
                         }}>Built to Deliver</span></h1>
 
 
-            <div className="border border-dark flex rounded-lg md:w-92 mx-auto mt-12"> 
+            <div className="mt-12 mx-4 sm:mx-auto flex w-[calc(100%-2rem)] max-w-md rounded-lg border border-dark p-1"> 
                <button
                 onClick={() => setActiveTab('active')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'active'
                     ? 'bg-secondary text-dark'
                     : 'text-[#9CA3AF] hover:text-gray-800'
@@ -75,7 +75,7 @@ export function ProjectSection () {
             </button>
             <button
                 onClick={() => setActiveTab('upcoming')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'upcoming'
                     ? 'bg-secondary text-dark'
                     : 'text-[#9CA3AF] hover:text-gray-800'
@@ -85,7 +85,7 @@ export function ProjectSection () {
             </button>
             <button
                 onClick={() => setActiveTab('completed')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'completed'
                     ? 'bg-secondary text-dark'
                     : 'text-[#9CA3AF] hover:text-gray-800'
