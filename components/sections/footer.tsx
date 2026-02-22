@@ -23,8 +23,8 @@ export function Footer() {
             
 
             <div className="flex gap-3">
-              <a 
-                href="#" 
+              <a target='blank' 
+                href="https://x.com/StageRaise" 
                 className="w-12 h-12 bg-deepGreen hover:opacity-90 rounded-xl flex items-center justify-center transition-colors"
                 aria-label="Twitter"
               >
