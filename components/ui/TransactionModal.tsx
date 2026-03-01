@@ -14,6 +14,7 @@ export type TransactionType =
 export type TransactionStatus = 
   | 'pending'      // Waiting for user to sign
   | 'confirming'   // Transaction submitted, waiting for confirmation
+  | 'finalizing'   // Post-confirmation sync/finalization
   | 'success'      // Transaction confirmed
   | 'error'        // Transaction failed
 
@@ -32,6 +33,7 @@ const TRANSACTION_CONFIG = {
     title: 'Creating Project',
     pendingMessage: 'Please confirm the transaction in your wallet...',
     confirmingMessage: 'Your project is being created on the blockchain...',
+    finalizingMessage: 'Finalizing project setup and syncing data...',
     successMessage: 'Project created successfully!',
     icon: '🚀'
   },
@@ -39,6 +41,7 @@ const TRANSACTION_CONFIG = {
     title: 'Funding Project',
     pendingMessage: 'Please confirm the transaction in your wallet...',
     confirmingMessage: 'Your contribution is being processed...',
+    finalizingMessage: 'Finalizing contribution details...',
     successMessage: 'Contribution successful!',
     icon: '💰'
   },
@@ -46,6 +49,7 @@ const TRANSACTION_CONFIG = {
     title: 'Submitting Vote',
     pendingMessage: 'Please confirm the transaction in your wallet...',
     confirmingMessage: 'Your vote is being recorded...',
+    finalizingMessage: 'Finalizing vote details...',
     successMessage: 'Vote submitted successfully!',
     icon: '🗳️'
   },
@@ -53,6 +57,7 @@ const TRANSACTION_CONFIG = {
     title: 'Withdrawing Funds',
     pendingMessage: 'Please confirm the transaction in your wallet...',
     confirmingMessage: 'Your withdrawal is being processed...',
+    finalizingMessage: 'Finalizing withdrawal details...',
     successMessage: 'Withdrawal successful!',
     icon: '💸'
   },
@@ -60,6 +65,7 @@ const TRANSACTION_CONFIG = {
     title: 'Requesting Refund',
     pendingMessage: 'Please confirm the transaction in your wallet...',
     confirmingMessage: 'Your refund is being processed...',
+    finalizingMessage: 'Finalizing refund details...',
     successMessage: 'Refund successful!',
     icon: '↩️'
   },
@@ -67,6 +73,7 @@ const TRANSACTION_CONFIG = {
     title: 'Approving Token',
     pendingMessage: 'Please approve token spending in your wallet...',
     confirmingMessage: 'Approval is being confirmed...',
+    finalizingMessage: 'Finalizing approval details...',
     successMessage: 'Token approved!',
     icon: '✅'
   }
@@ -114,7 +121,7 @@ export default function TransactionModal({
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md">
         <div className="bg-white rounded-3xl p-8 shadow-2xl border-2 border-dark">
-          {/* Close button - only show when not pending/confirming */}
+          {/* Close button - only show when complete or errored */}
           {(status === 'success' || status === 'error') && onClose && (
             <button
               onClick={onClose}
@@ -126,7 +133,7 @@ export default function TransactionModal({
 
           {/* Icon/Animation */}
           <div className="flex justify-center mb-6">
-            {status === 'pending' || status === 'confirming' ? (
+            {status === 'pending' || status === 'confirming' || status === 'finalizing' ? (
               <div className="relative w-20 h-20">
                 {/* Spinning circle */}
                 <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
@@ -160,6 +167,7 @@ export default function TransactionModal({
           <p className="text-gray-600 text-center mb-6">
             {status === 'pending' && config.pendingMessage}
             {status === 'confirming' && config.confirmingMessage}
+            {status === 'finalizing' && config.finalizingMessage}
             {status === 'success' && config.successMessage}
             {status === 'error' && (error || 'Something went wrong. Please try again.')}
           </p>
@@ -182,7 +190,7 @@ export default function TransactionModal({
           )}
 
           {/* Progress steps for pending/confirming */}
-          {(status === 'pending' || status === 'confirming') && (
+          {(status === 'pending' || status === 'confirming' || status === 'finalizing') && (
             <div className="flex justify-center gap-4 mb-6">
               <div className={`flex items-center gap-2 ${status === 'pending' ? 'text-secondary' : 'text-gray-400'}`}>
                 <div className={`w-3 h-3 rounded-full ${status === 'pending' ? 'bg-secondary animate-pulse' : 'bg-green-500'}`}></div>
@@ -192,8 +200,15 @@ export default function TransactionModal({
                 <div className="w-8 h-0.5 bg-gray-300"></div>
               </div>
               <div className={`flex items-center gap-2 ${status === 'confirming' ? 'text-secondary' : 'text-gray-400'}`}>
-                <div className={`w-3 h-3 rounded-full ${status === 'confirming' ? 'bg-secondary animate-pulse' : 'bg-gray-300'}`}></div>
+                <div className={`w-3 h-3 rounded-full ${status === 'confirming' ? 'bg-secondary animate-pulse' : 'bg-green-500'}`}></div>
                 <span className="text-sm font-medium">Confirm</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-8 h-0.5 bg-gray-300"></div>
+              </div>
+              <div className={`flex items-center gap-2 ${status === 'finalizing' ? 'text-secondary' : 'text-gray-400'}`}>
+                <div className={`w-3 h-3 rounded-full ${status === 'finalizing' ? 'bg-secondary animate-pulse' : 'bg-gray-300'}`}></div>
+                <span className="text-sm font-medium">Finalize</span>
               </div>
             </div>
           )}
@@ -265,6 +280,13 @@ export function useTransactionModal() {
     }))
   }, [])
 
+  const setFinalizing = useCallback(() => {
+    setModalState(prev => ({
+      ...prev,
+      status: 'finalizing'
+    }))
+  }, [])
+
   const setError = useCallback((error: string) => {
     setModalState(prev => ({
       ...prev,
@@ -284,6 +306,7 @@ export function useTransactionModal() {
     modalState,
     openModal,
     setConfirming,
+    setFinalizing,
     setSuccess,
     setError,
     closeModal

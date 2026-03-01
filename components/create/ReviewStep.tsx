@@ -167,7 +167,7 @@ export default function ReviewStep({
                 }))
                 : []
 
-            setTxStatus('success')
+            setTxStatus('finalizing')
 
             void (async () => {
                 try {
@@ -225,11 +225,12 @@ export default function ReviewStep({
                 } catch (syncError) {
                     console.error('Failed to sync project:', syncError)
                 } finally {
-                    // Close modal and move to success step after a delay
+                    setTxStatus('success')
+                    // Close modal and move to success step after a short delay
                     setTimeout(() => {
                         setShowTxModal(false)
                         nextStep()
-                    }, 2000)
+                    }, 1200)
                 }
             })()
         }
@@ -243,7 +244,7 @@ export default function ReviewStep({
         }
     }, [error])
 
-    const isCreating = isPending || isConfirming
+    const isCreating = isPending || isConfirming || txStatus === 'finalizing'
 
     return (
         <section className="bg-primary relative">

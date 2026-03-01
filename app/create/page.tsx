@@ -104,7 +104,7 @@ export default function CreateProjectPage() {
                         totalSteps={totalSteps}
                     />
                 )}
-                {currentStep === successStep && <SuccessStep />}
+                {currentStep === successStep && <SuccessStep fundingStart={formData.fundingStart} />}
             </div>
             <Footer />
         </>
