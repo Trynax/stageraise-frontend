@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { Token } from "@/lib/constants/tokens"
+import { getExplorerTxBaseUrl } from "@/lib/contracts/network"
 
 interface Contribution {
   contributor: string
   amount?: number
   transactionHash: string
   timestamp: string
+  chainId?: number
 }
 
 interface FundersListProps {
@@ -88,7 +90,7 @@ export function FundersList({ contributions, token }: FundersListProps) {
                         {contribution.contributor.slice(0, 4)}....{contribution.contributor.slice(-4)}
                       </span>
                       <a 
-                        href={`https://testnet.bscscan.com/tx/${contribution.transactionHash}`}
+                        href={`${getExplorerTxBaseUrl(contribution.chainId)}${contribution.transactionHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-all"

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import Image from "next/image"
+import { ACTIVE_CHAIN_ID, getExplorerTxBaseUrl } from "@/lib/contracts/network"
 
 export type TransactionType = 
   | 'creating' 
@@ -79,13 +80,6 @@ const TRANSACTION_CONFIG = {
   }
 }
 
-const EXPLORER_URLS: Record<number, string> = {
-  97: 'https://testnet.bscscan.com/tx/',
-  56: 'https://bscscan.com/tx/',
-  1: 'https://etherscan.io/tx/',
-  11155111: 'https://sepolia.etherscan.io/tx/'
-}
-
 export default function TransactionModal({ 
   isOpen, 
   type, 
@@ -93,10 +87,10 @@ export default function TransactionModal({
   hash, 
   error,
   onClose,
-  chainId = 97
+  chainId = ACTIVE_CHAIN_ID
 }: TransactionModalProps) {
   const config = TRANSACTION_CONFIG[type]
-  const explorerUrl = hash ? `${EXPLORER_URLS[chainId] || EXPLORER_URLS[97]}${hash}` : null
+  const explorerUrl = hash ? `${getExplorerTxBaseUrl(chainId)}${hash}` : null
 
   // Auto-close on success after 3 seconds
   useEffect(() => {

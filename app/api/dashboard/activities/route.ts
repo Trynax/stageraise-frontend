@@ -40,7 +40,8 @@ export async function GET(request: NextRequest) {
                             id: true,
                             name: true,
                             logoUrl: true,
-                            projectId: true
+                            projectId: true,
+                            chainId: true
                         }
                     }
                 }

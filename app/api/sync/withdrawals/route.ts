@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
 import type { Abi } from 'viem'
 import { decodeFunctionData, formatUnits } from 'viem'
-import { bscTestnet } from 'viem/chains'
+import { ACTIVE_CHAIN_ID, ACTIVE_RPC_URL, ACTIVE_VIEM_CHAIN } from '@/lib/contracts/network'
 import { prisma } from '@/lib/prisma'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
 import { getTokenByAddress } from '@/lib/constants/tokens'
@@ -10,8 +10,8 @@ import { getTokenByAddress } from '@/lib/constants/tokens'
 const stageRaiseABI = StageRaiseABI as Abi
 
 const client = createPublicClient({
-  chain: bscTestnet,
-  transport: http()
+  chain: ACTIVE_VIEM_CHAIN,
+  transport: http(ACTIVE_RPC_URL)
 })
 
 // POST /api/sync/withdrawals - Sync withdrawal from blockchain

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, formatUnits, http } from 'viem'
 import type { Abi } from 'viem'
-import { bscTestnet } from 'viem/chains'
+import { ACTIVE_CHAIN_ID, ACTIVE_RPC_URL, ACTIVE_VIEM_CHAIN } from '@/lib/contracts/network'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
@@ -13,8 +13,8 @@ interface VotingStatusResult {
 }
 
 const client = createPublicClient({
-  chain: bscTestnet,
-  transport: http()
+  chain: ACTIVE_VIEM_CHAIN,
+  transport: http(ACTIVE_RPC_URL)
 })
 
 function normalizeVotePower(value: bigint): number {
@@ -62,7 +62,7 @@ export async function GET(
     }
 
     // Read voting status from contract
-    const contractAddress = getStageRaiseAddress(project.chainId || 97)
+    const contractAddress = getStageRaiseAddress(project.chainId || ACTIVE_CHAIN_ID)
     const [isVotingOpen, currentStageRaw, votingEndTime, yesVotes, noVotes] = await Promise.all([
       client.readContract({
         address: contractAddress,

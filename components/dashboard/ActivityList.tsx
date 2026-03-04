@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { getExplorerTxBaseUrl } from "@/lib/contracts/network"
 
 interface Activity {
     id: string
@@ -17,6 +18,7 @@ interface Activity {
         name: string
         logoUrl: string | null
         projectId: number
+        chainId: number
     } | null
 }
 
@@ -87,7 +89,7 @@ function getActionButton(activity: Activity, fullWidth = false) {
         case 'refund_requested':
             return activity.txHash ? (
                 <Link
-                    href={`https://testnet.bscscan.com/tx/${activity.txHash}`}
+                    href={`${getExplorerTxBaseUrl(activity.project?.chainId)}${activity.txHash}`}
                     target="_blank"
                     className={buttonClass}
                 >

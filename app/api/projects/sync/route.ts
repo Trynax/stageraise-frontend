@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
 import type { Abi } from 'viem'
-import { bscTestnet } from 'viem/chains'
+import { ACTIVE_CHAIN_ID, ACTIVE_RPC_URL, ACTIVE_VIEM_CHAIN } from '@/lib/contracts/network'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
@@ -10,8 +10,8 @@ import { Prisma } from '@prisma/client'
 const stageRaiseABI = StageRaiseABI as Abi
 
 const client = createPublicClient({
-  chain: bscTestnet,
-  transport: http()
+  chain: ACTIVE_VIEM_CHAIN,
+  transport: http(ACTIVE_RPC_URL)
 })
 
 interface ProjectByIdMilestoneShape {
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       hash: transactionHash as `0x${string}`
     })
 
-    const contractAddress = getStageRaiseAddress(chainId || 97)
+    const contractAddress = getStageRaiseAddress(chainId || ACTIVE_CHAIN_ID)
     
     // Get project count to determine the new project ID (current count is the new project)
     const projectCount = await client.readContract({
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     const projectCreateData = {
       projectId,
       contractAddress,
-      chainId: chainId || 97,
+      chainId: chainId || ACTIVE_CHAIN_ID,
       ownerAddress: projectInfo.owner.toLowerCase(),
       name: projectInfo.name,
       description: projectInfo.description,

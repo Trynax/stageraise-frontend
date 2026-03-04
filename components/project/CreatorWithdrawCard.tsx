@@ -5,6 +5,7 @@ import Image from "next/image"
 import { formatUnits } from "viem"
 import { useAccount, useChainId } from "wagmi"
 import { Token } from "@/lib/constants/tokens"
+import { getExplorerTxBaseUrl } from "@/lib/contracts/network"
 import { useProjectBalance, useWithdraw, useWithdrawableAmount } from "@/lib/contracts/hooks"
 
 interface CreatorWithdrawCardProps {
@@ -15,13 +16,6 @@ interface CreatorWithdrawCardProps {
   isFundingActive?: boolean
   isMilestoneBased?: boolean
   onWithdrawSuccess?: () => void
-}
-
-const EXPLORER_URLS: Record<number, string> = {
-  97: "https://testnet.bscscan.com/tx/",
-  56: "https://bscscan.com/tx/",
-  1: "https://etherscan.io/tx/",
-  11155111: "https://sepolia.etherscan.io/tx/",
 }
 
 function formatAmount(amount: number): string {
@@ -117,7 +111,7 @@ export function CreatorWithdrawCard({
         : "pending"
   const shouldShowSuccessModal =
     isWithdrawModalOpen && Boolean(submittedWithdrawal) && isSuccess && !successDismissed
-  const explorerUrl = hash ? `${EXPLORER_URLS[chainId] || EXPLORER_URLS[97]}${hash}` : null
+  const explorerUrl = hash ? `${getExplorerTxBaseUrl(chainId)}${hash}` : null
 
   const resetWithdrawFlow = () => {
     setIsWithdrawModalOpen(false)

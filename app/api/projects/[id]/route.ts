@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, formatUnits, http } from 'viem'
 import type { Abi } from 'viem'
-import { bscTestnet } from 'viem/chains'
+import { ACTIVE_CHAIN_ID, ACTIVE_RPC_URL, ACTIVE_VIEM_CHAIN } from '@/lib/contracts/network'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
@@ -73,8 +73,8 @@ async function fetchLiveVotingSnapshot(chainId: number, projectId: number) {
   try {
     const contractAddress = getStageRaiseAddress(chainId)
     const client = createPublicClient({
-      chain: bscTestnet,
-      transport: http(),
+      chain: ACTIVE_VIEM_CHAIN,
+      transport: http(ACTIVE_RPC_URL),
     })
 
     const [isVotingOpen, milestoneStageRaw, failedMilestoneStageRaw, votingEndTimeRaw, yesVotesRaw, noVotesRaw, projectByIdData] = await Promise.all([

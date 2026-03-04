@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, formatUnits, http } from 'viem'
 import type { Abi } from 'viem'
-import { bscTestnet } from 'viem/chains'
+import { ACTIVE_CHAIN_ID, ACTIVE_RPC_URL, ACTIVE_VIEM_CHAIN } from '@/lib/contracts/network'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
@@ -9,11 +9,11 @@ import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
 const stageRaiseABI = StageRaiseABI as Abi
 
 const client = createPublicClient({
-  chain: bscTestnet,
-  transport: http()
+  chain: ACTIVE_VIEM_CHAIN,
+  transport: http(ACTIVE_RPC_URL)
 })
 
-const CONTRACT_ADDRESS = getStageRaiseAddress(97)
+const CONTRACT_ADDRESS = getStageRaiseAddress(ACTIVE_CHAIN_ID)
 
 function normalizeVotePower(value: bigint): number {
   const parsed = Number.parseFloat(formatUnits(value, 18))

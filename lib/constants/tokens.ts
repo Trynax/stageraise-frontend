@@ -6,30 +6,34 @@ export interface Token {
   icon: string
 }
 
-// BSC Testnet token addresses
+import { ACTIVE_CHAIN_ID } from "@/lib/contracts/network"
+import { TOKEN_ADDRESSES } from "@/lib/contracts/addresses"
+
+const chainTokens = TOKEN_ADDRESSES[ACTIVE_CHAIN_ID]
+
 export const SUPPORTED_TOKENS: Token[] = [
   {
     symbol: 'BUSD',
     name: 'Binance USD',
-    address: '0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee', // BSC Testnet BUSD
+    address: chainTokens.BUSD || '',
     decimals: 18,
     icon: '/icons/BUSD.svg'
   },
   {
     symbol: 'USDT',
     name: 'Tether USD',
-    address: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd', // BSC Testnet USDT
+    address: chainTokens.USDT || '',
     decimals: 6,
     icon: '/icons/USDT.svg'
   },
   {
     symbol: 'USDC',
     name: 'USD Coin',
-    address: '0x64544969ed7EBf5f083679233325356EbE738930', // BSC Testnet USDC
+    address: chainTokens.USDC || '',
     decimals: 6,
     icon: '/icons/USDC.svg'
   }
-]
+].filter((token) => /^0x[a-fA-F0-9]{40}$/.test(token.address))
 
 export const getTokenByAddress = (address: string): Token | undefined => {
   return SUPPORTED_TOKENS.find(

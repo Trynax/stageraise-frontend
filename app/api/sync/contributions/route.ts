@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
-import { bscTestnet } from 'viem/chains'
+import { ACTIVE_CHAIN_ID, ACTIVE_RPC_URL, ACTIVE_VIEM_CHAIN } from '@/lib/contracts/network'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
@@ -8,8 +8,8 @@ import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
 const stageRaiseABI = StageRaiseABI as any
 
 const client = createPublicClient({
-  chain: bscTestnet,
-  transport: http()
+  chain: ACTIVE_VIEM_CHAIN,
+  transport: http(ACTIVE_RPC_URL)
 })
 
 // POST /api/sync/contributions - Sync contribution from blockchain after funding
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     })
 
     const funderAddress = tx.from
-    const contractAddress = getStageRaiseAddress(chainId || 97)
+    const contractAddress = getStageRaiseAddress(chainId || ACTIVE_CHAIN_ID)
 
     // Parse the input data to get projectId
     // fundProject(uint32 _projectId, uint96 _amount)
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         amount: Number(contributionAmount) / 1e18,
         transactionHash,
         blockNumber: BigInt(tx.blockNumber || 0),
-        chainId: chainId || 97
+        chainId: chainId || ACTIVE_CHAIN_ID
       }
     })
 

@@ -1,5 +1,5 @@
 import { createPublicClient, http, parseAbiItem } from 'viem'
-import { bscTestnet } from 'viem/chains'
+import { ACTIVE_CHAIN_ID, ACTIVE_DEPLOY_CHAIN, ACTIVE_RPC_URL, ACTIVE_VIEM_CHAIN } from '@/lib/contracts/network'
 import { prisma } from '@/lib/prisma'
 import { getStageRaiseAddress } from '@/lib/contracts/addresses'
 import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
@@ -7,11 +7,11 @@ import StageRaiseABI from '@/lib/contracts/StageRaise.abi.json'
 const stageRaiseABI = StageRaiseABI as any
 
 const client = createPublicClient({
-  chain: bscTestnet,
-  transport: http()
+  chain: ACTIVE_VIEM_CHAIN,
+  transport: http(ACTIVE_RPC_URL)
 })
 
-const CHAIN_ID = 97
+const CHAIN_ID = ACTIVE_CHAIN_ID
 const CONTRACT_ADDRESS = getStageRaiseAddress(CHAIN_ID)
 const SYNC_INTERVAL = 30000 // 30 seconds
 const BLOCKS_PER_BATCH = BigInt(1000)
@@ -238,7 +238,7 @@ async function syncEvents() {
 export async function startIndexer() {
   console.log('Starting blockchain event indexer...')
   console.log(`Contract: ${CONTRACT_ADDRESS}`)
-  console.log(`Chain: BSC Testnet (${CHAIN_ID})`)
+  console.log(`Chain: ${ACTIVE_DEPLOY_CHAIN} (${CHAIN_ID})`)
   
   // Initial sync
   await syncEvents()
