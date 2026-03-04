@@ -19,14 +19,14 @@ export const SUPPORTED_TOKENS: Token[] = [
     symbol: 'USDT',
     name: 'Tether USD',
     address: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd', // BSC Testnet USDT
-    decimals: 18,
+    decimals: 6,
     icon: '/icons/USDT.svg'
   },
   {
     symbol: 'USDC',
     name: 'USD Coin',
     address: '0x64544969ed7EBf5f083679233325356EbE738930', // BSC Testnet USDC
-    decimals: 18,
+    decimals: 6,
     icon: '/icons/USDC.svg'
   }
 ]

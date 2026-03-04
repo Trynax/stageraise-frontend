@@ -415,6 +415,9 @@ export default function ProjectDetailPage() {
                                     projectId={project.projectId}
                                     token={token}
                                     fallbackProjectBalance={project.cachedRaisedAmount || 0}
+                                    isFundingUpcoming={isUpcoming}
+                                    isFundingActive={isFundingPhase}
+                                    isMilestoneBased={isMilestoneBasedProject}
                                     onWithdrawSuccess={() => {
                                         void fetchProject()
                                         void refetchOnchainProjectBalance()

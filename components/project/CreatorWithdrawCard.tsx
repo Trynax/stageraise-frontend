@@ -11,6 +11,9 @@ interface CreatorWithdrawCardProps {
   projectId: number
   token: Token | undefined
   fallbackProjectBalance?: number
+  isFundingUpcoming?: boolean
+  isFundingActive?: boolean
+  isMilestoneBased?: boolean
   onWithdrawSuccess?: () => void
 }
 
@@ -43,6 +46,9 @@ export function CreatorWithdrawCard({
   projectId,
   token,
   fallbackProjectBalance = 0,
+  isFundingUpcoming = false,
+  isFundingActive = false,
+  isMilestoneBased = false,
   onWithdrawSuccess,
 }: CreatorWithdrawCardProps) {
   const { address } = useAccount()
@@ -81,6 +87,19 @@ export function CreatorWithdrawCard({
   const presetAmounts = [10, 50, 100, 1000]
   const isProcessing = isPending || isConfirming
   const canOpenWithdrawModal = Boolean(address) && withdrawableBalance > 0
+  const withdrawLockReason = useMemo(() => {
+    if (withdrawableBalance > 0) return null
+    if (isFundingUpcoming) {
+      return "Withdrawals are locked until funding starts."
+    }
+    if (isFundingActive) {
+      return "Withdrawable balance stays locked until funding ends."
+    }
+    if (isMilestoneBased && projectBalance > 0) {
+      return "No unlocked tranche yet. Unlock depends on milestone progress and voting outcome."
+    }
+    return null
+  }, [withdrawableBalance, isFundingUpcoming, isFundingActive, isMilestoneBased, projectBalance])
   const parsedWithdrawAmount = Number.parseFloat(withdrawAmount)
   const isAmountValid =
     Number.isFinite(parsedWithdrawAmount) &&
@@ -191,6 +210,9 @@ export function CreatorWithdrawCard({
             {formatAmount(withdrawableBalance)} {token?.symbol || "BUSD"}
           </span>
         </p>
+        {withdrawLockReason && (
+          <p className="text-xs text-[#8A6A0A] mb-4">{withdrawLockReason}</p>
+        )}
 
         <button
           onClick={handleOpenWithdrawModal}
