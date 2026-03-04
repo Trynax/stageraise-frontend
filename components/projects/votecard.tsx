@@ -109,12 +109,17 @@ export default function VoteCard({ vote, fromPage = 'project' }: VoteCardProps) 
   const result = vote.result;
   const isActive = vote.isActive;
   const hasPositiveTimeRemaining = Boolean(vote.timeRemaining && toNumber(vote.timeRemaining.total) > 0);
+  const endTimestamp = typeof endDate === 'string' ? new Date(endDate).getTime() : Number.NaN;
+  const hasEndedByTime = Number.isFinite(endTimestamp) && endTimestamp <= Date.now();
   const isOngoing =
-    status === 'ongoing' ||
-    status === 'active' ||
-    result === 'ongoing' ||
-    Boolean(isActive) ||
-    hasPositiveTimeRemaining;
+    !hasEndedByTime &&
+    (
+      status === 'ongoing' ||
+      status === 'active' ||
+      result === 'ongoing' ||
+      Boolean(isActive) ||
+      hasPositiveTimeRemaining
+    );
   const detailHref = `/votes/${projectId}-${milestoneStage}?from=${fromPage}`;
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(
     typeof endDate === 'string' ? endDate : undefined,

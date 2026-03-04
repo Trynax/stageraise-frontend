@@ -85,9 +85,14 @@ export async function GET(request: NextRequest) {
             }) as Promise<number>
           ])
 
-          if (!isVotingOpen) return null
-
           const endTime = Number(votingEndTime)
+          const now = Math.floor(Date.now() / 1000)
+          const isWithinVotingWindow = endTime > now
+
+          // Treat rounds as inactive once end time has passed, even if the
+          // contract flag is still open pending explicit finalize call.
+          if (!isVotingOpen || !isWithinVotingWindow) return null
+
           const totalRaw = yesVotes + noVotes
           const yesPercent = totalRaw > BigInt(0) ? Number((yesVotes * BigInt(100)) / totalRaw) : 0
           const noPercent = totalRaw > BigInt(0) ? Number((noVotes * BigInt(100)) / totalRaw) : 0
@@ -95,7 +100,6 @@ export async function GET(request: NextRequest) {
           const noVotesDisplay = normalizeVotePower(noVotes)
           const totalVotesDisplay = yesVotesDisplay + noVotesDisplay
 
-          const now = Math.floor(Date.now() / 1000)
           const secondsRemaining = Math.max(0, endTime - now)
 
           const milestone = project.milestones.find(m => m.stage === currentStage)
